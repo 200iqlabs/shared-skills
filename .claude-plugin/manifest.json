@@ -1,0 +1,15 @@
+{
+  "name": "200iqlabs-agent-skills",
+  "description": "Business advisor AI agent skills for founders and small companies",
+  "author": "200IQ LABS",
+  "plugins": [
+    {
+      "name": "business-advisor-skills",
+      "path": "plugins/business-advisor-skills"
+    },
+    {
+      "name": "community-skills",
+      "path": "plugins/community-skills"
+    }
+  ]
+}
