@@ -1,4 +1,4 @@
-"""Integration tests for inFakt API scripts in agents/cfo/.
+"""Integration tests for inFakt API scripts in skills/cfo/.
 
 All live_api tests are read-only and validate response shape, not values.
 """

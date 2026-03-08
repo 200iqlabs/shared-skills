@@ -349,7 +349,7 @@ Wszystkie agenty w systemie muszą być zgodne ze standardem Agent Skills (agent
 
 **Struktura agenta:**
 ```
-agents/{agent-name}/
+skills/{skill-name}/
 ├── SKILL.md              # YAML frontmatter + markdown instrukcje
 ├── scripts/              # Executable code for deterministic tasks
 │   └── *.sh / *.py
@@ -508,7 +508,7 @@ When to defer to a human specialist.
 │  │ │ (PUBLIC)         │ │ system       │  │  │ ai-      ││
 │  │ │                  │ │ (PRIVATE)    │  │  │ private  ││
 │  │ │ • .claude-plugin/│ │              │  │  │ (PRIVATE)││
-│  │ │ • agents/        │◄┤ • skills/ ──┼──┼──┤ • skills/││
+│  │ │ • skills/         │◄┤ • skills/ ──┼──┼──┤ • skills/││
 │  │ │ • tools/         │ │  (submodule) │  │  │  (submod)││
 │  │ │ • openspec/      │ │ • context/   │  │  │ • contxt/││
 │  │ │                  │ │ • CLAUDE.md  │  │  │ • CLAUDE ││
@@ -528,17 +528,12 @@ shared-skills/
 ├── CHANGELOG.md
 ├── LICENSE                          # Apache 2.0 (community skills)
 ├── .claude-plugin/                  # Plugin marketplace config
-│   ├── manifest.json
-│   └── plugins/
-│       ├── business-advisor-skills/
-│       │   └── plugin.json
-│       └── community-skills/
-│           └── plugin.json
+│   └── plugin.json
 ├── openspec/
 │   ├── project.md
 │   ├── AGENTS.md
 │   └── specs/
-├── agents/
+├── skills/
 │   ├── cfo/
 │   │   ├── SKILL.md
 │   │   ├── scripts/

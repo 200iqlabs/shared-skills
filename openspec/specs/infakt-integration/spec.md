@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Fetch invoices from inFakt API
-The system SHALL provide `agents/cfo/scripts/get_invoices.py` that fetches invoices via `GET /api/v3/invoices.json`. The script SHALL support `--unpaid` flag (filter by `paid_date_null=true`), `--from` and `--to` date filters, handle pagination, and output JSON with summary (count, total_net, total_gross) and invoice list.
+The system SHALL provide `skills/cfo/scripts/get_invoices.py` that fetches invoices via `GET /api/v3/invoices.json`. The script SHALL support `--unpaid` flag (filter by `paid_date_null=true`), `--from` and `--to` date filters, handle pagination, and output JSON with summary (count, total_net, total_gross) and invoice list.
 
 #### Scenario: Fetch all invoices
 - **WHEN** script is run without arguments
@@ -20,7 +20,7 @@ The system SHALL provide `agents/cfo/scripts/get_invoices.py` that fetches invoi
 - **THEN** script SHALL paginate using metainfo.total_pages
 
 ### Requirement: Fetch costs from inFakt API
-The system SHALL provide `agents/cfo/scripts/get_costs.py` that fetches costs via `GET /api/v3/costs.json`. The script SHALL support `--from` and `--to` date filters and `--group-by` (category or month) for summarization.
+The system SHALL provide `skills/cfo/scripts/get_costs.py` that fetches costs via `GET /api/v3/costs.json`. The script SHALL support `--from` and `--to` date filters and `--group-by` (category or month) for summarization.
 
 #### Scenario: Fetch all costs
 - **WHEN** script is run without arguments

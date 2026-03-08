@@ -1,6 +1,6 @@
 """Integration tests for Revolut API tools.
 
-Tests tools/revolut/ scripts and agents/cfo/scripts/ Revolut scripts.
+Tests tools/revolut/ scripts and skills/cfo/scripts/ Revolut scripts.
 All live_api tests are read-only and validate response shape, not values.
 """
 
@@ -66,7 +66,7 @@ def test_get_transactions_csv(env_keys):
     assert lines[0] == "date,description,amount,currency,type"
 
 
-# ── agents/cfo/scripts/get_balances.py ──
+# ── skills/cfo/scripts/get_balances.py ──
 
 
 @pytest.mark.live_api
@@ -102,7 +102,7 @@ def test_cfo_get_balances_currency_filter(env_keys):
         assert account["currency"] == "PLN"
 
 
-# ── agents/cfo/scripts/get_transactions.py ──
+# ── skills/cfo/scripts/get_transactions.py ──
 
 
 @pytest.mark.live_api

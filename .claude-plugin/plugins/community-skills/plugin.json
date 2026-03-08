@@ -1,8 +1,0 @@
-{
-  "name": "community-skills",
-  "description": "Open source content and marketing skills",
-  "skills": [
-    { "path": "../../agents/marketing" },
-    { "path": "../../agents/linkedin-content" }
-  ]
-}

@@ -8,8 +8,8 @@ import sys
 import os
 from datetime import datetime
 
-# Add agents/cfo/scripts to path so we can import the modules
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "agents", "cfo", "scripts"))
+# Add skills/cfo/scripts to path so we can import the modules
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "skills", "cfo", "scripts"))
 
 from get_mrr import calculate_mrr
 from get_costs import summarize_costs

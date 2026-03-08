@@ -4,8 +4,8 @@
 [Who this system serves, what organization, key facts]
 
 ## Available Agents
-Skills are loaded from `skills/agents/`. Routing happens automatically
-based on the user's query matching agent descriptions in YAML frontmatter.
+Skills are loaded from `skills/`. Routing happens automatically
+based on the user's query matching skill descriptions in YAML frontmatter.
 
 ## Context Files
 Organization-specific data lives in `context/`:

@@ -63,7 +63,7 @@ The system SHALL test ClickUp write operations using mocked HTTP calls. Tests SH
 The system SHALL test CFO agent Revolut scripts against the real API.
 
 #### Scenario: Get balances returns valid data
-- **WHEN** `agents/cfo/scripts/get_balances.py` is executed with valid Revolut credentials
+- **WHEN** `skills/cfo/scripts/get_balances.py` is executed with valid Revolut credentials
 - **THEN** output SHALL be valid JSON containing a "accounts" key with a list, each item containing "id", "balance", and "currency"
 
 #### Scenario: Get balances filtered by currency
@@ -71,29 +71,29 @@ The system SHALL test CFO agent Revolut scripts against the real API.
 - **THEN** all returned accounts SHALL have currency "PLN"
 
 #### Scenario: Get transactions with pagination
-- **WHEN** `agents/cfo/scripts/get_transactions.py` is executed with valid credentials
+- **WHEN** `skills/cfo/scripts/get_transactions.py` is executed with valid credentials
 - **THEN** output SHALL be valid JSON containing a "transactions" key with a list
 
 ### Requirement: CFO Stripe integration tests
 The system SHALL test CFO agent Stripe scripts against the real API.
 
 #### Scenario: Get subscriptions returns valid data
-- **WHEN** `agents/cfo/scripts/get_subscriptions.py` is executed with valid Stripe credentials
+- **WHEN** `skills/cfo/scripts/get_subscriptions.py` is executed with valid Stripe credentials
 - **THEN** output SHALL be valid JSON containing "subscriptions" key with a list and "total" key with a number
 
 #### Scenario: Get revenue returns valid data
-- **WHEN** `agents/cfo/scripts/get_revenue.py` is executed with valid Stripe credentials
+- **WHEN** `skills/cfo/scripts/get_revenue.py` is executed with valid Stripe credentials
 - **THEN** output SHALL be valid JSON containing revenue summary grouped by currency
 
 ### Requirement: CFO inFakt integration tests
 The system SHALL test CFO agent inFakt scripts against the real API.
 
 #### Scenario: Get invoices returns valid data
-- **WHEN** `agents/cfo/scripts/get_invoices.py` is executed with valid inFakt credentials
+- **WHEN** `skills/cfo/scripts/get_invoices.py` is executed with valid inFakt credentials
 - **THEN** output SHALL be valid JSON containing "invoices" key with a list and "summary" with totals
 
 #### Scenario: Get costs returns valid data
-- **WHEN** `agents/cfo/scripts/get_costs.py` is executed with valid inFakt credentials
+- **WHEN** `skills/cfo/scripts/get_costs.py` is executed with valid inFakt credentials
 - **THEN** output SHALL be valid JSON containing "costs" key with a list and "summary" with totals
 
 ### Requirement: CFO business logic unit tests

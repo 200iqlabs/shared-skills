@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: CFO agent SKILL.md with reactive financial advisor persona
 The system SHALL provide a CFO agent defined in `skills/cfo/SKILL.md` that acts as a reactive financial advisor. The agent SHALL respond to financial questions by gathering context from static files and dynamic API data. The SKILL.md SHALL follow Agent Skills spec format with YAML frontmatter (name + description) and markdown body under 500 lines.

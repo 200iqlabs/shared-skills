@@ -16,10 +16,10 @@ The system SHALL provide a shared Python function `load_env()` in `tools/common/
 - **THEN** it SHALL default to `tools/common/.env` relative to the project root
 
 ### Requirement: CFO scripts use shared module
-All Python scripts in `agents/cfo/scripts/` SHALL import `load_env` from the shared module instead of defining it locally.
+All Python scripts in `skills/cfo/scripts/` SHALL import `load_env` from the shared module instead of defining it locally.
 
 #### Scenario: No local load_env definition
-- **WHEN** any CFO script in `agents/cfo/scripts/` is inspected
+- **WHEN** any CFO script in `skills/cfo/scripts/` is inspected
 - **THEN** it SHALL NOT contain a local `load_env()` function definition
 
 #### Scenario: Import from shared module

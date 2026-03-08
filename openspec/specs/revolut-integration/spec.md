@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Fetch account balances from Revolut Business API
-The system SHALL provide `agents/cfo/scripts/get_balances.py` that fetches all account balances via `GET /api/1.0/accounts`. The script SHALL output JSON to stdout, support `--currency` filter and `--active-only` flag, and authenticate using Bearer token from `REVOLUT_API_KEY` env var.
+The system SHALL provide `skills/cfo/scripts/get_balances.py` that fetches all account balances via `GET /api/1.0/accounts`. The script SHALL output JSON to stdout, support `--currency` filter and `--active-only` flag, and authenticate using Bearer token from `REVOLUT_API_KEY` env var.
 
 #### Scenario: Fetch all balances
 - **WHEN** script is run without arguments
@@ -16,7 +16,7 @@ The system SHALL provide `agents/cfo/scripts/get_balances.py` that fetches all a
 - **THEN** script SHALL output JSON error message and exit with code 1
 
 ### Requirement: Fetch transactions from Revolut Business API
-The system SHALL provide `agents/cfo/scripts/get_transactions.py` that fetches transactions via `GET /api/1.0/transactions` with date range filtering. The script SHALL support `--from`, `--to`, `--type`, and `--count` parameters, handle pagination automatically, and output JSON to stdout.
+The system SHALL provide `skills/cfo/scripts/get_transactions.py` that fetches transactions via `GET /api/1.0/transactions` with date range filtering. The script SHALL support `--from`, `--to`, `--type`, and `--count` parameters, handle pagination automatically, and output JSON to stdout.
 
 #### Scenario: Fetch transactions for date range
 - **WHEN** script is run with `--from 2026-01-01 --to 2026-01-31`

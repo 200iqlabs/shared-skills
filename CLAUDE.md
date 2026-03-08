@@ -8,15 +8,12 @@ Shared Skills is a modular AI agent library for business advisory, built on the 
 
 ## Architecture
 
-### Agent Skills (`agents/`)
-Each agent is a directory with a `SKILL.md` file using YAML frontmatter for routing metadata and markdown body for instructions. The frontmatter `description` field controls when the skill triggers — it should be "pushy" (undertriggering > overtriggering). Agents reference supporting files via `references/` subdirectories.
+### Skills (`skills/`)
+Each skill is a directory with a `SKILL.md` file using YAML frontmatter for routing metadata and markdown body for instructions. The frontmatter `description` field controls when the skill triggers — it should be "pushy" (undertriggering > overtriggering). Skills reference supporting files via `references/` subdirectories. Auto-discovered by the plugin system.
 
 ### Plugin System (`.claude-plugin/`)
-- `manifest.json` — top-level plugin manifest defining two bundles
-- `plugins/business-advisor-skills/` — commercial bundle (cfo, tax-advisor, legal, business-consultant, product-manager, coach-the-five)
-- `plugins/community-skills/` — open source bundle (marketing, linkedin-content)
-
-Plugin JSON files reference agents via relative paths (`../../agents/<name>`).
+- `plugin.json` — plugin manifest (name, description, author, license)
+- Skills are auto-discovered from `skills/` directory — no explicit paths needed
 
 ### Tools (`tools/`)
 Lightweight CLI scripts (bash/python) for external API integrations (ClickUp, Revolut). Preferred over MCP servers to minimize context window usage. Shared helpers in `tools/common/helpers.sh`. Setup: `cp tools/common/.env.example tools/common/.env`.
@@ -34,5 +31,5 @@ Project specification used with the OpenSpec workflow skills (opsx:*) for struct
 - Skills use progressive disclosure: metadata → body → references (load references only when needed)
 - Skill descriptions are optimized via `skill-creator` evals — use `/skill-creator` to create or refine agents
 - Most agents are currently placeholders (Phase 0) — check for the "PLACEHOLDER" marker before assuming implementation exists
-- Two license tiers: community skills (Apache 2.0) and business advisor bundle (commercial)
+- All skills are Apache 2.0 licensed
 - Language: many agent skills target Polish-speaking users (tax, legal, business consulting contexts)
