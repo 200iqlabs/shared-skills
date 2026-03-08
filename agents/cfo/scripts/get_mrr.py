@@ -17,20 +17,8 @@ from collections import defaultdict
 
 import requests
 
-
-def load_env():
-    """Load environment variables from tools/common/.env if it exists."""
-    env_path = os.path.join(
-        os.path.dirname(__file__), "..", "..", "..", "tools", "common", ".env"
-    )
-    env_path = os.path.normpath(env_path)
-    if os.path.exists(env_path):
-        with open(env_path) as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, _, value = line.partition("=")
-                    os.environ.setdefault(key.strip(), value.strip())
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "tools", "common"))
+from env import load_env
 
 
 def get_active_subscriptions(api_key):
