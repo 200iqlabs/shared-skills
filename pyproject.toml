@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "live_api: marks tests that require real API credentials (deselect with '-m \"not live_api\"')",
+]
