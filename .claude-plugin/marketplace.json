@@ -1,0 +1,13 @@
+{
+  "name": "shared-skills",
+  "owner": {
+    "name": "200iqlabs"
+  },
+  "plugins": [
+    {
+      "name": "200iqlabs-agent-skills",
+      "source": ".",
+      "description": "Business advisor AI agent skills for founders and small companies"
+    }
+  ]
+}
