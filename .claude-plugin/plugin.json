@@ -1,6 +1,8 @@
 {
   "name": "200iqlabs-agent-skills",
   "description": "Business advisor AI agent skills for founders and small companies",
-  "author": "200IQ LABS",
+  "author": {
+    "name": "200IQ LABS"
+  },
   "license": "Apache-2.0"
 }
