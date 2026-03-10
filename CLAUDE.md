@@ -29,7 +29,29 @@ Project specification used with the OpenSpec workflow skills (opsx:*) for struct
 ## Key Conventions
 
 - Skills use progressive disclosure: metadata → body → references (load references only when needed)
-- Skill descriptions are optimized via `skill-creator` evals — use `/skill-creator` to create or refine agents
 - Most agents are currently placeholders (Phase 0) — check for the "PLACEHOLDER" marker before assuming implementation exists
 - All skills are Apache 2.0 licensed
 - Language: many agent skills target Polish-speaking users (tax, legal, business consulting contexts)
+
+## Creating or Modifying Skills — MANDATORY workflow
+
+When creating a new skill or significantly modifying an existing one, you MUST use the `/skill-creator` workflow. Do NOT write SKILL.md files directly.
+
+**Required steps:**
+1. `/skill-creator` — capture intent, interview for edge cases, draft SKILL.md
+2. Generate test prompts (min. 5 per agent)
+3. Run evals and review results
+4. Iterate based on feedback and benchmarks
+5. Optimize description for triggering accuracy (target ≥ 80%)
+
+**Why:** Hand-written skill descriptions undertrigger. skill-creator's interview process surfaces edge cases, and its eval loop ensures the description actually works. Skipping this produces lower-quality agents.
+
+**When to use skill-creator:**
+- Building a new skill from scratch
+- Replacing a placeholder skill with a real implementation
+- Rewriting or significantly expanding a skill's description or instructions
+- Optimizing triggering accuracy for an existing skill
+
+**When you can skip it:**
+- Minor edits (typo fixes, adding a reference file, updating a date)
+- Changes only to reference files or scripts (not SKILL.md itself)
