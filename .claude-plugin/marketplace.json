@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "200iqlabs-agent-skills",
-      "source": ".",
+      "source": "./",
       "description": "Business advisor AI agent skills for founders and small companies"
     }
   ]
