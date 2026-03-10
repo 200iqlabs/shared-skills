@@ -18,14 +18,38 @@ Modular AI agent library built on the [Agent Skills](https://agentskills.io) sta
 ## Installation
 
 ### Claude Code Plugin
+
+1. Add the marketplace:
 ```bash
 /plugin marketplace add 200iqlabs/shared-skills
+```
+
+2. Install the plugin:
+```bash
+/plugin install 200iqlabs-agent-skills
+```
+
+3. Verify installation:
+```bash
+/plugin list
 ```
 
 ### Git Submodule (for repo integration)
 ```bash
 git submodule add https://github.com/200iqlabs/shared-skills.git skills
 ```
+
+## Usage
+
+Skills trigger automatically based on your questions — no special commands needed.
+
+**Examples:**
+- *"Przeanalizuj moje finanse z Revolut"* → triggers `cfo`
+- *"Napisz post na LinkedIn o AI w biznesie"* → triggers `linkedin-content`
+- *"Jakie mam opcje optymalizacji podatkowej?"* → triggers `tax-advisor`
+- *"Oceń tę umowę z kontrahentem"* → triggers `legal`
+
+**Verify a skill is active:** run Claude Code with `--verbose` flag or toggle verbose mode with `Ctrl+O` during a session.
 
 ## Creating new skills
 
@@ -35,6 +59,8 @@ Use the `skill-creator` to build skills iteratively:
 ```
 
 Then: "I want to create a new agent skill for [purpose]"
+
+See [CLAUDE.md](CLAUDE.md) for the mandatory skill-creator workflow.
 
 ## License
 
