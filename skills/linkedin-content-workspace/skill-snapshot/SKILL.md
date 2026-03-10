@@ -1,15 +1,13 @@
 ---
 name: linkedin-content
 description: "LinkedIn post creator and content strategist for personal brand building.
-  Use when the user wants to write a LinkedIn post, draft LinkedIn content, brainstorm
-  post ideas for LinkedIn, optimize an existing LinkedIn post, create hooks, or build
-  a content calendar for LinkedIn. Also trigger when the user mentions 'post na LinkedIn',
-  'LI', 'personal brand', 'ghostwriter', or wants to share a professional insight,
-  case study, behind-the-scenes story, or opinion piece on LinkedIn. Trigger on Polish
-  requests like 'napisz post na LinkedIn', 'pomysl na post', 'hook', 'zasieg na LinkedIn',
-  'seria postow'. Do NOT trigger for blog posts, website copy, email drafts, PowerPoint
-  presentations, or social media graphics — only for LinkedIn text content. Can work
-  standalone or be invoked by the marketing agent."
+  Use when the user wants to write a LinkedIn post, draft social media content, brainstorm
+  post ideas, optimize existing posts, create hooks, or build a content calendar.
+  Also use when the user mentions 'post', 'LinkedIn', 'content', 'personal brand',
+  'social media', 'ghostwriter', or wants to share a professional insight, case study,
+  behind-the-scenes story, or opinion piece. Trigger on Polish requests about 'napisz post',
+  'pomysl na post', 'hook', 'content marketing', 'zasieg'. Can work standalone or
+  be invoked by the marketing agent."
 license: Apache-2.0
 metadata:
   author: Pawel Lipowczan
@@ -74,7 +72,7 @@ Ghostwriter i strateg content marketingowy. Pomagam tworzyc posty na LinkedIn kt
 **Formatowanie LinkedIn:**
 - Bold miedzy **
 - Line breaks = nowy paragraf
-- Hashtagi na koncu (3-5 max). Uwaga: writing-style.md mowi "unikaj hashtagow" — to dotyczy hashtagow w tresci posta. Hashtagi na samym koncu posta to standard LinkedIn i sa OK.
+- Hashtagi na koncu (3-5 max)
 
 Load `references/writing-style.md` for detailed human-like writing style rules and word blacklist.
 
@@ -99,7 +97,7 @@ Load `references/writing-style.md` when generating content. Load `references/exa
 Zidentyfikuj typ postu (case study, how-to, insight). Wyciagnij kluczowe liczby i fakty. Napisz hook, rozwinicie, CTA.
 
 **Gdy uzytkownik prosi o brainstorm tematow:**
-Daj 5 konkretnych pomyslow. Dla kazdego podaj: typ postu (case study, how-to, insight, list, behind the scenes), gotowy hook (2-3 zdania zatrzymujace scroll), krotki opis kata/kierunku tresci, propozycje CTA i 3-5 hashtagow. Dopasuj do aktualnych trendow w automatyzacji/AI.
+Daj 5 konkretnych pomyslow z gotowymi hookami. Dopasuj do aktualnych trendow w automatyzacji/AI.
 
 **Gdy uzytkownik prosi o optymalizacje istniejacego postu:**
 Popraw hook (jesli slaby), skroc (jesli za dlugi), dodaj konkrety (jesli za ogolnikowy), popraw CTA.

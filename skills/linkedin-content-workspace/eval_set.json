@@ -1,0 +1,82 @@
+[
+  {
+    "query": "mam notatki z ostatniego projektu automatyzacji dla klienta z logistyki - udalo sie skrocic czas procesowania zamowien z 4h do 20min. chcialbym z tego zrobic post na linkedina, cos w stylu case study z konkretnymi liczbami",
+    "should_trigger": true
+  },
+  {
+    "query": "potrzebuje 5 pomyslow na posty na ten tydzien, ostatnio duzo pracuje z AI agentami i mam kilka ciekawych obserwacji ktore moglbym opisac",
+    "should_trigger": true
+  },
+  {
+    "query": "napisz mi post o tym jak wdrozylismy n8n u klienta i zaoszczedzilismy mu 30h miesiecznie na raportowaniu. ma byc krotki, konkretny, z hookiem na poczatku",
+    "should_trigger": true
+  },
+  {
+    "query": "mam gotowy post ale wydaje mi sie ze jest za dlogi i nudny, za duzo lania wody. mozesz go poprawic? skrocic i dodac lepszy hook?",
+    "should_trigger": true
+  },
+  {
+    "query": "chce zbudowac personal brand na linkedin jako ekspert od automatyzacji. zaproponuj kalendarz contentowy na najblizszy miesiac z mixem roznych formatow",
+    "should_trigger": true
+  },
+  {
+    "query": "wczoraj mialem ciekawy insight - firmy ktore automatyzuja najpierw procesy wewnetrzne maja lepsze wyniki niz te ktore zaczynaja od klienta. chcialbym sie tym podzielic, napisz cos na LI",
+    "should_trigger": true
+  },
+  {
+    "query": "przygotuj mi post behind the scenes o tym jak wyglada moj typowy dzien pracy z Claude Code i jak buduje systemy agentowe. cos autentycznego, nie korporacyjnego",
+    "should_trigger": true
+  },
+  {
+    "query": "mam prezentacje na infoshare za 2 tygodnie, chcialbym zrobic serię postow promujacych moje wystapienie. 3 posty: zapowiedz, behind the scenes z przygotowan, i przypomnienie dzien przed",
+    "should_trigger": true
+  },
+  {
+    "query": "hej potrzebuje hook na post o tym ze AI nie zastapi programistow ale zmieni ich role. cos kontrowersyjnego co zatrzyma scroll",
+    "should_trigger": true
+  },
+  {
+    "query": "klient pyta o wycene automatyzacji procesu fakturowania w Make.com - musza reczne dane z excela przerzucac do systemu ksiegowego, robi to 2 osoby po 3h dziennie. ile to mniej wiecej kosztuje i jaki ROI?",
+    "should_trigger": false
+  },
+  {
+    "query": "mam problem z webhookiem w n8n - nie odpala sie po ustawieniu trigera na nowy wiersz w google sheets. logi pokazuja timeout po 30s. jak to zdebugowac?",
+    "should_trigger": false
+  },
+  {
+    "query": "potrzebuje napisac maila do klienta z podsumowaniem projektu automatyzacji. formalny ton, po angielsku, z lista deliverables i next steps",
+    "should_trigger": false
+  },
+  {
+    "query": "zrob mi prezentacje w powerpoint o trendach w automatyzacji na 2026 rok, 15 slajdow z danymi rynkowymi i case studies",
+    "should_trigger": false
+  },
+  {
+    "query": "przeanalizuj nasz cashflow z ostatnich 6 miesiecy i powiedz czy stac nas na zatrudnienie kolejnego developera. dane sa w revolut i fakturowni",
+    "should_trigger": false
+  },
+  {
+    "query": "napisz post na bloga firmowego o wdrozeniu systemu CRM - dluzszy tekst, jakies 2000 slow, z SEO pod fraze 'wdrozenie CRM w malej firmie'",
+    "should_trigger": false
+  },
+  {
+    "query": "potrzebuje strategii marketingowej na Q2 - budzet 15k PLN, glowne kanaly to google ads i cold mailing, cel to 20 leadow miesiecznie",
+    "should_trigger": false
+  },
+  {
+    "query": "napisz mi tekst na strone www w sekcji 'o nas' dla Automation House. ma byc profesjonalny ale nie korporacyjny, po polsku",
+    "should_trigger": false
+  },
+  {
+    "query": "mam umowe z klientem na wdrozenie automatyzacji ale brakuje mi klauzuli o SLA i odpowiedzialnosci za dane. mozesz dodac odpowiednie zapisy?",
+    "should_trigger": false
+  },
+  {
+    "query": "jak skonfigurowac DKIM i SPF dla domeny zeby maile nie wpadaly w spam? uzywamy google workspace",
+    "should_trigger": false
+  },
+  {
+    "query": "stworz grafike do posta na social media - infografika pokazujaca proces before/after automatyzacji, minimalistyczny styl, kolory brandu",
+    "should_trigger": false
+  }
+]

@@ -1,0 +1,24 @@
+{
+  "expectations": [
+    {
+      "text": "no-banned-words",
+      "passed": true,
+      "evidence": "Original banned words removed"
+    },
+    {
+      "text": "shorter-than-original",
+      "passed": true,
+      "evidence": "Original: 423 chars, New: 439 chars"
+    },
+    {
+      "text": "has-hook",
+      "passed": true,
+      "evidence": "First line: AI w biznesie — 3 rzeczy, które zmieniły naszą firmę"
+    },
+    {
+      "text": "has-specifics",
+      "passed": true,
+      "evidence": "Contains specific numbers"
+    }
+  ]
+}

@@ -4,6 +4,10 @@ description: "Clear description of what this skill does AND specific contexts
   for when to use it. Include trigger keywords and phrases. Be 'pushy' —
   undertriggering is more common than overtriggering. Even if the user doesn't
   explicitly ask for [domain] — if they mention [related topics], use this skill."
+license: Apache-2.0
+metadata:
+  author: Author Name
+  version: "1.0"
 ---
 
 # Agent Display Name

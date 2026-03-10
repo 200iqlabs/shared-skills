@@ -1,0 +1,24 @@
+{
+  "expectations": [
+    {
+      "text": "no-banned-words",
+      "passed": true,
+      "evidence": "Original banned words removed"
+    },
+    {
+      "text": "shorter-than-original",
+      "passed": false,
+      "evidence": "Original: 423 chars, New: 698 chars"
+    },
+    {
+      "text": "has-hook",
+      "passed": true,
+      "evidence": "First line: 3 godziny tygodniowo. Tyle odzyskal moj zespol po wdrozeniu "
+    },
+    {
+      "text": "has-specifics",
+      "passed": true,
+      "evidence": "Contains specific numbers"
+    }
+  ]
+}

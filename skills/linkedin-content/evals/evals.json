@@ -1,0 +1,23 @@
+{
+  "skill_name": "linkedin-content",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Mam temat na post. Klient z branży e-commerce miał problem z ręcznym przetwarzaniem zamówień - 3 osoby robiły to ręcznie, zajmowało 6h dziennie. Zautomatyzowaliśmy to w Make.com, teraz trwa 15 minut bez ingerencji człowieka. Oszczędność ~120h miesięcznie. Napisz post.",
+      "expected_output": "LinkedIn post w formacie case study z hookiem, konkretnymi liczbami, CTA i hashtagami. Po polsku, w stylu Pawła.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Potrzebuję 5 pomysłów na posty na ten tydzień. Ostatnio dużo pracuję z AI agentami w Claude Code, budowałem system multi-agentowy dla klienta.",
+      "expected_output": "Lista 5 konkretnych pomysłów na posty z gotowymi hookami, dopasowanych do tematyki AI/automatyzacji.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Popraw ten post, jest za długi i nudny: 'Cześć wszystkim! Dzisiaj chciałbym podzielić się z Wami moimi przemyśleniami na temat sztucznej inteligencji w biznesie. Uważam że AI to naprawdę przełomowe narzędzie które może zrewolucjonizować sposób w jaki pracujemy. W naszej firmie wykorzystujemy AI do wielu zadań i muszę powiedzieć że rezultaty są niezwykłe. Jeśli jeszcze nie korzystacie z AI to naprawdę warto spróbować bo to game changer. Dajcie znać co myślicie!'",
+      "expected_output": "Poprawiony post: krótszy, z mocnym hookiem, konkrety zamiast ogólników, bez banned words (przełomowe, zrewolucjonizować, niezwykłe, game changer). CTA na końcu.",
+      "files": []
+    }
+  ]
+}

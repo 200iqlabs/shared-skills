@@ -1,0 +1,35 @@
+{
+  "reviews": [
+    {
+      "run_id": "case-study-from-notes-with_skill",
+      "feedback": "Wygląda OK.",
+      "timestamp": "2026-03-10T12:34:39.927Z"
+    },
+    {
+      "run_id": "case-study-from-notes-without_skill",
+      "feedback": "Też wygląda OK. Nieco gorsze formatowanie posta, ale merytorycznie wydaje się być OK.",
+      "timestamp": "2026-03-10T12:34:39.927Z"
+    },
+    {
+      "run_id": "brainstorm-topics-with_skill",
+      "feedback": "Ciekawe tematy zgodne z moimi zainteresowaniami i tym co robię.",
+      "timestamp": "2026-03-10T12:34:39.927Z"
+    },
+    {
+      "run_id": "brainstorm-topics-without_skill",
+      "feedback": "Też merytorycznie OK.. Trudno wskazać czy ten wynik jest gorszy od tego z wykorzystaniem skilla.",
+      "timestamp": "2026-03-10T12:34:39.927Z"
+    },
+    {
+      "run_id": "optimize-existing-post-with_skill",
+      "feedback": "Jest OK.",
+      "timestamp": "2026-03-10T12:34:39.927Z"
+    },
+    {
+      "run_id": "optimize-existing-post-without_skill",
+      "feedback": "Mniej personalne. Bardziej generyczne niż ze skillem. Tutaj jest wyraźnie słabiej niż ze skilem.",
+      "timestamp": "2026-03-10T12:34:39.927Z"
+    }
+  ],
+  "status": "complete"
+}

@@ -1,0 +1,6 @@
+{
+  "eval_id": 1,
+  "eval_name": "case-study-from-notes",
+  "prompt": "Mam temat na post. Klient z branży e-commerce miał problem z ręcznym przetwarzaniem zamówień - 3 osoby robiły to ręcznie, zajmowało 6h dziennie. Zautomatyzowaliśmy to w Make.com, teraz trwa 15 minut bez ingerencji człowieka. Oszczędność ~120h miesięcznie. Napisz post.",
+  "assertions": []
+}

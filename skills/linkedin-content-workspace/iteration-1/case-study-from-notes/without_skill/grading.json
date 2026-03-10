@@ -1,0 +1,44 @@
+{
+  "expectations": [
+    {
+      "text": "post-in-polish",
+      "passed": true,
+      "evidence": "Text contains Polish words"
+    },
+    {
+      "text": "no-banned-words",
+      "passed": false,
+      "evidence": "Found: ['tylko', 'ono']"
+    },
+    {
+      "text": "no-em-dash",
+      "passed": true,
+      "evidence": "No em dash"
+    },
+    {
+      "text": "has-hook",
+      "passed": true,
+      "evidence": "First line: 3 osoby. 6 godzin dziennie. Ręczne przetwarzanie zamówień."
+    },
+    {
+      "text": "has-cta",
+      "passed": true,
+      "evidence": "Question mark in last lines"
+    },
+    {
+      "text": "has-concrete-numbers",
+      "passed": true,
+      "evidence": "Key numbers from brief present"
+    },
+    {
+      "text": "has-hashtags",
+      "passed": true,
+      "evidence": "Hashtags found"
+    },
+    {
+      "text": "length-in-range",
+      "passed": true,
+      "evidence": "Length: 1155 chars"
+    }
+  ]
+}
