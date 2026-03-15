@@ -22,6 +22,9 @@ venv/
 # Node
 node_modules/
 
+# Skill workspaces (eval outputs from skill-creator)
+skills/*-workspace/
+
 # Packages
 *.skill
 
