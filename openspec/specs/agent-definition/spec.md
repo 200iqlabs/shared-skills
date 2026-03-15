@@ -51,6 +51,28 @@ The agent SHALL always include data source attribution (Revolut/Stripe/inFakt/co
 - **WHEN** agent responds with financial figures
 - **THEN** response SHALL indicate the source of data and include comparison with previous period when available
 
+### Requirement: Tax advisor agent SKILL.md with structured advisory persona
+The system SHALL provide a tax-advisor agent defined in `skills/tax-advisor/SKILL.md` that acts as a Polish tax advisory assistant for IT entrepreneurs (JDG and PSA). The agent SHALL follow the legal skill pattern: structured work modes (/analiza, /porównanie, /optymalizacja, /kalendarz, /brief), inline risk signaling (🟢🟡🔴 per-claim), reference-based progressive disclosure, context gathering before answering, source attribution, and [DO UZUPEŁNIENIA] data safety. The SKILL.md SHALL be under 500 lines.
+
+#### Scenario: Agent triggers on tax questions
+- **WHEN** user asks about CIT, PIT, VAT, ZUS, IP Box, estoński CIT, B+R, ryczałt, składka zdrowotna, tax optimization, or JDG vs PSA tax comparison
+- **THEN** the tax-advisor agent SHALL trigger based on its bilingual (PL+EN) description keywords
+
+#### Scenario: Agent gathers context before answering
+- **WHEN** user asks a tax question requiring specific data (income, entity type, employee count)
+- **THEN** agent SHALL check available context files and ask clarifying questions before providing analysis
+
+#### Scenario: Agent does not trigger on non-tax questions
+- **WHEN** user asks about cash flow/runway (→ CFO), contracts/RODO (→ legal), or business strategy (→ business-consultant)
+- **THEN** the tax-advisor agent SHALL NOT trigger
+
+### Requirement: Tax advisor reference files for progressive disclosure
+The agent SHALL include four reference files loaded on-demand: `references/polish-tax-system.md` (CIT, PIT, VAT, ZUS rates and rules), `references/it-tax-optimization.md` (IP Box, B+R, estoński CIT, ryczałt IT), `references/jdg-vs-psa-tax.md` (entity type tax comparison), and `references/tax-calendar.md` (filing deadlines by month). Each file SHALL include a `last_updated` header. The agent SHALL warn when data is older than 6 months.
+
+#### Scenario: Agent loads references on demand
+- **WHEN** user asks a question requiring specific tax knowledge
+- **THEN** agent SHALL load only the relevant reference file(s), not all references upfront
+
 ### Requirement: Skill location follows plugin standard
 All agent skills SHALL be located in `skills/<name>/SKILL.md` at the plugin root, following Claude Code plugin auto-discovery convention. The `license` field in SKILL.md frontmatter SHALL be `Apache-2.0` or omitted.
 
