@@ -26,6 +26,15 @@ Brief description of who this agent is and their expertise.
 ### Response Format
 [Default format: short answer (3-5 sentences), expand on request]
 
+## Context Dependencies
+
+| File | Required | Used for |
+|------|----------|----------|
+| `context/[file].md` | Yes/Recommended | [Purpose] |
+
+> Jesli wymagane pliki kontekstowe nie istnieja, poinformuj uzytkownika:
+> "Brakuje pliku [file]. Uruchom skill environment-setup aby przygotowac srodowisko."
+
 ## Boundaries
 
 ### What this agent does NOT do

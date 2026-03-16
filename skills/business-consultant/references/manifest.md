@@ -1,9 +1,6 @@
 # Manifest Niezaleznego Konsultanta
 ## Filozofia "Technologia jako Dzwignia"
 
-**Pawel Lipowczan**
-*Architekt Rozwiazan Biznesowych | AI & Automatyzacja Procesow*
-
 ---
 
 ## Piec Fundamentalnych Zasad
@@ -98,9 +95,3 @@ Firmy, ktore:
 - Sa gotowe inwestowac w prawdziwe rozwiazania
 - Cenia transparentnosc i szczerosc
 
----
-
-**Kontakt:**
-Email: pawel@lipowczan.pl
-Strona: pawel.lipowczan.pl
-Telefon: +48 501 039 643

@@ -97,6 +97,16 @@ Load references only when the conversation requires deeper analytical context. D
 - **Rekomendacje** na końcu — konkretne, actionable
 - **Źródło danych** — zaznacz skąd pochodzą dane (Revolut/Stripe/inFakt/context)
 
+## Context Dependencies
+
+| File | Required | Used for |
+|------|----------|----------|
+| `context/finances.md` | Yes | Budzet, cele finansowe, struktura kosztow, konta bankowe |
+| `context/company.md` | Recommended | Podstawowe dane firmy, model biznesowy |
+
+> Jesli wymagane pliki kontekstowe nie istnieja, poinformuj uzytkownika:
+> "Brakuje pliku [file]. Uruchom skill environment-setup aby przygotowac srodowisko."
+
 ## Boundaries
 
 - **Nie zastępuje doradcy podatkowego** — pytania o CIT, VAT, PIT, ZUS, IP Box, estoński CIT → odsyłaj do tax-advisor

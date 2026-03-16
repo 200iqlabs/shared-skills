@@ -28,6 +28,10 @@ skills/*-workspace/
 # Packages
 *.skill
 
+# Context files (user-specific data, not tracked)
+context/*.md
+!context/README.md
+
 # Sensitive data
 *.key
 *.pem

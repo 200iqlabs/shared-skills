@@ -26,7 +26,7 @@ Lightweight CLI scripts (bash/python) for external API integrations (ClickUp, Re
 ### OpenSpec (`openspec/`)
 Project specification used with the OpenSpec workflow skills (opsx:*) for structured change management.
 
-### Context Layer (`context/`) — PLANNED
+### Context Layer (`context/`)
 
 User-specific data lives in `context/`, separate from domain knowledge in skill `references/`. This enables clean distribution: fork/install → run environment-setup skill → ready to use.
 
@@ -46,8 +46,6 @@ User-specific data lives in `context/`, separate from domain knowledge in skill 
 | `legal-entities.md` | legal, tax-advisor | Entity details, relationships, document backlog |
 
 **Skill convention:** Each skill that uses context files MUST have a `## Context Dependencies` section listing required/recommended files and a warning message for missing files.
-
-**Status:** Architecture defined in `openspec/changes/context-layer-architecture/`. Not yet implemented.
 
 ## Key Conventions
 

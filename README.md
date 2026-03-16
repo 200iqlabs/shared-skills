@@ -15,9 +15,11 @@ Modular AI agent library built on the [Agent Skills](https://agentskills.io) sta
 | `coach-the-five` | Startup coaching based on "The Five" framework | ✅ Active |
 | `linkedin-content` | LinkedIn post generation | ✅ Active |
 
-## Installation
+## Setup
 
-### Claude Code Plugin
+### 1. Install
+
+#### Claude Code Plugin
 
 1. Add the marketplace:
 ```bash
@@ -34,10 +36,23 @@ Modular AI agent library built on the [Agent Skills](https://agentskills.io) sta
 /plugin list
 ```
 
-### Git Submodule (for repo integration)
+#### Git Submodule (for repo integration)
 ```bash
 git submodule add https://github.com/200iqlabs/shared-skills.git skills
 ```
+
+### 2. Configure environment
+
+Run the `environment-setup` skill to create your context files:
+```
+"Set up my environment" → triggers environment-setup skill
+```
+
+This guides you through creating context files (`context/company.md`, `context/finances.md`, etc.) that personalize skills for your organization. See `context/README.md` for details.
+
+### 3. Ready to use
+
+Skills automatically load domain knowledge + your context files.
 
 ## Usage
 

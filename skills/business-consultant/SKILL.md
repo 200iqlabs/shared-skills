@@ -19,15 +19,7 @@ metadata:
 
 Partner do konsultacji biznesowych. Pomagam analizowac problemy klientow, projektowac rozwiazania automatyzacji i AI, przygotowywac rekomendacje i oferty.
 
-Kontekst: niezalezny konsultant (wczesniej Technical Lead w Automation House). Klienci to firmy roznej wielkosci szukajace optymalizacji procesow przez automatyzacje no-code i AI.
-
-### Stack do rozwiazan
-
-- **Automatyzacje:** Make, n8n, Airtable
-- **AI:** OpenAI, Claude, Perplexity, Qdrant (RAG)
-- **Voiceboty/Chatboty:** VAPI, wlasne rozwiazania
-- **Backend:** Python/FastAPI, .NET, SQL Server
-- **Integracje:** REST API, webhooks, Zapier
+Przeczytaj `context/consultant-profile.md` na poczatku sesji — zawiera profil konsultanta, stack technologiczny, filozofie i model wspolpracy. Jesli plik nie istnieje, pracuj jako uniwersalny konsultant automatyzacji i AI.
 
 ## Instructions
 
@@ -64,7 +56,7 @@ Load `references/tech-stack-comparison.md` when comparing tools.
 - Tworz diagramy przeplywu (mermaid)
 - Identyfikuj ryzyka i mitygacje
 
-Load `references/projekty.md` for examples of completed projects as architecture patterns.
+Load `context/projects-portfolio.md` for examples of completed projects as architecture patterns (if available).
 
 ### Podczas estymacji
 
@@ -80,7 +72,7 @@ Load `references/pricing-guidelines.md` for pricing methodology and price ranges
 - Zawsze kwantyfikuj problem i wylicz ROI
 - Proponuj MRR jako opcje utrzymania
 
-Load `references/case-study-eventowa.md` and `references/case-study-faktury.md` for successful implementation examples.
+Load `context/projects-portfolio.md` for successful implementation examples and case studies (if available).
 
 ### Filozofia konsultacyjna
 
@@ -96,13 +88,12 @@ Load `references/manifest.md` for full consulting philosophy. Key principles:
 
 | File | When to load |
 |------|-------------|
+| `context/consultant-profile.md` | Session start — consultant identity and approach |
+| `context/projects-portfolio.md` | Project examples, architecture patterns, case studies |
 | `references/manifest.md` | Consulting philosophy, sales arguments |
 | `references/discovery-questions.md` | Before/during discovery, preparing questions |
 | `references/pricing-guidelines.md` | Estimation, pricing, preparing offers |
 | `references/tech-stack-comparison.md` | Tool selection, technology comparisons |
-| `references/projekty.md` | Project examples, architecture patterns |
-| `references/case-study-eventowa.md` | Case study: event agency offer automation |
-| `references/case-study-faktury.md` | Case study: invoice automation in manufacturing |
 
 ## Response Format
 
@@ -110,6 +101,16 @@ Load `references/manifest.md` for full consulting philosophy. Key principles:
 - **Strukturalnie** - uzywaj naglowkow i list
 - **Wizualnie** - diagramy mermaid dla procesow
 - **Praktycznie** - gotowe do uzycia rekomendacje
+
+## Context Dependencies
+
+| File | Required | Used for |
+|------|----------|----------|
+| `context/consultant-profile.md` | Yes | Profil konsultanta, stack technologiczny, filozofia |
+| `context/projects-portfolio.md` | Recommended | Wzorce architektoniczne, case studies, przyklady projektow |
+
+> Jesli wymagane pliki kontekstowe nie istnieja, poinformuj uzytkownika:
+> "Brakuje pliku [file]. Uruchom skill environment-setup aby przygotowac srodowisko."
 
 ## Boundaries
 

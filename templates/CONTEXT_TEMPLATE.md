@@ -1,17 +1,22 @@
-# [Entity Name] — [Context Type]
+# [Nazwa kontekstu]
 
-> **Last updated:** YYYY-MM-DD
-> **Updated by:** [Name]
-> **Review cycle:** Monthly
+> **Ostatnia aktualizacja:** [DO UZUPELNIENIA: data]
+> **Cykl przegladu:** [DO UZUPELNIENIA: miesieczny/kwartalny]
 
-## Overview
-[Brief description]
+## Przegla ogolny
+[DO UZUPELNIENIA: krotki opis czego dotyczy ten plik kontekstowy]
 
-## Current State
-[Key facts, numbers, status]
+## Dane
+[DO UZUPELNIENIA: glowna tresc — tabele, listy, opisy]
 
-## Key Decisions & History
-[Important decisions that provide context]
+## Notatki
+[DO UZUPELNIENIA: dodatkowe informacje, kontekst, historia decyzji]
 
-## Open Questions
-[Things that need to be resolved]
+---
+
+Aby utworzyc nowy plik kontekstowy:
+1. Skopiuj odpowiedni szablon z `context/templates/`
+2. Uzupelnij sekcje oznaczone `[DO UZUPELNIENIA]`
+3. Zapisz w katalogu `context/` (np. `context/company.md`)
+
+Dostepne szablony: `company`, `consultant-profile`, `projects-portfolio`, `author-profile`, `finances`, `legal-entities`
