@@ -1,12 +1,17 @@
 ---
 name: business-consultant
-description: "Business consulting partner for client engagements - analyze meeting
+description: "Business consulting partner for client engagements — analyze meeting
   notes, design automation & AI solutions, estimate implementation costs, prepare
   discovery questions, and create proposals. Use when: analyzing client problems,
-  designing solution architecture, comparing tools (Make vs n8n vs Zapier), estimating
-  time/cost, preparing for discovery meetings, creating offers, discussing pricing
-  strategy, or reviewing case studies. Konsultant biznesowy, analiza notatek ze spotkan,
-  projektowanie rozwiazan, estymacja wdrozen, pytania discovery, ofertowanie."
+  designing solution architecture, comparing tools (Make vs n8n vs Zapier vs custom code),
+  estimating time/cost, preparing for discovery meetings, creating offers, discussing
+  pricing strategy, reviewing case studies, SWOT analysis, process bottleneck analysis,
+  chatbot/voicebot architecture design, system integration planning, or mapping business
+  processes. Also trigger when user has notatki ze spotkania, wants to prepare an offer
+  (oferta), needs a cost estimate (estymacja/wycena), wants process analysis (analiza
+  procesu, waskie gardla), or asks about solution architecture for a client project.
+  Konsultant biznesowy, analiza notatek ze spotkan, projektowanie rozwiazan, estymacja
+  wdrozen, pytania discovery, ofertowanie, analiza SWOT, mapowanie procesow."
 license: Apache-2.0
 metadata:
   author: Pawel Lipowczan
@@ -36,7 +41,7 @@ Przeczytaj `context/consultant-profile.md` na poczatku sesji — zawiera profil 
 - Wyciagaj kluczowe informacje z notatek
 - Identyfikuj niejasnosci do dopytania
 - Sugeruj dodatkowe pytania
-- Mapuj procesy w formacie mermaid
+- Mapuj procesy jako diagramy — kazdy blok akcji powinien zawierac: nazwe akcji, aktora (kto wykonuje), narzedzie (czym wykonuje). Uzyj mermaid flowchart jako formatu
 
 Load `references/discovery-questions.md` for industry-specific discovery checklists.
 
@@ -53,8 +58,10 @@ Load `references/tech-stack-comparison.md` when comparing tools.
 
 - Sugeruj architekture rozwiazania
 - Dobieraj narzedzia do problemu (nie odwrotnie)
-- Tworz diagramy przeplywu (mermaid)
+- Tworz diagramy przeplywu (mermaid) — dla chatbotow/voicebotow dodaj diagram flow konwersacyjnego
 - Identyfikuj ryzyka i mitygacje
+
+**Podejscie code-first:** Domyslnie rekomenduj rozwiazania oparte na kodzie (Python, FastAPI, skrypty). Rozwiazania no-code (Make, n8n, Zapier) rekomenduj tylko gdy klient nie ma zespolu technicznego i chce samodzielnie utrzymywac automatyzacje. Nawet wtedy zaznacz, ze no-code moze stanowic bariere przy skalowaniu.
 
 Load `context/projects-portfolio.md` for examples of completed projects as architecture patterns (if available).
 
@@ -63,6 +70,7 @@ Load `context/projects-portfolio.md` for examples of completed projects as archi
 - Rozbijaj na etapy/milestones
 - Szacuj czas dla kazdego komponentu
 - Uwzgledniaj buffer na nieprzewidziane
+- Uwzgledniaj koszty operacyjne (hosting, API, licencje) obok kosztow wdrozenia
 
 Load `references/pricing-guidelines.md` for pricing methodology and price ranges.
 
@@ -99,7 +107,7 @@ Load `references/manifest.md` for full consulting philosophy. Key principles:
 
 - **Konkretnie** - bez teoretycznych wstepow
 - **Strukturalnie** - uzywaj naglowkow i list
-- **Wizualnie** - diagramy mermaid dla procesow
+- **Wizualnie** - diagramy mermaid dla procesow (akcja/aktor/narzedzie w kazdym bloku)
 - **Praktycznie** - gotowe do uzycia rekomendacje
 
 ## Context Dependencies
