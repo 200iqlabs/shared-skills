@@ -26,12 +26,41 @@ Lightweight CLI scripts (bash/python) for external API integrations (ClickUp, Re
 ### OpenSpec (`openspec/`)
 Project specification used with the OpenSpec workflow skills (opsx:*) for structured change management.
 
+### Context Layer (`context/`) — PLANNED
+
+User-specific data lives in `context/`, separate from domain knowledge in skill `references/`. This enables clean distribution: fork/install → run environment-setup skill → ready to use.
+
+**Architecture:**
+- `context/templates/` — tracked in git, distributed with repo. Template files with `[DO UZUPELNIENIA]` placeholders
+- `context/*.md` — gitignored. Created by users (manually or via environment-setup skill)
+- `references/` — domain knowledge only (methodologies, frameworks, checklists). Stays in each skill
+
+**Context types:**
+| File | Used by | Content |
+|------|---------|---------|
+| `company.md` | legal, tax-advisor, cfo | Entity details, legal structure, team |
+| `consultant-profile.md` | business-consultant | Consulting philosophy, experience, approach |
+| `projects-portfolio.md` | business-consultant | Past projects, case studies, architecture patterns |
+| `author-profile.md` | linkedin-content | Author persona, audience, example posts |
+| `finances.md` | cfo | Budget, goals, financial structure |
+| `legal-entities.md` | legal, tax-advisor | Entity details, relationships, document backlog |
+
+**Skill convention:** Each skill that uses context files MUST have a `## Context Dependencies` section listing required/recommended files and a warning message for missing files.
+
+**Status:** Architecture defined in `openspec/changes/context-layer-architecture/`. Not yet implemented.
+
 ## Key Conventions
 
 - Skills use progressive disclosure: metadata → body → references (load references only when needed)
 - Most agents are currently placeholders (Phase 0) — check for the "PLACEHOLDER" marker before assuming implementation exists
 - All skills are Apache 2.0 licensed
 - Language: many agent skills target Polish-speaking users (tax, legal, business consulting contexts)
+
+## Setup Workflow (for users)
+
+1. **Fork or plugin install** — `git clone`/`git submodule add` or `/plugin marketplace add 200iqlabs/shared-skills`
+2. **Run environment-setup skill** — guides through creating context files step-by-step
+3. **Ready to use** — skills automatically load domain knowledge + user context
 
 ## Creating or Modifying Skills — MANDATORY workflow
 
