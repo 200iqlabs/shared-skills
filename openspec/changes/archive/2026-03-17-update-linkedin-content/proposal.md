@@ -7,9 +7,12 @@ The linkedin-content skill has already passed eval (Agent Skills 2.0, commit f22
 ## What Changes
 
 - Remove hardcoded author identity from SKILL.md, reference `context/author-profile.md`
+- Remove hardcoded hashtag lists (both standard and thematic) — load from context
+- Remove hardcoded domain references ("automatyzacja", "AI", "no-code") — skill becomes domain-agnostic
 - Move `references/example-posts.md` content to `context/templates/author-profile.template.md`
 - Add `## Context Dependencies` section to SKILL.md
-- Add graceful fallback for missing context files
+- Add two-tier graceful degradation: (1) notify about missing context + suggest environment-setup, (2) generic fallback mode if user proceeds without context
+- Handle partial context: use filled fields, treat `[DO UZUPELNIENIA]` placeholders as missing
 - Keep `references/writing-style.md` in place (domain knowledge)
 
 ## Capabilities
