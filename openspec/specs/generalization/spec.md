@@ -67,7 +67,21 @@ The SKILL.md SHALL contain a `## Context Dependencies` section that declares whi
 
 The references/ directory SHALL retain all universally applicable domain knowledge files that are not user-specific.
 
-#### Scenario: Domain knowledge files are preserved
+#### Scenario: Domain knowledge files are preserved (business-consultant)
 
 - **WHEN** listing files in `skills/business-consultant/references/`
 - **THEN** the following files are present: `discovery-questions.md`, `pricing-guidelines.md`, `tech-stack-comparison.md`, `manifest.md` (methodology only)
+
+#### Scenario: Domain knowledge files are preserved (cfo)
+
+- **WHEN** listing files in `skills/cfo/references/`
+- **THEN** `financial-analysis-frameworks.md` and `saas-metrics.md` contain only generic frameworks and industry benchmarks, not company-specific data
+
+### Requirement: Boundary references use only public skills or generic advisors
+
+SKILL.md boundaries SHALL NOT reference skills that exist only in private repositories. All boundary redirections SHALL point to either public shared-skills agents or generic external advisor descriptions.
+
+#### Scenario: All boundary targets are resolvable
+
+- **WHEN** checking each boundary redirection in a skill's Boundaries section
+- **THEN** every referenced skill exists in the skills/ directory, or the redirection uses generic language (e.g., "external advisor") instead of a private skill name
