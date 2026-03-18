@@ -28,7 +28,7 @@ Skopiuj odpowiedni prompt, wklej jako pierwszą wiadomość w nowej sesji.
 | 3 | coach-the-five | ⏭️ Pominięty | Przeniesiony do private-skills |
 | 4 | legal | ⏳ Pending | OpenSpec change: eval-legal |
 | 5 | business-consultant | ✅ Done | context migration + eval, 1 iteration |
-| 6 | cfo | ⏳ Pending | OpenSpec change: eval-cfo |
+| 6 | cfo | ✅ Done | context standardization + eval, 1 iteration (re-run for methodology fix) |
 
 ---
 

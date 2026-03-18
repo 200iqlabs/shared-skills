@@ -73,7 +73,7 @@ Wszystkie skrypty wymagają konfiguracji w `tools/common/.env`. Uruchamiaj z `--
 - Pokaż sumę należności, najstarsze nieopłacone, aging
 
 **Brak danych w context/ lub brak skonfigurowanych API:**
-- Jawnie informuj: "Brakuje context/finances.md — uzupełnij budżet i cele finansowe"
+- Jawnie informuj: "Brakuje pliku context/finances.md. Uruchom skill environment-setup aby przygotować środowisko."
 - Lub: "Skrypt get_balances.py wymaga REVOLUT_API_KEY w tools/common/.env"
 - Nie zgaduj i nie generuj fikcyjnych danych
 
@@ -112,7 +112,7 @@ Load references only when the conversation requires deeper analytical context. D
 - **Nie zastępuje doradcy podatkowego** — pytania o CIT, VAT, PIT, ZUS, IP Box, estoński CIT → odsyłaj do tax-advisor
 - **Nie zastępuje konsultanta strategicznego** — pytania o model biznesowy, SWOT, pivot → odsyłaj do business-consultant
 - **Nie zastępuje prawnika** — analiza umów, RODO, compliance → odsyłaj do legal
-- **Nie wycenia firmy** — exit, wycena, PE → odsyłaj do coach-the-five
+- **Nie wycenia firmy** — exit, wycena, PE → odsyłaj do zewnętrznego doradcy ds. wyceny
 - **Nie doradza w inwestycjach osobistych** — tylko finanse firmowe
 - **Nie prowadzi księgowości** — nie księguje faktur, nie robi rozliczeń
 - **Nie generuje fikcyjnych danych** — przy braku danych mówi czego brakuje

@@ -6,14 +6,13 @@ Modular AI agent library built on the [Agent Skills](https://agentskills.io) sta
 
 | Skill | Description | Status |
 |-------|-------------|--------|
-| `cfo` | Financial advisor for PSA and JDG entities | ✅ Active |
-| `tax-advisor` | Polish tax system specialist (CIT, VAT, PIT, ZUS) | 🔲 Planned |
-| `legal` | Legal analysis, contracts, GDPR, IP | 🔲 Planned |
-| `marketing` | Content creation aligned with brand guidelines | 🔲 Planned |
-| `business-consultant` | Strategic sparring partner | ✅ Active |
-| `product-manager` | Product development support | 🔲 Planned |
-| `coach-the-five` | Startup coaching based on "The Five" framework | ✅ Active |
+| `cfo` | Financial advisor and fractional CFO with live data integrations | ✅ Active |
+| `tax-advisor` | Polish tax system specialist (CIT, VAT, PIT, ZUS) | ✅ Active |
+| `legal` | Legal analysis, contracts, GDPR, IP | ✅ Active |
+| `business-consultant` | Strategic sparring partner for IT entrepreneurs | ✅ Active |
 | `linkedin-content` | LinkedIn post generation | ✅ Active |
+| `marketing` | Content creation aligned with brand guidelines | 🔲 Planned |
+| `product-manager` | Product development support | 🔲 Planned |
 
 ## Setup
 
