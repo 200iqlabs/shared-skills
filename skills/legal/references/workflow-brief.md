@@ -1,7 +1,16 @@
 # Workflow: Brief dla prawnika (/brief)
 
 ## Kiedy używać
-Użytkownik potrzebuje przygotować strukturalny brief do przekazania prawnikowi. Generuj TYLKO na żądanie — nie proponuj briefa domyślnie.
+Użytkownik potrzebuje przygotować strukturalny brief do przekazania prawnikowi. Proponuj brief po `/analiza` gdy są punkty 🔴 lub 🟡 — ale generuj TYLKO na żądanie lub po potwierdzeniu użytkownika.
+
+## Zbieranie danych przed briefem
+Przed wygenerowaniem briefa zbierz niezbędne informacje:
+1. Przeczytaj `context/legal-entities.md` i `context/company.md`
+2. Jeśli brakuje kluczowych danych (forma prawna, strony sporu, dokumenty) — zapytaj użytkownika
+3. Dopiero gdy masz wystarczający kontekst — generuj brief
+
+## Format wyjściowy
+Zapisz brief jako **osobny plik .md** (np. `brief-wyjscie-wspolnika.md`). Brief to dokument udostępniany prawnikowi — musi być "czysty" (bez sygnalizacji kolorami 🟢/🟡/🔴, bez emoji). Oznaczenia ryzyka i uwagi dla użytkownika podaj w odpowiedzi konwersacyjnej.
 
 ## Struktura briefa
 
@@ -11,7 +20,7 @@ Generuj w profesjonalnym języku prawniczym:
 BRIEF DLA PRAWNIKA
 
 Data przygotowania: [data]
-Przygotował: Paweł Lipowczan
+Przygotował: [DO UZUPEŁNIENIA: imię i nazwisko]
 Sprawa: [krótki, opisowy tytuł]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -51,7 +60,7 @@ Wskazanie co w nich jest istotne.]
 
 5. PILNOŚĆ
 
-[🟢/🟡/🔴] [Uzasadnienie poziomu pilności]
+[NISKA/ŚREDNIA/WYSOKA] [Uzasadnienie poziomu pilności]
 
 Termin: [jeśli jest konkretny deadline — wskaż go]
 ```
@@ -71,7 +80,7 @@ Zamiast: "Czy umowa jest OK?"
 Napisz: "Czy klauzula ograniczenia odpowiedzialności w § 8 ust. 2 jest skuteczna wobec roszczeń deliktowych kontrahenta?"
 
 Zamiast: "Czy mogę nabyć akcje?"
-Napisz: "Czy planowane nabycie dodatkowych akcji w 200IQ Labs PSA wymaga zgody pozostałych akcjonariuszy zgodnie z § [X] statutu, oraz czy istnieją ograniczenia wynikające z art. 300³⁶ KSH?"
+Napisz: "Czy planowane nabycie dodatkowych akcji w [nazwa PSA] wymaga zgody pozostałych akcjonariuszy zgodnie z § [X] statutu, oraz czy istnieją ograniczenia wynikające z art. 300³⁶ KSH?"
 
 Zamiast: "Czy RODO jest spełnione?"
-Napisz: "Czy polityka prywatności produktu 200IQ Labs spełnia wymogi art. 13 RODO w zakresie informacji o profilowaniu użytkowników i automatycznym podejmowaniu decyzji?"
+Napisz: "Czy polityka prywatności produktu [nazwa produktu] spełnia wymogi art. 13 RODO w zakresie informacji o profilowaniu użytkowników i automatycznym podejmowaniu decyzji?"

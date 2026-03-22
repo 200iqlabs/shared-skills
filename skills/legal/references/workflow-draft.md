@@ -3,6 +3,9 @@
 ## Kiedy używać
 Użytkownik chce wygenerować dokument prawny: umowę, regulamin, pismo, politykę, NDA, OWU, lub inny dokument formalny.
 
+## Format wyjściowy
+Zapisz draft jako **osobny plik .md** (np. `nda-draft.md`, `umowa-b2b-draft.md`). W odpowiedzi konwersacyjnej podaj krótkie podsumowanie: co zawiera draft, oznaczenia ryzyka per-sekcja, i co użytkownik powinien zweryfikować. Nie wklejaj treści dokumentu inline w odpowiedzi.
+
 ## Krok 1: Zbieranie wymagań
 
 Zapytaj o następujące informacje (w jednym pytaniu, nie rozbijaj na wiele tur):

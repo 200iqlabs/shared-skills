@@ -552,8 +552,9 @@ shared-skills/
 │   ├── legal/
 │   │   ├── SKILL.md
 │   │   └── references/
-│   │       ├── contract-analysis-checklist.md
-│   │       └── gdpr-ai-products.md
+│   │       ├── legal-scope.md
+│   │       ├── workflow-draft.md
+│   │       └── workflow-brief.md
 │   ├── marketing/
 │   │   ├── SKILL.md
 │   │   ├── references/
