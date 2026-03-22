@@ -26,7 +26,7 @@ Skopiuj odpowiedni prompt, wklej jako pierwszą wiadomość w nowej sesji.
 | 1 | linkedin-content | ✅ Done | commit f223474 |
 | 2 | tax-advisor | ✅ Done | commit 2eee495, 2 iteracje |
 | 3 | coach-the-five | ⏭️ Pominięty | Przeniesiony do private-skills |
-| 4 | legal | ✅ Done | context migration + eval, 2 iterations |
+| 4 | legal | ✅ Done | commit b4e6d82, context migration + eval, 2 iterations |
 | 5 | business-consultant | ✅ Done | context migration + eval, 1 iteration |
 | 6 | cfo | ✅ Done | context standardization + eval, 1 iteration (re-run for methodology fix) |
 

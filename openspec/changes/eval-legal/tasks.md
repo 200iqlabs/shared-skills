@@ -38,4 +38,4 @@
 ## 5. Finalize
 
 - [x] 5.1 Update `docs/EVAL-PLAYBOOK.md` — set legal skill status to "Done" with commit hash
-- [ ] 5.2 Commit all changes
+- [x] 5.2 Commit all changes
