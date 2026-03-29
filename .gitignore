@@ -16,6 +16,9 @@ Thumbs.db
 # Claude Code local settings
 .claude/settings.local.json
 
+# Firecrawl scrape cache
+.firecrawl/
+
 # Python
 __pycache__/
 *.pyc
