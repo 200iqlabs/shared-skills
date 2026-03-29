@@ -23,17 +23,17 @@
 
 ## 5. Run skill-creator evaluation
 
-- [ ] 5.1 Run `/skill-creator` on `skills/process-mapping/SKILL.md`
-- [ ] 5.2 Generate 5+ test prompts covering: meeting notes extraction, structured input, AS-IS only, AS-IS+TO-BE, Polish requests, Excalidraw output, Mermaid fallback
-- [ ] 5.3 Run with-skill and without-skill tests
-- [ ] 5.4 Grade and generate benchmark
-- [ ] 5.5 Apply fixes based on eval feedback
-- [ ] 5.6 Optimize description for triggering accuracy
+- [x] 5.1 Run `/skill-creator` on `skills/process-mapping/SKILL.md`
+- [x] 5.2 Generate 5+ test prompts covering: meeting notes extraction, structured input, AS-IS only, AS-IS+TO-BE, Polish requests, Excalidraw output, Mermaid fallback
+- [x] 5.3 Run with-skill and without-skill tests (2 iterations, 10 agents each)
+- [x] 5.4 Grade and generate benchmark (iter1: 100% vs 58%, iter2: 98% vs 36%)
+- [x] 5.5 Apply fixes based on eval feedback (scope narrowing, LTR layout, diamond decisions, ⚠️ for assumed, clean response)
+- [x] 5.6 Optimize description for triggering accuracy (20 trigger eval queries, manual optimization)
 
 ## 6. Verify
 
-- [ ] 6.1 Verify generated `.excalidraw` file opens correctly in Obsidian Excalidraw plugin
-- [ ] 6.2 Verify Mermaid fallback works and shows action/actor/tool
-- [ ] 6.3 Verify context-aware colors load from design system when present
-- [ ] 6.4 Verify business-consultant correctly references process-mapping skill
-- [ ] 6.5 Verify environment-setup includes process-mapping in audit
+- [x] 6.1 Verify generated `.excalidraw` file opens correctly in Obsidian Excalidraw plugin (user confirmed via eval viewer)
+- [x] 6.2 Verify Mermaid fallback works and shows action/actor/tool (eval 4 mermaid-helpdesk passed)
+- [ ] 6.3 Verify context-aware colors load from design system when present (not tested — no design system in test project)
+- [x] 6.4 Verify business-consultant correctly references process-mapping skill
+- [x] 6.5 Verify environment-setup includes process-mapping in audit
