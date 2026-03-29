@@ -1,26 +1,39 @@
-## 1. Create process-mapping skill
+## 1. Create process-mapping skill references
 
-- [ ] 1.1 Create `skills/process-mapping/SKILL.md` with description, instructions, block format spec, and Excalidraw/Mermaid rendering logic
-- [ ] 1.2 Research Excalidraw API via context7 — determine best approach for generating diagrams programmatically
-- [ ] 1.3 Create `skills/process-mapping/references/block-format.md` with examples of three-part blocks (action/actor/tool) in both Excalidraw and Mermaid formats
-- [ ] 1.4 Create `skills/process-mapping/references/excalidraw-api.md` with API usage patterns and authentication setup
+- [x] 1.1 Create `skills/process-mapping/references/json-schema.md` — adapted from coleam00's JSON schema and ooiyeefei's json-format, focused on process-mapping element types (blocks, arrows, decision diamonds as styled rectangles)
+- [x] 1.2 Create `skills/process-mapping/references/element-templates.md` — JSON templates for three-part blocks (action/actor/tool), arrows, start/end nodes, decision nodes
+- [x] 1.3 Create `skills/process-mapping/references/color-palette.md` — default semantic palette for process elements + instructions for reading project design system (vibe-coding artifacts)
+- [x] 1.4 Create `skills/process-mapping/references/arrows-and-layout.md` — arrow routing patterns adapted from ooiyeefei, process-specific layout (vertical flow, swim lanes)
+- [x] 1.5 Create `skills/process-mapping/references/validation.md` — validation checklist adapted from both skills, process-specific checks (all blocks have action/actor/tool, arrows connect correctly)
 
-## 2. Integrate with business-consultant
+## 2. Create SKILL.md
 
-- [ ] 2.1 Update `skills/business-consultant/SKILL.md` — replace inline mermaid instructions with reference to process-mapping skill
-- [ ] 2.2 Add note in discovery and analysis sections: "For process maps, invoke process-mapping skill"
+- [x] 2.1 Create `skills/process-mapping/SKILL.md` with description, instructions, block format spec, three-tier rendering (excalidraw → online API → mermaid), context-aware color loading, AS-IS/TO-BE support
+- [x] 2.2 Add Context Dependencies section referencing `context/process-mapping.md` and project design system files
 
-## 3. Run skill-creator evaluation
+## 3. Create context template and update environment-setup
 
-- [ ] 3.1 Run `/skill-creator` on `skills/process-mapping/SKILL.md`
-- [ ] 3.2 Generate 5+ test prompts covering: meeting notes extraction, structured input, AS-IS only, AS-IS+TO-BE, Polish requests
-- [ ] 3.3 Run with-skill and without-skill tests
-- [ ] 3.4 Grade and generate benchmark
-- [ ] 3.5 Apply fixes based on eval feedback
-- [ ] 3.6 Optimize description for triggering accuracy
+- [x] 3.1 Create `context/templates/process-mapping.md` — template with preferences: output format, default path, color overrides, API config
+- [x] 3.2 Update `skills/environment-setup/SKILL.md` — add `context/process-mapping.md` to audit table and creation flow
 
-## 4. Verify
+## 4. Integrate with business-consultant
 
-- [ ] 4.1 Verify Mermaid fallback works without Excalidraw configuration
-- [ ] 4.2 Verify block format shows action/actor/tool in both rendering modes
-- [ ] 4.3 Verify business-consultant correctly references process-mapping skill
+- [x] 4.1 Update `skills/business-consultant/SKILL.md` — replace inline mermaid instructions with reference to process-mapping skill
+- [x] 4.2 Add note in discovery and analysis sections: "For process maps, invoke process-mapping skill"
+
+## 5. Run skill-creator evaluation
+
+- [ ] 5.1 Run `/skill-creator` on `skills/process-mapping/SKILL.md`
+- [ ] 5.2 Generate 5+ test prompts covering: meeting notes extraction, structured input, AS-IS only, AS-IS+TO-BE, Polish requests, Excalidraw output, Mermaid fallback
+- [ ] 5.3 Run with-skill and without-skill tests
+- [ ] 5.4 Grade and generate benchmark
+- [ ] 5.5 Apply fixes based on eval feedback
+- [ ] 5.6 Optimize description for triggering accuracy
+
+## 6. Verify
+
+- [ ] 6.1 Verify generated `.excalidraw` file opens correctly in Obsidian Excalidraw plugin
+- [ ] 6.2 Verify Mermaid fallback works and shows action/actor/tool
+- [ ] 6.3 Verify context-aware colors load from design system when present
+- [ ] 6.4 Verify business-consultant correctly references process-mapping skill
+- [ ] 6.5 Verify environment-setup includes process-mapping in audit

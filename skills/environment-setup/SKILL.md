@@ -33,6 +33,7 @@ context/projects-portfolio.md
 context/author-profile.md
 context/finances.md
 context/legal-entities.md
+context/process-mapping.md
 ```
 
 Dla kazdego pliku okresl status:
@@ -49,6 +50,7 @@ Przedstaw wynik audytu w tabeli:
 | `context/author-profile.md` | [status] | linkedin-content |
 | `context/finances.md` | [status] | cfo |
 | `context/legal-entities.md` | [status] | legal, tax-advisor |
+| `context/process-mapping.md` | [status] | process-mapping |
 
 #### 2. Guided creation — tworzenie brakujacych plikow
 
@@ -67,6 +69,7 @@ Dla kazdego brakujacego pliku:
 4. `consultant-profile.md` — profil konsultanta (business-consultant)
 5. `projects-portfolio.md` — portfolio projektow (business-consultant)
 6. `author-profile.md` — profil autora LinkedIn (linkedin-content)
+7. `process-mapping.md` — konfiguracja mapowania procesow (process-mapping)
 
 **Wazne:** Uzytkownik moze pominac dowolny plik. Nie blokuj procesu.
 

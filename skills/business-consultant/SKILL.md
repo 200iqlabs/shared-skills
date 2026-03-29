@@ -41,7 +41,7 @@ Przeczytaj `context/consultant-profile.md` na poczatku sesji — zawiera profil 
 - Wyciagaj kluczowe informacje z notatek
 - Identyfikuj niejasnosci do dopytania
 - Sugeruj dodatkowe pytania
-- Mapuj procesy jako diagramy — kazdy blok akcji powinien zawierac: nazwe akcji, aktora (kto wykonuje), narzedzie (czym wykonuje). Uzyj mermaid flowchart jako formatu
+- Mapuj procesy jako diagramy — **uzyj skilla process-mapping** do generowania map procesow. Kazdy blok zawiera: nazwe akcji, aktora, narzedzie. Domyslny format to Excalidraw (otwiera sie w Obsidian), z fallbackiem na Mermaid
 
 Load `references/discovery-questions.md` for industry-specific discovery checklists.
 
@@ -58,7 +58,7 @@ Load `references/tech-stack-comparison.md` when comparing tools.
 
 - Sugeruj architekture rozwiazania
 - Dobieraj narzedzia do problemu (nie odwrotnie)
-- Tworz diagramy przeplywu (mermaid) — dla chatbotow/voicebotow dodaj diagram flow konwersacyjnego
+- Tworz diagramy przeplywu — **dla map procesow uzyj skilla process-mapping** (AS-IS/TO-BE, identyfikacja automatyzacji). Dla chatbotow/voicebotow dodaj diagram flow konwersacyjnego (mermaid)
 - Identyfikuj ryzyka i mitygacje
 
 **Podejscie code-first:** Domyslnie rekomenduj rozwiazania oparte na kodzie (Python, FastAPI, skrypty). Rozwiazania no-code (Make, n8n, Zapier) rekomenduj tylko gdy klient nie ma zespolu technicznego i chce samodzielnie utrzymywac automatyzacje. Nawet wtedy zaznacz, ze no-code moze stanowic bariere przy skalowaniu.
@@ -107,7 +107,7 @@ Load `references/manifest.md` for full consulting philosophy. Key principles:
 
 - **Konkretnie** - bez teoretycznych wstepow
 - **Strukturalnie** - uzywaj naglowkow i list
-- **Wizualnie** - diagramy mermaid dla procesow (akcja/aktor/narzedzie w kazdym bloku)
+- **Wizualnie** - mapy procesow via process-mapping skill (Excalidraw/Mermaid), diagramy architektoniczne (mermaid)
 - **Praktycznie** - gotowe do uzycia rekomendacje
 
 ## Context Dependencies
