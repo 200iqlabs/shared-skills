@@ -11,6 +11,9 @@ Modular AI agent library built on the [Agent Skills](https://agentskills.io) sta
 | `legal` | Legal analysis, contracts, GDPR, IP | ✅ Active |
 | `business-consultant` | Strategic sparring partner for IT entrepreneurs | ✅ Active |
 | `linkedin-content` | LinkedIn post generation | ✅ Active |
+| `process-mapping` | Process flow diagrams (Excalidraw/Mermaid) with action/actor/tool blocks | ✅ Active |
+| `vibe-coding` | AI-driven UI creation — design briefs, tokens, component generation | ✅ Active |
+| `environment-setup` | Guided setup wizard for context files | ✅ Active |
 | `marketing` | Content creation aligned with brand guidelines | 🔲 Planned |
 | `product-manager` | Product development support | 🔲 Planned |
 
@@ -62,6 +65,8 @@ Skills trigger automatically based on your questions — no special commands nee
 - *"Napisz post na LinkedIn o AI w biznesie"* → triggers `linkedin-content`
 - *"Jakie mam opcje optymalizacji podatkowej?"* → triggers `tax-advisor`
 - *"Oceń tę umowę z kontrahentem"* → triggers `legal`
+- *"Zmapuj proces obsługi reklamacji z notatek ze spotkania"* → triggers `process-mapping`
+- *"Chcę zbudować landing page — pokaż mi jak"* → triggers `vibe-coding`
 
 **Verify a skill is active:** run Claude Code with `--verbose` flag or toggle verbose mode with `Ctrl+O` during a session.
 
