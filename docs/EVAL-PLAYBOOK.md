@@ -29,6 +29,7 @@ Skopiuj odpowiedni prompt, wklej jako pierwszą wiadomość w nowej sesji.
 | 4 | legal | ✅ Done | commit b4e6d82, context migration + eval, 2 iterations |
 | 5 | business-consultant | ✅ Done | context migration + eval, 1 iteration |
 | 6 | cfo | ✅ Done | context standardization + eval, 1 iteration (re-run for methodology fix) |
+| 7 | process-mapping | ✅ Done | commit c1e797a, 2 iterations, 98% pass rate (+62pp vs baseline) |
 
 ---
 
@@ -76,10 +77,38 @@ Wzoruj się na procesie linkedin-content — pełna struktura workspace z timing
 
 ---
 
-## 3. cfo
+## 3. process-mapping
 
 ```
-Kontekst: Przeprowadzam audit skilli pod kątem zgodności z procesem skill-creator (Agent Skills 2.0). Skille linkedin-content, tax-advisor, legal i business-consultant już przeszły ten proces. Teraz kolej na cfo (ostatni).
+Kontekst: Nowy skill do generowania map procesów biznesowych (Excalidraw/Mermaid). Zbudowany od zera z referencjami z coleam00/excalidraw-diagram-skill i ooiyeefei/ccc. Docelowe środowisko: Obsidian z pluginem Excalidraw.
+
+Zadanie: Użyj /skill-creator żeby przepuścić nowy skill skills/process-mapping/SKILL.md przez pełny proces ewaluacji:
+
+1. Przeczytaj SKILL.md i wszystkie pliki referencyjne (references/)
+2. Zaproponuj 5+ realistycznych test prompts (po polsku, jak konsultant biznesowy po spotkaniu z klientem — transkrypcje, notatki, materiały od klienta)
+3. Po akceptacji — uruchom 10+ testów (5 with-skill + 5 without-skill baseline) równolegle
+4. Zrób grading (assertions sprawdzane skryptem) + benchmark.json
+5. Wygeneruj viewer z --static (Windows encoding issue) i otwórz w przeglądarce
+6. Po review — zastosuj poprawki i uruchom iteration 2
+7. Zrób description optimization ręcznie (run_loop.py nie działa na Windows) — 20 trigger eval queries (10 should-trigger, 10 should-not-trigger)
+8. Workspace: skills/process-mapping-workspace/iteration-1/ i iteration-2/
+
+Kluczowe uwagi z iteration 1 → 2:
+- Skill miał za szeroki scope (robił analizę biznesową) — zawęzić do samego rysowania
+- Bloki decyzyjne jako diamenty (rotated rectangle), nie styled rectangles
+- Orientacja LTR (left-to-right) zamiast top-to-bottom
+- AS-IS + TO-BE na jednym canvasie, nie w osobnych plikach
+- Dane domniemane oznaczać ⚠️ na diagramie, [assumed] w tekście
+- Mermaid inline w response, bez generowania plików .mmd
+- Czysty response bez legend kolorów i sekcji "pliki wyjściowe"
+```
+
+---
+
+## 4. cfo
+
+```
+Kontekst: Przeprowadzam audit skilli pod kątem zgodności z procesem skill-creator (Agent Skills 2.0). Skille linkedin-content, tax-advisor, legal i business-consultant już przeszły ten proces. Teraz kolej na cfo.
 
 Zadanie: Użyj /skill-creator żeby przepuścić istniejący skill skills/cfo/SKILL.md przez pełny proces ewaluacji:
 
