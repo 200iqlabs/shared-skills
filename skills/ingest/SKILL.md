@@ -1,34 +1,45 @@
 ---
 name: ingest
-description: "Process raw files from client inbox into structured knowledge. Use when
-  user wants to ingest a transcript, CSV, email, or any raw data into a client's
-  knowledge base. Triggers on '/ingest', 'process inbox', 'przetworz transkrypcje',
-  'wrzuc do bazy wiedzy', 'przetwórz dane klienta'. Also triggers when user pastes
-  text with '/ingest CLIENT_NAME' prefix. Przetwarzanie danych klienta, transkrypcje
-  ze spotkan, import danych, wciaganie informacji do systemu."
+description: "Process raw files from client or project inbox into structured knowledge.
+  Use when user wants to ingest a transcript, CSV, email, or any raw data into a
+  client's or project's knowledge base. Triggers on '/ingest', 'process inbox',
+  'przetworz transkrypcje', 'wrzuc do bazy wiedzy', 'przetwórz dane klienta',
+  'przetwórz dane projektu'. Also triggers when user pastes text with '/ingest NAME'
+  prefix. Przetwarzanie danych klienta/projektu, transkrypcje ze spotkan, import
+  danych, wciaganie informacji do systemu."
 license: Apache-2.0
 ---
 
-# /ingest — Client Data Ingestion
+# /ingest — Data Ingestion
 
-Process raw files from a client's `inbox/` folder (or inline text) into structured
-knowledge files in the appropriate project's `data/` directory.
+Process raw files from a client's or project's `inbox/` folder (or inline text) into
+structured knowledge files in the appropriate `data/` directory.
 
 ## Invocation
 
 ```
-/ingest                          → scan inbox/ of all clients
-/ingest CLIENT_NAME              → scan only this client's inbox/
-/ingest CLIENT_NAME <text>       → process inline pasted text
+/ingest                          → scan inbox/ of all clients AND projects
+/ingest NAME                     → scan this client's or project's inbox/
+/ingest NAME <text>              → process inline pasted text
 ```
 
 ## Prerequisites
 
 Before processing, read these files in order:
-1. If no client specified: `context/plsoft/clients/_index.md` (find clients with inbox files)
+
+**For clients:**
+1. If no name specified: `context/plsoft/clients/_index.md` (find clients with inbox files)
 2. Client's `catalog.md` (understand existing knowledge files)
 3. Client's `client.md` (identify active projects)
 4. Active project's `project.md` (understand scope for routing)
+
+**For projects:**
+1. If no name specified: `context/plsoft/projects/_index.md` (find projects with inbox files)
+2. Project's `catalog.md` (understand existing knowledge files)
+3. Project's `project.md` (understand scope)
+
+**Name resolution:** When a name is specified, check `projects/` first, then `clients/`.
+If no match in either, report an error.
 
 ## Processing Flow
 
@@ -49,6 +60,9 @@ Before processing, read these files in order:
      - Relevant to multiple → update all
      - Ambiguous → ask user
    - **0 active projects** → ask user (may need new project or reactivation)
+
+**Project routing (flat):** PLSoft projects have no sub-projects. All ingested content
+routes directly to `PROJECT/data/`. Read `project.md` to understand scope.
 
 ### Step 3: Identify file type
 
@@ -83,6 +97,14 @@ CLIENT/archive/YYYY-MM-DD_inline-<detected-type>.md
 ```
 Example: `archive/2026-04-14_inline-meeting-notes.md`
 
+**Project file mode:**
+```bash
+mv "PROJECT/inbox/original-name.ext" "PROJECT/archive/YYYY-MM-DD_original-name.ext"
+```
+
+**Project inline mode:**
+Save to `PROJECT/archive/YYYY-MM-DD_inline-<detected-type>.md`
+
 ### Step 6: Generate ingest summary
 
 Create `PROJECT/data/ingest-YYYY-MM-DD.md`:
@@ -116,6 +138,20 @@ If multiple ingests happen on the same day, append a counter: `ingest-YYYY-MM-DD
 
 2. Update `clients/_index.md`:
    - Update `Last Activity` for the client
+   - Update `Inbox Status` (should now show 0 or fewer files)
+   - Add entry to `Recent Changes`
+   - Update `updated:` timestamp in frontmatter
+
+**For projects:**
+
+1. Update `PROJECT/catalog.md`:
+   - Add entries for new files created in `data/`
+   - Update dates/summaries for modified files
+   - Add archive entry
+   - Update `files:` count and `updated:` timestamp in frontmatter
+
+2. Update `projects/_index.md`:
+   - Update `Last Activity` for the project
    - Update `Inbox Status` (should now show 0 or fewer files)
    - Add entry to `Recent Changes`
    - Update `updated:` timestamp in frontmatter
