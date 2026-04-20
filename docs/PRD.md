@@ -5,6 +5,11 @@
 **Autor:** Paweł Lipowczan
 **Status:** DRAFT
 
+> **Rebrand note (2026-04-17):** Wszystkie wzmianki "Shorts Lab" w tym
+> dokumencie są historyczne. Po rebrandzie: firma = **200IQ LABS** (PSA),
+> produkt = **Qamera AI** (qamera.ai). Treść PRD pozostaje bez zmian dla
+> zachowania kontekstu historycznego.
+
 **Changelog:**
 - v1.3: Renamed repos (shared-skills, agentic-ai-system, agentic-ai-private), GitHub org 200iqlabs
 - v1.2: Alignment z Agent Skills spec (agentskills.io), skill-creator jako narzędzie budowy agentów, plugin marketplace jako kanał dystrybucji
