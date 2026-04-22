@@ -18,36 +18,91 @@ structured knowledge files in the appropriate `data/` directory.
 ## Invocation
 
 ```
-/ingest                          → scan inbox/ of all clients AND projects
+/ingest                          → scan inbox/ of all declared client AND project folders
 /ingest NAME                     → scan this client's or project's inbox/
 /ingest NAME <text>              → process inline pasted text
 ```
 
+## Context Paths contract
+
+This skill is project-agnostic. It resolves folder locations from a `## Context Paths`
+section in the current project's root `CLAUDE.md`. The section declares scope types
+as keys and one or more repo-relative folder paths as values, in a markdown nested list.
+
+**Expected format:**
+
+```markdown
+## Context Paths
+
+clients:
+  - context/<org>/clients
+projects:
+  - context/<org>/projects
+```
+
+**Scope types consumed by this skill:** `clients`, `projects`. Other scope types
+(`customers`, `prospects`, `partners`, etc.) are ignored silently — they may be
+consumed by other skills.
+
+**Multi-path behavior:** a scope type MAY list multiple paths. When resolving a
+name or scanning inboxes, the skill processes **all** matching folders across
+**all** declared paths. No disambiguation prompt: parallel ingest across matches
+is the accepted behavior.
+
+**Missing section — halt with actionable error:** if `CLAUDE.md` does not contain
+a `## Context Paths` section, stop before any file operation and print:
+
+> `/ingest` requires a `## Context Paths` section in the project's `CLAUDE.md`.
+> Add a section like this, then retry:
+>
+> ```markdown
+> ## Context Paths
+>
+> clients:
+>   - context/<org>/clients
+> projects:
+>   - context/<org>/projects
+> ```
+
+**Empty section — no-op, not an error:** if the section exists but declares no
+scope types (or all lists are empty), report "no folders configured" and exit
+cleanly.
+
 ## Prerequisites
 
-Before processing, read these files in order:
+Before processing, resolve paths from `## Context Paths` in the project `CLAUDE.md`.
+Let `<clients_paths>` and `<projects_paths>` be the lists of declared folders for
+those scope types (each may be empty or contain multiple entries).
+
+Then read files in order:
 
 **For clients:**
-1. If no name specified: `context/plsoft/clients/_index.md` (find clients with inbox files)
+1. If no name specified: each `<clients_path>/_index.md` across all declared client paths (find clients with inbox files)
 2. Client's `catalog.md` (understand existing knowledge files)
 3. Client's `client.md` (identify active projects)
 4. Active project's `project.md` (understand scope for routing)
 
 **For projects:**
-1. If no name specified: `context/plsoft/projects/_index.md` (find projects with inbox files)
+1. If no name specified: each `<projects_path>/_index.md` across all declared project paths (find projects with inbox files)
 2. Project's `catalog.md` (understand existing knowledge files)
 3. Project's `project.md` (understand scope)
 
-**Name resolution:** When a name is specified, check `projects/` first, then `clients/`.
-If no match in either, report an error.
+**Name resolution:** when a `NAME` is specified, search every declared path.
+Check `<projects_paths>` first, then `<clients_paths>`. If `NAME` matches in
+multiple paths (within or across scope types), process **all** matches in
+parallel. If no match in any declared path, report a name-not-found error
+listing the paths that were searched.
 
 ## Processing Flow
 
 ### Step 1: Identify inputs
 
-**File mode:** Scan `CLIENT/inbox/` for files. If no files found, report and stop.
+**File mode:** for each matched folder, scan `<matched_folder>/inbox/` for files.
+If no files found in any match, report and stop.
 
-**Inline mode:** User pasted text after the command. Treat as virtual file.
+**Inline mode:** user pasted text after the command. Treat as virtual file and
+apply to every matched folder (normally there is only one match when text is
+pasted inline).
 
 ### Step 2: Route to project
 
@@ -61,8 +116,9 @@ If no match in either, report an error.
      - Ambiguous → ask user
    - **0 active projects** → ask user (may need new project or reactivation)
 
-**Project routing (flat):** PLSoft projects have no sub-projects. All ingested content
-routes directly to `PROJECT/data/`. Read `project.md` to understand scope.
+**Project routing (flat):** projects consumed by this skill have no sub-projects.
+All ingested content routes directly to `<matched_folder>/data/`. Read
+`project.md` to understand scope.
 
 ### Step 3: Identify file type
 
@@ -85,29 +141,25 @@ routes directly to `PROJECT/data/`. Read `project.md` to understand scope.
 
 ### Step 5: Archive raw source
 
+Let `<matched_folder>` be the client or project folder resolved in Step 1.
+
 **File mode:**
 ```bash
-mv "CLIENT/inbox/original-name.ext" "CLIENT/archive/YYYY-MM-DD_original-name.ext"
+mv "<matched_folder>/inbox/original-name.ext" "<matched_folder>/archive/YYYY-MM-DD_original-name.ext"
 ```
 
 **Inline mode:**
 Save the raw pasted text to:
 ```
-CLIENT/archive/YYYY-MM-DD_inline-<detected-type>.md
+<matched_folder>/archive/YYYY-MM-DD_inline-<detected-type>.md
 ```
 Example: `archive/2026-04-14_inline-meeting-notes.md`
 
-**Project file mode:**
-```bash
-mv "PROJECT/inbox/original-name.ext" "PROJECT/archive/YYYY-MM-DD_original-name.ext"
-```
-
-**Project inline mode:**
-Save to `PROJECT/archive/YYYY-MM-DD_inline-<detected-type>.md`
+When multiple folders matched (parallel ingest), repeat the archive step per match.
 
 ### Step 6: Generate ingest summary
 
-Create `PROJECT/data/ingest-YYYY-MM-DD.md`:
+Create `<matched_folder>/data/ingest-YYYY-MM-DD.md`:
 
 ```markdown
 # Ingest Summary — YYYY-MM-DD
@@ -130,36 +182,27 @@ If multiple ingests happen on the same day, append a counter: `ingest-YYYY-MM-DD
 
 ### Step 7: Update indexes
 
-1. Update `CLIENT/catalog.md`:
+1. Update `<matched_folder>/catalog.md`:
    - Add entries for new files created in `data/`
    - Update dates/summaries for modified files
    - Add archive entry
    - Update `files:` count and `updated:` timestamp in frontmatter
 
-2. Update `clients/_index.md`:
-   - Update `Last Activity` for the client
+2. Update the `_index.md` of the **declared path** containing the matched folder
+   (i.e. `<clients_path>/_index.md` for a client, `<projects_path>/_index.md`
+   for a project):
+   - Update `Last Activity`
    - Update `Inbox Status` (should now show 0 or fewer files)
    - Add entry to `Recent Changes`
    - Update `updated:` timestamp in frontmatter
 
-**For projects:**
-
-1. Update `PROJECT/catalog.md`:
-   - Add entries for new files created in `data/`
-   - Update dates/summaries for modified files
-   - Add archive entry
-   - Update `files:` count and `updated:` timestamp in frontmatter
-
-2. Update `projects/_index.md`:
-   - Update `Last Activity` for the project
-   - Update `Inbox Status` (should now show 0 or fewer files)
-   - Add entry to `Recent Changes`
-   - Update `updated:` timestamp in frontmatter
+When a name matched in multiple declared paths, update the `_index.md` in each
+path that contained a match.
 
 ### Step 8: Report
 
 Display a summary to the user:
-- How many files were processed
+- How many files were processed (and in how many matched folders, if more than one)
 - Which knowledge files were updated or created
 - Where raw files were archived
 - Any issues or questions that need user input
