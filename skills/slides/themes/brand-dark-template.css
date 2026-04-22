@@ -1,0 +1,244 @@
+/* @theme brand-dark */
+/*
+ * OPTIONAL branded dark theme template.
+ *
+ * This file is a TEMPLATE shipped with the slides skill.
+ * `/slides:init` substitutes placeholders from the repo's brand reference
+ * (path declared in slides/config.yaml → brand_reference) and writes the
+ * result to `slides/themes/<name>.css` in the target repo.
+ *
+ * If the target repo has no brand reference, init SKIPS this template and
+ * the skill relies on Marp's built-in themes (default, gaia, uncover).
+ *
+ * Placeholders (substituted at generation time, NOT at render time):
+ *   {{THEME_NAME}}       → theme name declared in config (e.g., "brand-dark")
+ *   {{PRIMARY}}          → brand accent hex (e.g., #00ff9d)
+ *   {{PRIMARY_LIGHT}}    → accent lighter shade (e.g., gradient start)
+ *   {{PRIMARY_DARK}}     → accent darker shade (e.g., hover state)
+ *   {{SECONDARY}}        → secondary accent hex
+ *   {{BG_MAIN}}          → main slide background (e.g., very dark)
+ *   {{BG_CODE}}          → code block background
+ *   {{BG_CARD}}          → card/box background
+ *   {{BORDER}}           → subtle border color
+ *   {{TEXT}}             → body text color
+ *   {{TEXT_HEADING}}     → heading color (often pure white on dark bg)
+ *   {{TEXT_MUTED}}       → muted text (captions, footers)
+ *   {{FONT_SANS}}        → sans-serif font family (e.g., Inter)
+ *   {{FONT_MONO}}        → monospace font family (e.g., Fira Code)
+ *   {{FONT_IMPORT_URL}}  → Google Fonts @import URL for the chosen fonts
+ */
+
+@import url('{{FONT_IMPORT_URL}}');
+
+/* ---------- Base slide ---------- */
+
+section {
+  background-color: {{BG_MAIN}};
+  color: {{TEXT}};
+  font-family: '{{FONT_SANS}}', system-ui, -apple-system, sans-serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.5;
+  padding: 72px 96px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ---------- Typography ---------- */
+
+h1, h2, h3, h4, h5, h6 {
+  color: {{TEXT_HEADING}};
+  font-family: '{{FONT_SANS}}', system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 0.5em 0;
+}
+
+h1 {
+  font-size: 3.2em;
+  background: linear-gradient(135deg, {{PRIMARY_LIGHT}}, {{PRIMARY}}, {{SECONDARY}});
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+h2 { font-size: 2.2em; font-weight: 700; }
+h3 { font-size: 1.5em; font-weight: 600; color: {{PRIMARY}}; }
+h4 { font-size: 1.2em; font-weight: 600; color: {{PRIMARY}}; }
+
+p, li { margin: 0 0 0.6em 0; }
+
+strong { color: {{TEXT_HEADING}}; font-weight: 700; }
+em { color: {{PRIMARY}}; font-style: normal; font-weight: 500; }
+
+a {
+  color: {{PRIMARY}};
+  text-decoration: none;
+  border-bottom: 1px solid {{PRIMARY}}44;
+}
+a:hover { border-bottom-color: {{PRIMARY}}; }
+
+/* ---------- Lists ---------- */
+
+ul, ol { padding-left: 1.4em; margin: 0.6em 0; }
+ul li::marker { color: {{PRIMARY}}; }
+ol li::marker { color: {{PRIMARY}}; font-weight: 600; }
+
+/* ---------- Code ---------- */
+
+code {
+  font-family: '{{FONT_MONO}}', ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.9em;
+  background: {{BG_CODE}};
+  color: {{PRIMARY}};
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  border: 1px solid {{BORDER}};
+}
+
+pre {
+  background: {{BG_CODE}};
+  border: 1px solid {{PRIMARY}}33;
+  border-radius: 8px;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  font-size: 0.85em;
+}
+
+pre code { background: transparent; border: none; padding: 0; color: {{TEXT}}; }
+
+/* ---------- Blockquote ---------- */
+
+blockquote {
+  border-left: 4px solid {{PRIMARY}};
+  padding: 0.2em 1.2em;
+  margin: 1em 0;
+  font-style: italic;
+  color: {{TEXT}};
+}
+
+/* ---------- Tables ---------- */
+
+table { border-collapse: collapse; width: 100%; margin: 0.6em 0; font-size: 0.9em; }
+th, td { border-bottom: 1px solid {{BORDER}}; padding: 0.5em 0.8em; text-align: left; }
+th { color: {{PRIMARY}}; font-weight: 600; border-bottom-color: {{PRIMARY}}66; }
+
+/* ---------- Horizontal rule ---------- */
+
+hr { border: none; border-top: 1px solid {{BORDER}}; margin: 1.4em 0; }
+
+/* ---------- Header / Footer / Pagination ---------- */
+
+header, footer {
+  color: {{TEXT_MUTED}};
+  font-size: 0.5em;
+  font-family: '{{FONT_MONO}}', monospace;
+}
+footer { padding: 0.8em 1.5em; }
+section::after { color: {{TEXT_MUTED}}; font-family: '{{FONT_MONO}}', monospace; font-size: 0.5em; }
+
+/* ---------- Class: lead (title slide) ---------- */
+
+section.lead {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 96px;
+}
+section.lead h1 { font-size: 4em; margin-bottom: 0.3em; }
+section.lead h2, section.lead p {
+  color: {{TEXT}};
+  font-size: 1.1em;
+  font-weight: 400;
+  margin-top: 0;
+}
+
+/* ---------- Class: section (divider) ---------- */
+
+section.section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+section.section h1, section.section h2 { font-size: 3.6em; }
+
+/* ---------- Class: quote ---------- */
+
+section.quote {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 96px;
+}
+section.quote blockquote {
+  border-left: none;
+  font-size: 1.8em;
+  font-style: italic;
+  color: {{TEXT_HEADING}};
+  max-width: 80%;
+  padding: 0;
+  position: relative;
+}
+section.quote blockquote::before {
+  content: '"';
+  display: block;
+  font-size: 4em;
+  color: {{PRIMARY}};
+  line-height: 0.5;
+  margin-bottom: 0.2em;
+}
+section.quote > p:last-child {
+  margin-top: 1.5em;
+  color: {{PRIMARY}};
+  font-family: '{{FONT_MONO}}', monospace;
+  font-size: 0.8em;
+}
+
+/* ---------- Class: code ---------- */
+
+section.code pre { font-size: 1em; }
+
+/* ---------- Class: end (closing slide) ---------- */
+
+section.end {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+section.end h1 { font-size: 3.2em; }
+section.end strong { color: {{PRIMARY}}; font-size: 1.2em; }
+section.end a { border-bottom: none; font-family: '{{FONT_MONO}}', monospace; font-size: 0.9em; }
+
+/* ---------- Square format (LinkedIn carousel 1:1) ---------- */
+
+@media (aspect-ratio: 1/1) {
+  section { padding: 56px 64px; font-size: 30px; }
+  section.lead h1 { font-size: 3.2em; }
+  h1 { font-size: 2.4em; }
+  h2 { font-size: 1.8em; }
+}
+
+/* ---------- Data highlight (metric/KPI) ---------- */
+
+.metric {
+  font-family: '{{FONT_MONO}}', monospace;
+  font-weight: 600;
+  color: {{PRIMARY}};
+  font-size: 2.4em;
+  line-height: 1;
+}
+.metric-label {
+  color: {{TEXT_MUTED}};
+  font-size: 0.5em;
+  font-family: '{{FONT_SANS}}', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
