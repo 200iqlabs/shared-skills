@@ -157,30 +157,7 @@ Example: `archive/2026-04-14_inline-meeting-notes.md`
 
 When multiple folders matched (parallel ingest), repeat the archive step per match.
 
-### Step 6: Generate ingest summary
-
-Create `<matched_folder>/data/ingest-YYYY-MM-DD.md`:
-
-```markdown
-# Ingest Summary — YYYY-MM-DD
-
-## Source
-- [filename or "inline text"] ([type], [size/line count])
-
-## Actions taken
-### Updated files
-- filename.md — what was added/changed
-
-### Created files
-- filename.md — what it contains and why it was created
-
-## Archived to
-- archive/YYYY-MM-DD_filename.ext
-```
-
-If multiple ingests happen on the same day, append a counter: `ingest-YYYY-MM-DD-2.md`.
-
-### Step 7: Update indexes
+### Step 6: Update indexes
 
 1. Update `<matched_folder>/catalog.md`:
    - Add entries for new files created in `data/`
@@ -199,17 +176,21 @@ If multiple ingests happen on the same day, append a counter: `ingest-YYYY-MM-DD
 When a name matched in multiple declared paths, update the `_index.md` in each
 path that contained a match.
 
-### Step 8: Report
+### Step 7: Report
 
-Display a summary to the user:
+Display a summary to the user in chat (do NOT persist this summary to disk):
 - How many files were processed (and in how many matched folders, if more than one)
 - Which knowledge files were updated or created
 - Where raw files were archived
 - Any issues or questions that need user input
 
+The chat report is the only summary. Git diff / git log serve as the audit trail —
+no `ingest-*.md` or similar process-log file is written to the folder.
+
 ## What /ingest Does NOT Do
 
 - Does not generate PDFs, emails, agendas (user does this in conversation)
+- Does not write a per-run summary file to `data/` (or anywhere else) — the chat report in Step 7 is the only summary; git history is the audit trail
 - Does not modify `output/` — write-only folder for generated artifacts
 - Does not read `archive/` — only writes to it
 - Does not change project status — that's a user/agent decision in conversation
