@@ -17,8 +17,8 @@ from datetime import datetime, timedelta
 
 import requests
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "tools", "common"))
-from env import load_env
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "tools", "stripe"))
+from _common import load_env
 
 
 def get_invoices(api_key, date_from, date_to, status=None):

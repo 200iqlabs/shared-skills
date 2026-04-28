@@ -16,8 +16,8 @@ import sys
 
 import requests
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "tools", "common"))
-from env import load_env
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "tools", "stripe"))
+from _common import load_env
 
 
 def get_subscriptions(api_key, status="active", limit=100):
