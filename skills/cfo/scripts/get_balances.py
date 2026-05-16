@@ -16,8 +16,9 @@ import sys
 
 import requests
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "tools", "common"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "tools", "common"))
 from env import load_env
+from revolut import get_access_token, revolut_api_url
 
 
 def get_balances(api_url, api_key, currency=None, active_only=False):
@@ -43,12 +44,12 @@ def main():
     args = parser.parse_args()
 
     load_env()
-    api_key = os.environ.get("REVOLUT_API_KEY")
-    api_url = os.environ.get("REVOLUT_API_URL", "https://b2b.revolut.com/api/1.0")
-
-    if not api_key:
-        print(json.dumps({"error": "REVOLUT_API_KEY not set. Configure in tools/common/.env"}))
+    try:
+        api_key = get_access_token()
+    except Exception as e:
+        print(json.dumps({"error": f"Revolut auth error: {e}"}))
         sys.exit(1)
+    api_url = revolut_api_url()
 
     try:
         accounts = get_balances(api_url, api_key, args.currency, args.active_only)
