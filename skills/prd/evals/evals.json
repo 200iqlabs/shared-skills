@@ -1,0 +1,23 @@
+{
+  "skill_name": "prd",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "/prd MENTORMATCH\n\nMam gotowy input z Week 1 i Week 2 w pliku fixtures/mentormatch/prd-input.md oraz brand w fixtures/mentormatch/brand.md. Buduję w Track Tech (Claude Code + Next.js + Supabase + Vercel). Zrób mi prd.md pod 7-dniowe MVP. Zapisz do fixtures/mentormatch/prd.md.",
+      "expected_output": "Lean prd.md, dokładnie 8 sekcji (BEZ §9 Component Inventory, bo Track Tech), dokładnie 1 Core Flow w §3 z JTBD + user story + acceptance criteria, AI Build Summary w §1, §5 z Track Tech i konkretnymi wersjami, §6 min 5 rzeczy out of scope, §8 boolean DoD. Value proposition przepisany 1:1 z LP, nie reformułowany. Plik zapisany do fixtures/mentormatch/prd.md.",
+      "files": ["fixtures/mentormatch/prd-input.md", "fixtures/mentormatch/brand.md"]
+    },
+    {
+      "id": 1,
+      "prompt": "/prd KLASA\n\nInput z W1/W2 jest w fixtures/klasa/prd-input.md, brand w fixtures/klasa/brand.md. Spnij to w PRD pod moje MVP na 7 dni. Zapisz do fixtures/klasa/prd.md.",
+      "expected_output": "prd.md z 9 sekcjami — Track Builder wykryty z inputu (founder nietechniczny, Lovable), więc §9 Component Inventory OBECNA z płaską listą komponentów UI (Form/Modal/Display) zmapowaną do user story. §4 data model opisany jako tabele Supabase słownie (nie TypeScript). 1 Core Flow, §6 out of scope, §8 DoD. Plik zapisany do fixtures/klasa/prd.md.",
+      "files": ["fixtures/klasa/prd-input.md", "fixtures/klasa/brand.md"]
+    },
+    {
+      "id": 2,
+      "prompt": "/prd splitbill\n\nInput jest w fixtures/thin/prd-input.md. Zrób PRD.",
+      "expected_output": "Skill NIE generuje pełnego prd.md ze zmyślonymi W1/W2. Zamiast tego rozpoznaje, że prd-input.md jest pusty/szczątkowy i ZADAJE pytania o brakujące elementy (problem-solution fit, ICP, value proposition, monetization, track) — jedno-dwa naraz — zanim cokolwiek wygeneruje. Brak halucynacji ICP/metryk.",
+      "files": ["fixtures/thin/prd-input.md"]
+    }
+  ]
+}
