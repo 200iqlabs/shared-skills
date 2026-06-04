@@ -18,6 +18,12 @@
       "prompt": "/prd splitbill\n\nInput jest w fixtures/thin/prd-input.md. Zrób PRD.",
       "expected_output": "Skill NIE generuje pełnego prd.md ze zmyślonymi W1/W2. Zamiast tego rozpoznaje, że prd-input.md jest pusty/szczątkowy i ZADAJE pytania o brakujące elementy (problem-solution fit, ICP, value proposition, monetization, track) — jedno-dwa naraz — zanim cokolwiek wygeneruje. Brak halucynacji ICP/metryk.",
       "files": ["fixtures/thin/prd-input.md"]
+    },
+    {
+      "id": 3,
+      "prompt": "/prd MIKROBIOTA\n\nMój input z Week 2 jest rozbity na osobne pliki w fixtures/mikrobiota-split/: icp.md, positioning.md, gtm-plan.md, landing-brief.md. Nie mam osobnego brand.md. Zrób mi prd.md pod 7-dniowe MVP i zapisz do fixtures/mikrobiota-split/prd.md.",
+      "expected_output": "Skill czyta WSZYSTKIE cztery pliki (nie marudzi o brak prd-input.md ani brand.md), mapuje treść na sekcje: §1 z value proposition 1:1 z landing-brief/positioning + AI Build Summary, §2 ICP z icp.md, §3 jeden Core Flow z JTBD z positioning.md, §5 Track Tech (wykryty z uwagi foundera w landing-brief) z konkretnymi wersjami + Brand reference wyekstrahowany z sekcji Brand w landing-brief.md (HEX-y #0E7C66/#E8B04B, Source Sans 3, voice 'Masz kontrolę'). 8 sekcji (BEZ §9, bo Track Tech). §6 out of scope, §8 DoD. Plik zapisany do fixtures/mikrobiota-split/prd.md.",
+      "files": ["fixtures/mikrobiota-split/icp.md", "fixtures/mikrobiota-split/positioning.md", "fixtures/mikrobiota-split/gtm-plan.md", "fixtures/mikrobiota-split/landing-brief.md"]
     }
   ]
 }

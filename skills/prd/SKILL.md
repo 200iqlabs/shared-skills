@@ -3,9 +3,11 @@ name: prd
 description: >-
   Generuje 1-2 stronicowy, agent-ready PRD dla MVP budowanego w 7 dni (Faza 1
   playbooka PLSoft 7-Day MVP / AI Startup Builders Week 3). Bierze insighty z
-  Week 1 (Problem-Solution Fit) i Week 2 (GTM/ICP/Value Proposition + LP) z
-  prd-input.md + brand.md i sprowadza je do jednego dokumentu prd.md, który
-  agent (Claude Code lub Lovable/v0) rozumie i pod który generuje kod. Triggeruj
+  Week 1 (Problem-Solution Fit) i Week 2 (GTM/ICP/Value Proposition + LP) —
+  dostarczone w dowolnym układzie plików (jeden dokument, osobne icp/positioning/
+  gtm-plan/landing-brief, folder, notatki) plus brand — i sprowadza je do jednego
+  dokumentu prd.md, który agent (Claude Code lub Lovable/v0) rozumie i pod który
+  generuje kod. Triggeruj
   na komendę /prd ORAZ gdy founder-uczestnik programu chce zrobić PRD pod MVP,
   spisać scope na 7 dni, przerobić output W1/W2 na dokument dla agenta, albo
   pyta "jak napisać PRD dla mojego MVP", "spnij to w PRD", "scope na MVP".
@@ -42,22 +44,38 @@ do §6 Out of scope. Większość Twojej pracy w tym skillu to **odmawianie**, n
 Dlaczego: agent dostając PRD na 8 stron z trzema flow dryfuje w niuansach i po D7
 masz trzy half-baked ścieżki zamiast jednego działającego MVP na Demo Day.
 
-## Input contract (z Fazy 0 playbooka)
+## Input contract — liczy się informacja, nie pliki
 
-Zanim cokolwiek wygenerujesz, potrzebujesz dwóch plików z repo uczestnika:
+PRD powstaje z insightów Week 1 (Problem-Solution Fit) i Week 2 (GTM / ICP / Value
+Proposition / LP). **Nie ma znaczenia, w ilu plikach ani pod jakimi nazwami** founder
+je dostarczy — jeden skonsolidowany dokument, cztery osobne pliki z W2
+(`icp.md`, `positioning.md`, `gtm-plan.md`, `landing-brief.md`), cały folder repo,
+czy wklejone notatki. Founder wskazuje materiały; Ty czytasz to, co wskazał, i sprawdzasz,
+czy **treść** pokrywa poniższą checklistę — nie czy istnieje plik o konkretnej nazwie.
 
-| Plik | Zawiera | Skąd |
+**Czego PRD potrzebuje (input checklist):**
+
+| Informacja | Zasila sekcję | Zwykle pochodzi z |
 |---|---|---|
-| `prd-input.md` | Problem-Solution Fit (W1) + ICP + Value Proposition + monetization z Lean Canvas (W2) + link do opublikowanego LP (W2) | Faza 0 input lock |
-| `brand.md` | Konkretne HEX-y palety, font family, voice & tone | Skopiowane z LP Week 2 |
+| Problem-Solution Fit + kto jest zdesperowany | §1, §2 | W1 Discovery |
+| ICP + 1 persona (+ wnioski z social listeningu) | §2 | W2 ICP |
+| Value Proposition / positioning / JTBD / key messaging | §1, §3 | W2 positioning |
+| Model monetyzacji + zarys unit economics | §1 | W2 Lean Canvas / GTM |
+| Brief LP + link do opublikowanego LP (headline, sekcje, CTA) | §1 | W2 landing brief |
+| Brand: konkretne HEX-y, fonty, voice & tone | §5 | LP Week 2 |
 
-**Jeśli `prd-input.md` nie istnieje lub jest szczątkowy** → nie zgaduj i nie generuj
-od razu. Najpierw krótko podsumuj, czego brakuje (1-3 zdania), a potem **przedstaw
-userowi dwie ścieżki do wyboru**:
+Jedna pozycja rozbita na trzy pliki — w porządku. Jeden plik pokrywający kilka pozycji —
+też. **Przeczytaj wszystko, co founder wskazał, zanim ocenisz kompletność** — brak pliku
+o danej nazwie to nie to samo co brak informacji (może siedzieć w innym pliku).
 
-> **Ścieżka 1 — dostarczasz materiały:** wskazujesz ścieżkę do uzupełnionego
-> `prd-input.md` (albo inne pliki/notatki z W1/W2). Generuję PRD z nich; jeśli czegoś
-> nadal zabraknie, dopytam tylko o luki.
+**Jeśli materiały nie pokrywają checklisty** (nie ma ich w ogóle, są szczątkowe, albo
+brakuje krytycznej pozycji — mierzalny problem, 1 persona, value proposition, model
+przychodu) → nie zgaduj i nie generuj od razu. Najpierw krótko podsumuj, czego brakuje
+(1-3 zdania, wskaż której pozycji checklisty), a potem **przedstaw userowi dwie ścieżki
+do wyboru**:
+
+> **Ścieżka 1 — dostarczasz materiały:** wskazujesz dodatkowe pliki/notatki z W1/W2
+> (w dowolnym układzie). Generuję PRD z nich; jeśli czegoś nadal zabraknie, dopytam tylko o luki.
 >
 > **Ścieżka 2 — seria pytań:** przeprowadzam Cię przez brakujące elementy pytaniami.
 
@@ -76,14 +94,16 @@ zdania pomysłu — PRD wygląda kompletnie, ale jest generic i nie pasuje do ż
 zwalidowanego LP. Founder może świadomie zaakceptować luki; nie może ich dostać w pakiecie
 bez ostrzeżenia.
 
-**Jeśli brakuje tylko pojedynczych elementów** (np. jest problem, nie ma monetization),
-pomiń wybór ścieżek — od razu zadaj 1-2 precyzyjne pytania (z rekomendacją, jedno naraz).
+**Jeśli brakuje tylko pojedynczych pozycji checklisty** (np. jest problem, nie ma
+monetization), pomiń wybór ścieżek — od razu zadaj 1-2 precyzyjne pytania (z rekomendacją,
+jedno naraz).
 
 ## Jak prowadzisz rozmowę
 
-1. Przeczytaj `prd-input.md` i `brand.md`. Wyciągnij surowiec do każdej z 8 sekcji.
-2. Jeśli czegoś krytycznego brakuje (mierzalny problem, 1 persona, model przychodu,
-   pomysł na core action) → dopytaj, jedno pytanie naraz.
+1. Przeczytaj wszystkie wskazane materiały (jeden plik, wiele plików, folder, wklejone
+   notatki). Wyciągnij surowiec do każdej z 8 sekcji, mapując treść na input checklist.
+2. Jeśli któraś krytyczna pozycja checklisty nie jest pokryta (mierzalny problem, 1 persona,
+   model przychodu, pomysł na core action) → dopytaj, jedno pytanie naraz.
 3. Aktywnie **proponuj cięcia**: jak widzisz 3 features, powiedz wprost które 2 idą
    do Out of scope i dlaczego. Founder = klient, ale Twoja rola to dyscyplina scope'u.
 4. Wygeneruj `prd.md` w strukturze poniżej. Zapisz do repo uczestnika jako `prd.md`
@@ -169,11 +189,14 @@ pola, typy, relacje FK). Jeśli encji > 5 → prawie na pewno scope za szeroki, 
 Wymień **konkretne wersje** (Next.js 15, nie "latest" — "latest" sprawia, że agent
 łapie breaking changes). Track determinuje §4 i całą Fazę 4.
 
-**Brand reference (podsekcja §5, zawsze):** wklej do PRD esencję z `brand.md` —
+**Brand reference (podsekcja §5, zawsze):** wklej do PRD esencję informacji brandowych —
 konkretne HEX-y, font names, 1-2 zdania voice & tone i dla kogo ten styl jest
-(dopasowanie do ICP z §2). PRD ma być **samowystarczalny dla agenta**: w Fazie 4
-agent dostaje często sam `prd.md` + prompt, a bez brandu w dokumencie generuje
-generic UI, który nie pasuje do LP. Nie kopiuj całego `brand.md` — esencja, 5-8 linii.
+(dopasowanie do ICP z §2) — **niezależnie skąd przyszły** (osobny plik brandowy, sekcja
+w briefie LP, fragment notatek). PRD ma być **samowystarczalny dla agenta**: w Fazie 4
+agent dostaje często sam `prd.md` + prompt, a bez brandu w dokumencie generuje generic
+UI, który nie pasuje do LP. Nie kopiuj całej specyfikacji brandu — esencja, 5-8 linii.
+Jeśli brandu nie ma w żadnym materiale → to pozycja do dopytania (Open Question / pytanie
+do foundera), nie do zmyślenia.
 
 ### §6 — Out of scope (min. 5 rzeczy, które kuszą ale NIE wchodzą)
 
@@ -243,7 +266,8 @@ dekompozycji nie rób w tym skillu — to osobny krok playbooka §5.
 - ❌ Brak §6 Out of scope → scope creep w D4
 - ❌ Reformułowanie value proposition z LP zamiast 1:1 → drift od zwalidowanego copy
 - ❌ Stack "latest" zamiast wersji → breaking changes w trakcie buildu
-- ❌ Generowanie PRD z pustego `prd-input.md` (zgadywanie W1/W2) → generic MVP nie pasujący do LP
+- ❌ Generowanie PRD z pustych/szczątkowych materiałów (zgadywanie W1/W2) → generic MVP nie pasujący do LP
+- ❌ Upieranie się przy pliku o konkretnej nazwie zamiast czytania treści, którą founder dostarczył (1 plik czy 10 — bez znaczenia)
 - ❌ Data model na 10 encji → znak że scope §3 za szeroki, wróć i tnij
 
 ## Format odpowiedzi
