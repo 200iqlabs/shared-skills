@@ -79,9 +79,11 @@ Jesli audiencja nie jest zdefiniowana w kontekscie, zapytaj uzytkownika kto jest
 **Formatowanie LinkedIn:**
 - Bold miedzy **
 - Line breaks = nowy paragraf
-- Hashtagi na koncu (3-5 max). Uwaga: writing-style.md mowi "unikaj hashtagow" — to dotyczy hashtagow w tresci posta. Hashtagi na samym koncu posta to standard LinkedIn i sa OK.
+- Hashtagi na koncu (3-5 max). Zasada z writing-style.md dotyczy hashtagow w tresci posta; hashtagi na samym koncu to standard LinkedIn i sa OK.
 
-Load `references/writing-style.md` for detailed human-like writing style rules and word blacklist.
+Load writing style rules before generating content:
+1. If `context/brand/writing-style.md` exists in the repo — load it as the authoritative style source (anglicism whitelist, replacement table, epithet test, banned words).
+2. Otherwise fall back to `references/writing-style.md` (generic human-like writing rules).
 
 ### Hashtagi
 
@@ -94,9 +96,10 @@ Jesli kontekst nie zawiera hashtagow, zapytaj uzytkownika o jego preferowane has
 | File | When to load |
 |------|-------------|
 | `context/author-profile.md` | Session start — author identity, audience, example posts |
-| `references/writing-style.md` | When writing any post (human-like style rules, banned words) |
+| `context/brand/writing-style.md` | When writing any post — authoritative style source (if it exists) |
+| `references/writing-style.md` | When writing any post — generic fallback when the context file is missing |
 
-Load `context/author-profile.md` at session start for author identity and example posts. Load `references/writing-style.md` when generating content.
+Load `context/author-profile.md` at session start for author identity and example posts. When generating content, load `context/brand/writing-style.md` if present, otherwise `references/writing-style.md`.
 
 ### Uczenie sie ze wzorcowych postow
 
@@ -141,6 +144,7 @@ Styl odpowiedzi:
 | File | Required | Used for |
 |------|----------|----------|
 | `context/author-profile.md` | Yes | Profil autora, audiencja, hashtagi, przyklady dobrych postow |
+| `context/brand/writing-style.md` | No (recommended) | Autorytatywne zasady stylu (anglicyzmy, epitety, banlista). Brak pliku = fallback na `references/writing-style.md`, skill dziala dalej |
 
 ### Gdy brakuje kontekstu
 
