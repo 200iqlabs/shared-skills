@@ -4,6 +4,8 @@ Modular AI agent library built on the [Agent Skills](https://agentskills.io) sta
 
 ## Skills
 
+### Business advisory
+
 | Skill | Description | Status |
 |-------|-------------|--------|
 | `cfo` | Financial advisor and fractional CFO with live data integrations | ✅ Active |
@@ -16,6 +18,26 @@ Modular AI agent library built on the [Agent Skills](https://agentskills.io) sta
 | `environment-setup` | Guided setup wizard for context files | ✅ Active |
 | `marketing` | Content creation aligned with brand guidelines | 🔲 Planned |
 | `product-manager` | Product development support | 🔲 Planned |
+
+### Developer workflow
+
+Coding-agent skills for PR review, review loops, and OpenSpec `/goal` prep.
+
+| Skill | Description | Status |
+|-------|-------------|--------|
+| `review-fix` | Fetch PR review comments, fix valid issues, commit, push, reply on GitHub (`/review-fix [PR]`) | ✅ Active |
+| `review-loop` | Automated Claude↔Copilot review cycle on a PR until stable (`/review-loop <PR> <change>`) | ✅ Active |
+| `prepare-openspec-goal` | Formulate a transcript-checkable completion condition for `/goal` implementing an OpenSpec change | ✅ Active |
+
+## Commands
+
+Slash commands bundled with the plugin (`commands/`).
+
+| Command | Description |
+|---------|-------------|
+| `/decisions` | Surface open decisions one at a time, each with a recommendation, and wait for the answer (PL) |
+| `/explain-diff` | Walk through code changes (PR / branch vs main) one file at a time, in plain Polish |
+| `/explain-design` | Walk through an OpenSpec `design.md` topic by topic, one heading at a time (PL) |
 
 ## Setup
 
