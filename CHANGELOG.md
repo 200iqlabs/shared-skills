@@ -25,13 +25,18 @@
   provenance metadata — `author`, `homepage`, `repository`, `license` (Apache-2.0),
   `category` and `keywords` — so the licence is visible to anyone browsing the catalogue,
   not only to those who open the repository.
-  - **On Claude Code ≥ 2.1.193 the migration is automatic.** A `renames` map in
-    `marketplace.json` resolves the old name; the plugin loads as `✔ enabled`, shows a
-    one-time `Renamed to "ss"` notice, and Claude Code rewrites the `enabledPlugins` and
-    `pluginConfigs` keys in your settings for you. Nothing to do.
-  - **On older versions** the rename surfaces as `plugin-not-found`. Reinstall manually:
-    `claude plugin install ss@shared-skills`.
-  - If you hit `plugin-cache-miss`, the same single command fixes it.
+  - **On Claude Code ≥ 2.1.193 the rename resolves itself, but finish it with one
+    command.** A `renames` map in `marketplace.json` maps the old name to the new one, so
+    the plugin never reports `failed to load`; it shows a one-time `Renamed to "ss"` notice
+    and Claude Code rewrites the `enabledPlugins` key in your settings by itself. Measured
+    on a live GitHub-hosted marketplace, though, the *install record* was dropped in the
+    process — the plugin then stops appearing in `claude plugin list` even though the
+    settings key is correct. One command restores it:
+    ```bash
+    claude plugin marketplace update shared-skills
+    claude plugin install ss@shared-skills
+    ```
+  - **On older versions** the rename surfaces as `plugin-not-found`. Same fix.
   - **Command names change**, and old written references stop working:
     `/decisions` → `/ss:decisions`, `/explain-diff` → `/ss:explain-diff`,
     `/explain-design` → `/ss:explain-design`, and the whole slides namespace
