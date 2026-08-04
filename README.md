@@ -4,20 +4,23 @@ Modular AI agent library built on the [Agent Skills](https://agentskills.io) sta
 
 ## Skills
 
+Installed as a plugin, every skill and command carries the `ss:` prefix — it comes from
+the plugin's `name` field and keeps these skills apart from your repo-local ones.
+
 ### Business advisory
 
 | Skill | Description | Status |
 |-------|-------------|--------|
-| `cfo` | Financial advisor and fractional CFO with live data integrations | ✅ Active |
-| `tax-advisor` | Polish tax system specialist (CIT, VAT, PIT, ZUS) | ✅ Active |
-| `legal` | Legal analysis, contracts, GDPR, IP | ✅ Active |
-| `business-consultant` | Strategic sparring partner for IT entrepreneurs | ✅ Active |
-| `linkedin-content` | LinkedIn post generation | ✅ Active |
-| `process-mapping` | Process flow diagrams (Excalidraw/Mermaid) with action/actor/tool blocks | ✅ Active |
-| `vibe-coding` | AI-driven UI creation — design briefs, tokens, component generation | ✅ Active |
-| `environment-setup` | Guided setup wizard for context files | ✅ Active |
-| `marketing` | Content creation aligned with brand guidelines | 🔲 Planned |
-| `product-manager` | Product development support | 🔲 Planned |
+| `ss:cfo` | Financial advisor and fractional CFO with live data integrations | ✅ Active |
+| `ss:tax-advisor` | Polish tax system specialist (CIT, VAT, PIT, ZUS) | ✅ Active |
+| `ss:legal` | Legal analysis, contracts, GDPR, IP | ✅ Active |
+| `ss:business-consultant` | Strategic sparring partner for IT entrepreneurs | ✅ Active |
+| `ss:linkedin-content` | LinkedIn post generation | ✅ Active |
+| `ss:process-mapping` | Process flow diagrams (Excalidraw/Mermaid) with action/actor/tool blocks | ✅ Active |
+| `ss:vibe-coding` | AI-driven UI creation — design briefs, tokens, component generation | ✅ Active |
+| `ss:environment-setup` | Guided setup wizard for context files | ✅ Active |
+| `ss:marketing` | Content creation aligned with brand guidelines | 🔲 Planned |
+| `ss:product-manager` | Product development support | 🔲 Planned |
 
 ### Developer workflow
 
@@ -25,9 +28,9 @@ Coding-agent skills for PR review, review loops, and OpenSpec `/goal` prep.
 
 | Skill | Description | Status |
 |-------|-------------|--------|
-| `review-fix` | Fetch PR review comments, fix valid issues, commit, push, reply on GitHub (`/review-fix [PR]`) | ✅ Active |
-| `review-loop` | Automated Claude↔Copilot review cycle on a PR until stable (`/review-loop <PR> <change>`) | ✅ Active |
-| `prepare-openspec-goal` | Formulate a transcript-checkable completion condition for `/goal` implementing an OpenSpec change | ✅ Active |
+| `ss:review-fix` | Fetch PR review comments, fix valid issues, commit, push, reply on GitHub (`/ss:review-fix [PR]`) | ✅ Active |
+| `ss:review-loop` | Automated Claude↔Copilot review cycle on a PR until stable (`/ss:review-loop <PR> <change>`) | ✅ Active |
+| `ss:prepare-openspec-goal` | Formulate a transcript-checkable completion condition for `/goal` implementing an OpenSpec change | ✅ Active |
 
 ## Commands
 
@@ -35,9 +38,16 @@ Slash commands bundled with the plugin (`commands/`).
 
 | Command | Description |
 |---------|-------------|
-| `/decisions` | Surface open decisions one at a time, each with a recommendation, and wait for the answer (PL) |
-| `/explain-diff` | Walk through code changes (PR / branch vs main) one file at a time, in plain Polish |
-| `/explain-design` | Walk through an OpenSpec `design.md` topic by topic, one heading at a time (PL) |
+| `/ss:decisions` | Surface open decisions one at a time, each with a recommendation, and wait for the answer (PL) |
+| `/ss:explain-diff` | Walk through code changes (PR / branch vs main) one file at a time, in plain Polish |
+| `/ss:explain-design` | Walk through an OpenSpec `design.md` topic by topic, one heading at a time (PL) |
+| `/ss:slides:init` | Bootstrap the `slides/` workspace — structure, theme CSS, `config.yaml`, `project.md`. Idempotent |
+| `/ss:slides:explore` | Brainstorm a deck concept before committing to a workspace; ideas persist across sessions |
+| `/ss:slides:new` | Create an active workspace at `slides/workspace/<slug>/` — `brief.md`, empty `draft.md`, `sources/` |
+| `/ss:slides:draft` | Generate or iterate `draft.md` from brief + sources, as plain markdown (no Marp syntax) |
+| `/ss:slides:build` | `draft.md` → `slides.md` with Marp frontmatter, rendered to PDF (optionally HTML) |
+| `/ss:slides:tweak` | Adjust `slides.md` layout (split slides, `_class`, reorder) without touching `draft.md` |
+| `/ss:slides:archive` | Move a completed workspace to `slides/archive/<slug>/`; the PDF in `slides/output/` stays |
 
 ## Setup
 
@@ -47,18 +57,21 @@ Slash commands bundled with the plugin (`commands/`).
 
 1. Add the marketplace:
 ```bash
-/plugin marketplace add 200iqlabs/shared-skills
+claude plugin marketplace add 200iqlabs/shared-skills
 ```
 
 2. Install the plugin:
 ```bash
-/plugin install 200iqlabs-agent-skills
+claude plugin install ss@shared-skills
 ```
 
 3. Verify installation:
 ```bash
-/plugin list
+claude plugin list
 ```
+
+> Already installed under the old name `200iqlabs-agent-skills`? Nothing to do on
+> Claude Code ≥ 2.1.193 — the rename migrates itself. See [CHANGELOG.md](CHANGELOG.md).
 
 #### Git Submodule (for repo integration)
 ```bash

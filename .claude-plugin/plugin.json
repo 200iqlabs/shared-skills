@@ -1,8 +1,21 @@
 {
-  "name": "200iqlabs-agent-skills",
+  "name": "ss",
+  "displayName": "200IQ LABS Agent Skills",
   "description": "Business advisor AI agent skills for founders and small companies",
   "author": {
     "name": "200IQ LABS"
   },
-  "license": "Apache-2.0"
+  "homepage": "https://github.com/200iqlabs/shared-skills",
+  "repository": "https://github.com/200iqlabs/shared-skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "business",
+    "advisor",
+    "cfo",
+    "legal",
+    "marketing",
+    "product-management",
+    "startup",
+    "founders"
+  ]
 }

@@ -1,13 +1,34 @@
 {
   "name": "shared-skills",
+  "description": "Open-source business advisor agent skills published by 200IQ LABS",
   "owner": {
     "name": "200iqlabs"
   },
+  "renames": {
+    "200iqlabs-agent-skills": "ss"
+  },
   "plugins": [
     {
-      "name": "200iqlabs-agent-skills",
+      "name": "ss",
       "source": "./",
-      "description": "Business advisor AI agent skills for founders and small companies"
+      "description": "Business advisor AI agent skills for founders and small companies",
+      "author": {
+        "name": "200IQ LABS"
+      },
+      "homepage": "https://github.com/200iqlabs/shared-skills",
+      "repository": "https://github.com/200iqlabs/shared-skills",
+      "license": "Apache-2.0",
+      "category": "productivity",
+      "keywords": [
+        "business",
+        "advisor",
+        "cfo",
+        "legal",
+        "marketing",
+        "product-management",
+        "startup",
+        "founders"
+      ]
     }
   ]
 }
