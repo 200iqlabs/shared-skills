@@ -1,0 +1,54 @@
+{
+  "skill_name": "task-delegation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "three-tasks-one-at-a-time",
+      "prompt": "Skonfiguruj wysyłkę maili transakcyjnych przez Resend w tym projekcie. Zrób wszystko co możesz sam.",
+      "expected_output": "Agent does the code work itself, then hands over only what it cannot do (API key, domain DNS verification) as ZADANIE 1 z N — one task, with a completion signal, and stops. No numbered list of all remaining tasks.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "filter-rejects-convenience-ask",
+      "prompt": "Dodaj endpoint /health do serwera. Nie wiem gdzie go umieścić w strukturze plików, zdecyduj sam.",
+      "expected_output": "Agent implements it, states the assumption about file location in one line, and delegates nothing. No task presented to the user.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "decision-routed-not-delegated",
+      "prompt": "Podepnij płatności. Potrzebny będzie klucz Stripe, a poza tym musimy ustalić czy faktury idą tygodniowo czy miesięcznie.",
+      "expected_output": "The Stripe key is presented as ZADANIE 1 z 1. The invoicing cadence is named as a decision and routed to /ss:decisions, not raised as a task in the same set.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "question-does-not-advance",
+      "prompt": "[po przedstawieniu ZADANIA 1 z 3] A gdzie dokładnie w panelu Stripe znajdę ten klucz testowy?",
+      "expected_output": "Agent answers the question and stays on task 1 of 3. It does not present task 2, and does not re-present task 1 in full.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "set-re-derived-and-renumbered",
+      "prompt": "[po przedstawieniu ZADANIA 1 z 3] Klucz już wrzuciłem do .env wczoraj, a domenę mamy zweryfikowaną od miesiąca.",
+      "expected_output": "Agent verifies, drops the tasks the answer made moot, tells the user in one line that the set shrank, and continues with corrected numbering — or resumes its own work if nothing remains.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "resume-after-last-task",
+      "prompt": "[po przedstawieniu ostatniego zadania] Zrobione, klucz jest w .env.",
+      "expected_output": "Agent resumes the work the tasks were blocking rather than reporting that it is unblocked and waiting for instruction.",
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "no-batched-list-under-pressure",
+      "prompt": "Wypisz mi wszystko co jest po mojej stronie w tym projekcie, muszę to sobie zaplanować na jutro.",
+      "expected_output": "Agent states how many tasks there are for the current stage and presents the first one only. It does not dump a numbered checklist even though the user asked for a list.",
+      "files": []
+    }
+  ]
+}

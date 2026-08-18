@@ -31,6 +31,7 @@ Coding-agent skills for PR review, review loops, and OpenSpec `/goal` prep.
 | `ss:review-fix` | Fetch PR review comments, fix valid issues, commit, push, reply on GitHub (`/ss:review-fix [PR]`) | ✅ Active |
 | `ss:review-loop` | Automated Claude↔Copilot review cycle on a PR until stable (`/ss:review-loop <PR> <change>`) | ✅ Active |
 | `ss:prepare-openspec-goal` | Formulate a transcript-checkable completion condition for `/goal` implementing an OpenSpec change | ✅ Active |
+| `ss:task-delegation` | Hand work to the user one task at a time — only what the agent cannot do itself, confirm before the next | ✅ Active |
 
 ## Commands
 
@@ -38,6 +39,8 @@ Slash commands bundled with the plugin (`commands/`).
 
 | Command | Description |
 |---------|-------------|
+| `/ss:working-mode` | Switch the session working mode on or off — Polish replies, orientation header, closed stop list. Off by default |
+| `/ss:orientation` | Restate what the session is working on, what for, where it got to, and what is wanted from you (PL) |
 | `/ss:decisions` | Surface open decisions one at a time, each with a recommendation, and wait for the answer (PL) |
 | `/ss:explain-diff` | Walk through code changes (PR / branch vs main) one file at a time, in plain Polish |
 | `/ss:explain-design` | Walk through an OpenSpec `design.md` topic by topic, one heading at a time (PL) |
@@ -48,6 +51,15 @@ Slash commands bundled with the plugin (`commands/`).
 | `/ss:slides:build` | `draft.md` → `slides.md` with Marp frontmatter, rendered to PDF (optionally HTML) |
 | `/ss:slides:tweak` | Adjust `slides.md` layout (split slides, `_class`, reorder) without touching `draft.md` |
 | `/ss:slides:archive` | Move a completed workspace to `slides/archive/<slug>/`; the PDF in `slides/output/` stays |
+
+> **`/ss:working-mode` conflicts with always-on style plugins.** While it is on, the plugin's hooks
+> inject a reply-style contract at session start and a short reminder on every message. Another
+> always-on instruction governing how replies are written will fight it, and there is no error when
+> it wins — only a gradual drift back. Known cases: `explanatory-output-style` (educational asides,
+> explicit permission to exceed normal length) and the `caveman` hooks (terse fragments, dropped
+> words). Remove one of them rather than running both. Per-turn injections that say nothing about
+> style — safety guidance, for instance — coexist with it fine. The command checks for conflicts
+> when you switch the mode on and names what it finds.
 
 ## Setup
 

@@ -3,6 +3,25 @@
 ## [Unreleased]
 
 ### Added
+- **Agent working mode** (`/ss:working-mode`) — a session-scoped switch that puts replies under one
+  contract: Polish, business meaning before technical detail, no unglossed jargon; an orientation
+  header (`Gdzie jesteśmy:` / `Po co:`) on a closed list of six moments; and a closed list of the
+  only reasons the agent may stop and hand control back. Off by default, scoped to the session it
+  was switched on in, and unaffected by long sessions or context compaction. Conflicts with
+  always-on style plugins (`explanatory-output-style`, `caveman`) — the command names one if it
+  finds it.
+- **The plugin's first hooks** (`hooks/`). `SessionStart` injects the rule set, `UserPromptSubmit`
+  reinforces it each turn, `SessionEnd` clears the session's state. They ship inside the plugin and
+  write nothing into `~/.claude/settings.json`, so disabling the plugin stops them; when the mode is
+  off they emit nothing at all. `node hooks/selftest.mjs` covers the on path, the off path, session
+  isolation and the silent-failure paths.
+- **`ss:task-delegation` skill** — hands work to the user one task at a time, only work the agent
+  cannot do itself, with a position counter and a stated completion signal; a question keeps the
+  protocol on the current task, and the set is re-derived when an answer changes it. The action-side
+  sibling of `/ss:decisions`, which keeps the choices.
+- **`/ss:orientation`** — on demand, restates what the session is working on, what for, where it has
+  got to, and what is wanted from the user; reports unverified work as unverified, and routes
+  outstanding decisions and tasks to their own flows instead of listing them.
 - **Developer-workflow skills** (migrated from loose global `~/.claude/skills/`): `review-fix`
   (PR review comments → fix → commit → push → reply), `review-loop` (automated Claude↔Copilot
   review cycle), `prepare-openspec-goal` (transcript-checkable `/goal` completion condition for

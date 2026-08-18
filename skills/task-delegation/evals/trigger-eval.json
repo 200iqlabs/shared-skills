@@ -1,0 +1,82 @@
+[
+  {
+    "query": "kod do wysyłki maili masz gotowy, ale klucz do Resend i rekordy DNS są po mojej stronie. prowadź mnie przez to",
+    "should_trigger": true
+  },
+  {
+    "query": "potrzebuję żebyś dokończył deploy na produkcję. co jest po mojej stronie?",
+    "should_trigger": true
+  },
+  {
+    "query": "czego ode mnie potrzebujesz zeby to ruszyc",
+    "should_trigger": true
+  },
+  {
+    "query": "wypisz mi wszystko co muszę zrobić w tym projekcie, chcę sobie zaplanować jutrzejszy dzień",
+    "should_trigger": true
+  },
+  {
+    "query": "I've set up the repo. What do you need from me to get the Stripe integration working end to end?",
+    "should_trigger": true
+  },
+  {
+    "query": "skonfiguruj nam Sentry w tej aplikacji nextowej, DSN i konto to chyba moja działka ale reszta twoja",
+    "should_trigger": true
+  },
+  {
+    "query": "zrobiłeś już te migracje? bo widzę że coś stoi. jak potrzebujesz ode mnie dostępu do bazy produkcyjnej to mów",
+    "should_trigger": true
+  },
+  {
+    "query": "daj mi zadania jedno po drugim, nie chcę znowu dostać ściany tekstu z listą 8 punktów",
+    "should_trigger": true
+  },
+  {
+    "query": "ogarnij konfigurację domeny dla tego projektu na Vercelu",
+    "should_trigger": true
+  },
+  {
+    "query": "utknąłeś na tym imporcie kontaktów? jak coś jest po mojej stronie to dawaj, tylko po kolei a nie wszystko naraz",
+    "should_trigger": true
+  },
+  {
+    "query": "mam do wyboru ryczałt albo liniowy na przyszły rok, przeanalizuj co mi się bardziej opłaca przy 380k przychodu",
+    "should_trigger": false
+  },
+  {
+    "query": "przejdź ze mną po kolei przez otwarte decyzje w tym changu, jedna na raz",
+    "should_trigger": false
+  },
+  {
+    "query": "rozpisz mi plan implementacji tego feature'a na taski w openspec/changes/add-billing/tasks.md",
+    "should_trigger": false
+  },
+  {
+    "query": "gdzie jesteśmy z tym projektem? wracam po tygodniu i nie pamiętam na czym stanęliśmy",
+    "should_trigger": false
+  },
+  {
+    "query": "stwórz mi w ClickUpie listę zadań dla zespołu na sprint, po jednym tasku na każdy endpoint z tego API",
+    "should_trigger": false
+  },
+  {
+    "query": "napisz post na LinkedIn o tym jak delegujemy pracę do agentów AI w małym zespole",
+    "should_trigger": false
+  },
+  {
+    "query": "test się wywala na CI ale lokalnie przechodzi, zdiagnozuj to",
+    "should_trigger": false
+  },
+  {
+    "query": "podsumuj mi co zrobiłeś w tej sesji, punkt po punkcie",
+    "should_trigger": false
+  },
+  {
+    "query": "which should we use for the queue — BullMQ or a Postgres-backed job table? give me a recommendation",
+    "should_trigger": false
+  },
+  {
+    "query": "przeczytaj ten kontrakt z podwykonawcą i wypisz co jest dla nas ryzykowne",
+    "should_trigger": false
+  }
+]

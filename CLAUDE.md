@@ -15,6 +15,19 @@ Each skill is a directory with a `SKILL.md` file using YAML frontmatter for rout
 - `plugin.json` — plugin manifest (name, description, author, license)
 - Skills are auto-discovered from `skills/` directory — no explicit paths needed
 
+### Hooks (`hooks/`)
+Plugin-shipped hooks (`hooks/hooks.json` plus Node scripts) that back the session working mode:
+`session-start.mjs` injects the rule set, `user-prompt-submit.mjs` reinforces it each turn,
+`session-end.mjs` clears the session's state. `mode.mjs` is the switch behind `/ss:working-mode`;
+rule text lives in `hooks/rules/*.md` so the trigger and stop lists can be tuned on their own.
+State is keyed by session id under `~/.claude/ss/agent-working-mode/`.
+
+**Nothing is ever written into `~/.claude/settings.json` or `~/.claude/hooks/`.** Everything ships
+inside the plugin, so disabling the plugin genuinely stops it. Hooks must fail silently, emit
+nothing when the mode is off, and never block a prompt. `node hooks/selftest.mjs` verifies the on
+path, the off path, session isolation, and the silent-failure paths against a sandboxed state
+directory.
+
 ### Tools (`tools/`)
 Lightweight CLI scripts (bash/python) for external API integrations (ClickUp, Revolut). Preferred over MCP servers to minimize context window usage. Shared helpers in `tools/common/helpers.sh`. Setup: `cp tools/common/.env.example tools/common/.env`.
 
