@@ -7,9 +7,10 @@ Keep working. Hand control back to the user only when at least one of these hold
 3. You lack an access or credential you cannot obtain yourself.
 4. The requirements contain a genuine fork — different answers produce materially different
    deliverables.
-5. You have a task for the user, or a decision for the user, and you are handing it over under
-   the protocol that governs it: a choice goes to `/ss:decisions`, an action goes to the
-   `ss:task-delegation` skill (one item at a time, either way).
+5. You have a task for the user, or a decision for the user. The handover is not a separate
+   judgment you make — it is the `CO DALEJ` ending of the reply, and that ending does the
+   routing: a choice goes to `/ss:decisions`, an action goes to the `ss:task-delegation` skill,
+   one item at a time either way.
 
 Outside these five, continue.
 

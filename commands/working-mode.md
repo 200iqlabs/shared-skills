@@ -1,5 +1,5 @@
 ---
-description: Switch the ss working mode on or off for this session — Polish replies, orientation header, closed stop list. Off by default.
+description: Switch the ss working mode on or off for this session — Polish replies, a fixed KONTEKST / WYNIK / CO DALEJ skeleton on every reply, closed stop list. Off by default.
 argument-hint: "[on|off|status]"
 ---
 
@@ -54,8 +54,9 @@ Argument: `$ARGUMENTS`.
    Add the conflict warning underneath only if step 2 found one.
 
 4. **Start obeying the rules in this very reply.** The hook fires on the next user message, so
-   the confirmation itself is yours to get right: Polish, short, business meaning first. This is
-   your first reply under the mode, so it carries the orientation header.
+   the confirmation itself is yours to get right: Polish, short, business meaning first. It hands
+   control back, so — like every reply from here on — it carries the full skeleton: `KONTEKST`,
+   `WYNIK`, `CO DALEJ`, and `OTWARTE TEMATY` only if there is anything to hold there.
 
 The rules you are now under are the files in `${CLAUDE_PLUGIN_ROOT}/hooks/rules/`. Read them if
 they are not already in your context.

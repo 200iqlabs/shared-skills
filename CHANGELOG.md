@@ -4,8 +4,9 @@
 
 ### Added
 - **Agent working mode** (`/ss:working-mode`) — a session-scoped switch that puts replies under one
-  contract: Polish, business meaning before technical detail, no unglossed jargon; an orientation
-  header (`Gdzie jesteśmy:` / `Po co:`) on a closed list of six moments; and a closed list of the
+  contract: Polish, business meaning before technical detail, things named by what they do rather
+  than by a term plus a translation; a fixed `KONTEKST` / `WYNIK` / `CO DALEJ` skeleton on every
+  reply that hands control back (plus an optional `OTWARTE TEMATY`); and a closed list of the
   only reasons the agent may stop and hand control back. Off by default, scoped to the session it
   was switched on in, and unaffected by long sessions or context compaction. Conflicts with
   always-on style plugins (`explanatory-output-style`, `caveman`) — the command names one if it
@@ -37,6 +38,20 @@
 - Templates for new agents and contexts
 
 ### Changed
+- **Working-mode replies restructured around a constant skeleton.** Every reply that hands control
+  back now opens with `KONTEKST` (what the session is working on and what for), `WYNIK` (what the
+  step produced, confirmed facts only, failures stated plainly) and `CO DALEJ`, optionally followed
+  by `OTWARTE TEMATY`. **The conditional orientation header (`Gdzie jesteśmy:` / `Po co:`) and its
+  closed list of six trigger conditions are removed** — the header fired on none of them when a
+  user glanced at a parallel session that had kept running, which was the one case it existed for.
+  The skeleton is unconditional instead: no triggers, no judgment about which replies deserve
+  orientation, and mid-turn progress notes are the only exemption. `CO DALEJ` closes with exactly
+  one of four endings — a decision (which routes into `/ss:decisions` in the same turn, never as
+  prose questions), one delegated task, a named external wait, or „Sesję można zamknąć." Glossing a
+  term in parentheses is gone too: the thing is described by what it does, and tool names, paths
+  and commands appear only on request or when the user cannot act without them. **BREAKING** for
+  anything matching on the old header lines. `/ss:orientation`, `/ss:decisions` and
+  `ss:task-delegation` are unchanged; sessions already running keep the old rules until restarted.
 - **Plugin renamed `200iqlabs-agent-skills` → `ss`.** Skills and commands now carry the
   `ss:` prefix (`ss:cfo`, `ss:ingest`, `/ss:decisions`). The publisher identity moved to
   fields built for it: `displayName` ("200IQ LABS Agent Skills"), the marketplace `owner`,

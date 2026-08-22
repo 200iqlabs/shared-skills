@@ -23,16 +23,16 @@ function readPayload() {
 
 /**
  * Only this hook knows whether the session was just resumed or just compacted —
- * from the model's side a resumed turn looks like any other turn, so the second
- * header trigger would be left to guesswork. Saying it outright makes it
- * mechanical.
+ * from the model's side either one looks like any other turn. Both are the moments
+ * where a dropped or stale KONTEKST costs the most, so the hook says outright
+ * which one happened instead of leaving it to guesswork.
  */
 function resumeNote(source) {
   if (source === 'resume') {
-    return 'This session has just been resumed. Your next reply is the first one after the resume, so it carries the orientation header (trigger 2).'
+    return 'This session has just been resumed. Your next reply hands control back, so it carries the full skeleton — KONTEKST, WYNIK, CO DALEJ — exactly like every other such reply. Check that KONTEKST still describes what this session is actually working on before you reuse it.'
   }
   if (source === 'compact') {
-    return "This session's earlier context has just been summarised (compacted). The rules above are in force exactly as before — the compaction does not weaken them. Your next reply is the first one after the compaction, so it carries the orientation header (trigger 2)."
+    return "This session's earlier context has just been summarised (compacted). The rules above are in force exactly as before — the compaction does not weaken them. Your next reply hands control back, so it carries the full skeleton — KONTEKST, WYNIK, CO DALEJ — exactly like every other such reply. Rebuild KONTEKST from what survived the summary rather than dropping it."
   }
   return null
 }

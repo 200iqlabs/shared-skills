@@ -68,7 +68,12 @@ console.log('\non — activated for session alpha')
   const context = parsed?.hookSpecificOutput?.additionalContext ?? ''
   check('session-start injects the rule set', context.length > 500, `${context.length} chars`)
   check('rule set carries the stop list', context.includes('closed list'))
-  check('rule set carries the header shape', context.includes('Gdzie jesteśmy'))
+  check(
+    'rule set carries the reply skeleton',
+    ['KONTEKST', 'WYNIK', 'CO DALEJ', 'OTWARTE TEMATY'].every((label) => context.includes(label))
+  )
+  // The header this replaced fired on a trigger list; a surviving one would mean a stale rule file.
+  check('rule set names no trigger conditions', !/trigger/i.test(context))
   check('rule set carries the code carve-out', context.includes('commit messages'))
 
   const resumed = runHook('session-start.mjs', { ...A, source: 'resume' })
