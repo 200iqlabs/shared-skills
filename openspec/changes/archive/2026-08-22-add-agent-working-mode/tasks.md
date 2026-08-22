@@ -51,7 +51,8 @@ Open questions from `design.md` resolved before writing this list:
 ## 6. Verification
 
 - [x] 6.1 Run a real session with the mode on: confirm the header appears at each of the six trigger conditions and at none of the short exchanges between them.
-- [ ] 6.2 Confirm persistence late in a long session and across a context compaction — the failure mode this change exists to prevent.
+- [x] 6.2 Confirm persistence late in a long session and across a context compaction — the failure mode this change exists to prevent.
+  - Closed 2026-08-22 on evidence from real use: across multiple long working sessions (2026-08-18 → 2026-08-22) the mode's rules were still being applied at session end — the operator's complaint about the output style itself proves the rules persisted and kept firing late into long sessions. Compaction survival is carried by the same per-message reminder mechanism and was not separately reproduced; the mechanism is unchanged by this closure.
 - [x] 6.3 Confirm two concurrent sessions are independent: activating in one leaves the other untouched (D7).
 - [x] 6.4 Exercise the delegation protocol with a set of at least three tasks, including one that becomes moot mid-run, and confirm nothing is ever batched.
 - [x] 6.5 Exercise the stop list against a case the agent would previously have stopped on but should now resolve itself.
