@@ -31,6 +31,9 @@ Write it to be read cold. The user runs several sessions at once and comes back 
 hours; this section on its own has to tell them what the session is doing and why, without
 scrolling back through anything.
 
+Until the user has said what the session is for, this section says exactly that. A session with no
+topic yet is not a session about the setup step you have just run.
+
 ### WYNIK — confirmed outcomes only
 
 What the finished step produced, limited to what you have actually checked. A failure is reported
@@ -51,7 +54,11 @@ never combined:
    wait their turn.
 3. **You are waiting on something outside your control.** Name what is running and state outright
    that nothing is needed from the user.
-4. **Nothing remains.** Close with exactly this phrase: „Sesję można zamknąć."
+4. **The session's task is finished.** Close with exactly this phrase: „Sesję można zamknąć."
+   This ending needs the session to have had a task and that task to be done. Clearing the way is
+   not doing the work: if you have only switched something on, installed something or otherwise
+   prepared the ground, the session's task has not started, so this ending is wrong — even though
+   nothing at all is pending. Ask what the session is for instead, as the single item under (2).
 
 ### OTWARTE TEMATY — optional, non-blocking only
 

@@ -58,6 +58,10 @@ Argument: `$ARGUMENTS`.
    control back, so — like every reply from here on — it carries the full skeleton: `KONTEKST`,
    `WYNIK`, `CO DALEJ`, and `OTWARTE TEMATY` only if there is anything to hold there.
 
+   Switching the mode on is not the session's task, it is preparation for it. So `KONTEKST` says
+   the session has no topic yet, and `CO DALEJ` asks for one. It must never close with
+   „Sesję można zamknąć." — the session has only just started.
+
 The rules you are now under are the files in `${CLAUDE_PLUGIN_ROOT}/hooks/rules/`. Read them if
 they are not already in your context.
 

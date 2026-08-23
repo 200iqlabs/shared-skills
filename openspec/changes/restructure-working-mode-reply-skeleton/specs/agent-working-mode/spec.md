@@ -54,7 +54,7 @@ The `CO DALEJ` section SHALL end the reply with exactly one of the following, an
 1. A decision is needed from the user — the section SHALL say so, and the agent SHALL invoke the decision-sweep flow automatically in the same turn, raising decisions one at a time with a recommendation first. The decisions SHALL NOT be written out as prose questions instead.
 2. An action is needed from the user — the section SHALL hand over exactly one task under the task-delegation protocol, never a list.
 3. The agent is waiting on an external process — the section SHALL name what is awaited and state that nothing is needed from the user.
-4. Nothing remains — the section SHALL close with the exact phrase „Sesję można zamknąć."
+4. The session's task is finished — the section SHALL close with the exact phrase „Sesję można zamknąć." This ending SHALL require that the session had a task and that the task is complete. A session whose task has not yet been set SHALL NOT be reported as closable, even when nothing is pending.
 
 #### Scenario: The next step needs a user decision
 
@@ -75,6 +75,11 @@ The `CO DALEJ` section SHALL end the reply with exactly one of the following, an
 
 - **WHEN** the agent is blocked only on a process outside its control
 - **THEN** CO DALEJ SHALL name the process and state that the user is not needed
+
+#### Scenario: The session has no task yet
+
+- **WHEN** a reply ends a preparatory step — switching the mode on, installing something — and the user has not yet said what the session is for
+- **THEN** CO DALEJ SHALL ask what the session is for under ending 2, and SHALL NOT state „Sesję można zamknąć."
 
 ### Requirement: OTWARTE TEMATY collects non-blocking observations
 
