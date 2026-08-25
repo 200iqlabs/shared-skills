@@ -59,7 +59,7 @@ While active, prose addressed to the user SHALL be written in Polish, SHALL carr
 
 This contract SHALL apply only to prose addressed to the user. Code, commit messages, pull-request descriptions, file contents, and text destined for any audience other than the user SHALL be unaffected.
 
-#### Scenario: An unavoidable technical term appears
+#### Scenario: A thing's natural name is a technical term
 
 - **WHEN** a reply needs to refer to something whose natural name is a technical term
 - **THEN** it SHALL describe the thing by what it does, and SHALL NOT emit the term with a parenthesised translation
@@ -67,7 +67,7 @@ This contract SHALL apply only to prose addressed to the user. Code, commit mess
 #### Scenario: The user asks for technical detail
 
 - **WHEN** the user requests the technical specifics of a result
-- **THEN** the reply SHALL provide them, and this SHALL be the only route by which unprompted technical vocabulary enters the conversation
+- **THEN** the reply SHALL provide them, and outside the two routes the requirement names — the user asking, and the user being unable to act without it — technical vocabulary SHALL NOT enter the conversation
 
 #### Scenario: Agent writes a commit message
 
@@ -103,7 +103,7 @@ Uncertainty alone SHALL NOT be grounds to stop. Where the agent is unsure but th
 
 #### Scenario: Next action is a push to the default branch
 
-- **WHEN** the next action is a push to the default branch, a merge of a pull request, or the publication of a release
+- **WHEN** the next action is a push to the default branch, a merge of a pull request, or the publishing or releasing of a package
 - **THEN** the agent SHALL treat it as targeting production and stop before proceeding, rather than reading "production" as covering only deployed systems
 
 #### Scenario: Agent has finished part of a larger job
@@ -136,7 +136,7 @@ When the mode is activated, the agent SHALL check whether another always-on inst
 
 ### Requirement: Every turn-ending reply carries the reply skeleton
 
-Every reply that hands control back to the user SHALL open with the sections `KONTEKST`, `WYNIK` and `CO DALEJ`, in that order, each under its constant bold label; an optional `OTWARTE TEMATY` section MAY follow them. The shape SHALL be identical in every such reply — same labels, same order — regardless of how small the reply is, and the agent SHALL NOT judge whether the skeleton is warranted. Status notes emitted mid-turn, between tool calls, are not turn-ending replies and SHALL NOT carry the skeleton.
+Every reply that hands control back to the user SHALL open with the sections `KONTEKST`, `WYNIK` and `CO DALEJ`, in that order, each introduced by its label in bold — literally `**KONTEKST:**`, `**WYNIK:**` and `**CO DALEJ:**`; an optional `**OTWARTE TEMATY:**` section MAY follow them. The shape SHALL be identical in every such reply — same labels, same order — regardless of how small the reply is, and the agent SHALL NOT judge whether the skeleton is warranted. Status notes emitted mid-turn, between tool calls, are not turn-ending replies and SHALL NOT carry the skeleton.
 
 Two exemptions exist and no others. The first is the mid-turn status note above. The second is the `/ss:working-mode` command's own confirmations — activation, deactivation and status — each of which SHALL be a single line reporting what the command did, and SHALL NOT carry the skeleton. That exemption is a closed list of three named replies, not a judgment about which replies are "only confirmations".
 
