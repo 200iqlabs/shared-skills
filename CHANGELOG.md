@@ -53,8 +53,8 @@
   anything matching on the old header lines. `/ss:orientation`, `/ss:decisions` and
   `ss:task-delegation` are unchanged; sessions already running keep the old rules until restarted.
 
-  Two replies are exempt from the skeleton and no others: a status note emitted mid-turn, and the
-  `/ss:working-mode` confirmation for `on`, `off` or `status`. Each of those stays a single line —
+  Two exemptions exist and no others: a status note emitted mid-turn, and the `/ss:working-mode`
+  confirmations for `on`, `off` and `status` — three named replies. Each of those stays a single line —
   the switch is run, waited for, and only then is the session's actual task stated, so sections
   stacked above a one-line confirmation orient nobody.
 - **Work reaches the default branch through a branch, a pull request and a review.** A direct push

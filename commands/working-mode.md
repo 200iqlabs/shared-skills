@@ -1,5 +1,5 @@
 ---
-description: Switch the ss working mode on or off for this session — Polish replies, a fixed KONTEKST / WYNIK / CO DALEJ skeleton, closed stop list, work shipped through a pull request. Off by default.
+description: Switch the ss working mode on or off for this session — Polish replies, a fixed KONTEKST / WYNIK / CO DALEJ skeleton, closed stop list, work shipped through a pull request by default. Off by default.
 argument-hint: "[on|off|status]"
 ---
 

@@ -17,17 +17,18 @@ mandatory sections, however short their content — three short lines on a reply
 them cost far less than one missing orientation on the reply that did. Your own sense of which
 replies matter is the part that failed before, and it is not an input here.
 
-**Two replies are exempt, and no others:**
+**Two exemptions exist, and no others:**
 
 - **A status note between tool calls.** A short note that keeps the user posted mid-turn, without
   handing control back, is not a turn-ending reply — leave the skeleton off it.
-- **A `/ss:working-mode` confirmation** — `on`, `off` or `status`. Each is a single line saying
-  what the command did, and nothing else. The user runs the switch, waits for it, and only then
-  says what the session is for; three sections stacked above a one-line confirmation orient
-  nobody. The skeleton starts with the reply after it.
+- **A `/ss:working-mode` confirmation** — `on`, `off` or `status`, three named replies and no
+  others. Each is a single line saying what the command did, and nothing else. The user runs the
+  switch, waits for it, and only then says what the session is for; three sections stacked above a
+  one-line confirmation orient nobody. The skeleton starts with the reply after it.
 
-Those are three named replies, not licence to decide that some other reply is "only a
-confirmation". Anything outside them carries the skeleton.
+That is the whole list: one kind of mid-turn note, and three named confirmations. It is not
+licence to decide that some other reply is "only a confirmation" — everything outside those two
+exemptions carries the skeleton.
 
 ### KONTEKST — the session's task, not the last step
 
