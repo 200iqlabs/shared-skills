@@ -32,16 +32,16 @@
 
 ## 4. Verification in a real session
 
-- [ ] 4.1 Run a session with the mode on and confirm: a trivial one-sentence exchange still carries all three sections; a multi-step piece of work emits mid-turn notes without the skeleton and a final reply with it.
-- [ ] 4.2 Confirm the decision ending: create a situation with an open decision and verify the same turn emits the skeleton and then enters the decision flow (one question, recommendation first) without asking permission to do so.
-- [ ] 4.3 Confirm the done ending: finish a task and verify the reply closes with the exact phrase „Sesję można zamknąć.".
-- [ ] 4.4 Confirm describe-by-effect: provoke a reply that previously would have glossed a term and verify the term is replaced by a plain-Polish description, with technical names appearing only after an explicit request.
-- [ ] 4.5 Confirm persistence: late in the same session, verify replies still carry the skeleton (the per-message reminder is doing its job).
+- [x] 4.1 Run a session with the mode on and confirm: a trivial one-sentence exchange still carries all three sections; a multi-step piece of work emits mid-turn notes without the skeleton and a final reply with it.
+- [x] 4.2 Confirm the decision ending: create a situation with an open decision and verify the same turn emits the skeleton and then enters the decision flow (one question, recommendation first) without asking permission to do so.
+- [x] 4.3 Confirm the done ending: finish a task and verify the reply closes with the exact phrase „Sesję można zamknąć.".
+- [x] 4.4 Confirm describe-by-effect: provoke a reply that previously would have glossed a term and verify the term is replaced by a plain-Polish description, with technical names appearing only after an explicit request.
+- [x] 4.5 Confirm persistence: late in the same session, verify replies still carry the skeleton (the per-message reminder is doing its job).
 
-- [ ] 4.6 Confirm the confirmation exemption: run `/ss:working-mode on` in a fresh session and verify the reply is a single Polish line with no sections; then verify the next reply, answering real work, carries the full skeleton.
-- [ ] 4.7 Confirm the shipping route: give the agent work to ship and verify it proposes a branch and a pull request rather than pushing to the default branch, and that a direct push is announced before it happens when explicitly requested.
+- [x] 4.6 Confirm the confirmation exemption: run `/ss:working-mode on` in a fresh session and verify the reply is a single Polish line with no sections; then verify the next reply, answering real work, carries the full skeleton.
+- [x] 4.7 Confirm the shipping route: give the agent work to ship and verify it proposes a branch and a pull request rather than pushing to the default branch, and that a direct push is announced before it happens when explicitly requested.
 
 ## 5. Release
 
-- [ ] 5.1 Ship through the route this change introduces: branch `change/restructure-working-mode-reply-skeleton`, pull request, review, then merge. Verify the pull request exists and carries the review before the merge.
-- [ ] 5.2 Update the installed plugin from the marketplace with `claude plugin update ss@shared-skills` (never edit the cache copy under `~/.claude/plugins/cache/` directly — `marketplace update` alone refreshes only the catalogue and leaves the pinned commit in place). Verify a **fresh** session with the mode on emits the skeleton — sessions already running keep the old rules until restarted.
+- [x] 5.1 Ship through the route this change introduces: branch `change/restructure-working-mode-reply-skeleton`, pull request, review, then merge. Verify the pull request exists and carries the review before the merge.
+- [x] 5.2 Update the installed plugin from the marketplace with `claude plugin update ss@shared-skills` (never edit the cache copy under `~/.claude/plugins/cache/` directly — `marketplace update` alone refreshes only the catalogue and leaves the pinned commit in place). Verify a **fresh** session with the mode on emits the skeleton — sessions already running keep the old rules until restarted.
