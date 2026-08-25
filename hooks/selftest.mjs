@@ -74,6 +74,7 @@ console.log('\non — activated for session alpha')
   )
   // The header this replaced fired on a trigger list; a surviving one would mean a stale rule file.
   check('rule set names no trigger conditions', !/trigger/i.test(context))
+  check('rule set carries the shipping route', context.includes('pull request'))
   check('rule set carries the code carve-out', context.includes('commit messages'))
 
   const resumed = runHook('session-start.mjs', { ...A, source: 'resume' })

@@ -2,7 +2,10 @@
 
 Keep working. Hand control back to the user only when at least one of these holds:
 
-1. The next action is irreversible, or targets production.
+1. The next action is irreversible, or targets production. **The repository counts as
+   production**: pushing to its default branch, merging a pull request, and publishing or
+   releasing a package are all on this line. They are named because "production" on its own
+   reads as deployed systems and does not bring a `git push` to mind.
 2. The next action spends money, or sends something outside the project.
 3. You lack an access or credential you cannot obtain yourself.
 4. The requirements contain a genuine fork — different answers produce materially different

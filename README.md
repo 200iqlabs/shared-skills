@@ -39,7 +39,7 @@ Slash commands bundled with the plugin (`commands/`).
 
 | Command | Description |
 |---------|-------------|
-| `/ss:working-mode` | Switch the session working mode on or off — Polish replies, a fixed `KONTEKST` / `WYNIK` / `CO DALEJ` skeleton on every reply, closed stop list. Off by default |
+| `/ss:working-mode` | Switch the session working mode on or off — Polish replies, a fixed `KONTEKST` / `WYNIK` / `CO DALEJ` skeleton, closed stop list, work shipped through a pull request. Off by default |
 | `/ss:orientation` | Restate what the session is working on, what for, where it got to, and what is wanted from you (PL) |
 | `/ss:decisions` | Surface open decisions one at a time, each with a recommendation, and wait for the answer (PL) |
 | `/ss:explain-diff` | Walk through code changes (PR / branch vs main) one file at a time, in plain Polish |

@@ -1,5 +1,5 @@
 ---
-description: Switch the ss working mode on or off for this session — Polish replies, a fixed KONTEKST / WYNIK / CO DALEJ skeleton on every reply, closed stop list. Off by default.
+description: Switch the ss working mode on or off for this session — Polish replies, a fixed KONTEKST / WYNIK / CO DALEJ skeleton, closed stop list, work shipped through a pull request. Off by default.
 argument-hint: "[on|off|status]"
 ---
 
@@ -53,14 +53,12 @@ Argument: `$ARGUMENTS`.
 
    Add the conflict warning underneath only if step 2 found one.
 
-4. **Start obeying the rules in this very reply.** The hook fires on the next user message, so
-   the confirmation itself is yours to get right: Polish, short, business meaning first. It hands
-   control back, so — like every reply from here on — it carries the full skeleton: `KONTEKST`,
-   `WYNIK`, `CO DALEJ`, and `OTWARTE TEMATY` only if there is anything to hold there.
-
-   Switching the mode on is not the session's task, it is preparation for it. So `KONTEKST` says
-   the session has no topic yet, and `CO DALEJ` asks for one. It must never close with
-   „Sesję można zamknąć." — the session has only just started.
+4. **Start obeying the rules in this very reply — except the skeleton.** The hook fires on the
+   next user message, so the confirmation itself is yours to get right: Polish, short, no filler.
+   But it is one of the three replies exempt from the skeleton, so it stays the single line from
+   step 3 and gains no sections. The user switches the mode on, waits for it, and only then says
+   what the session is for — there is nothing yet to put under `KONTEKST` and no result to report
+   under `WYNIK`. The skeleton starts with your next reply.
 
 The rules you are now under are the files in `${CLAUDE_PLUGIN_ROOT}/hooks/rules/`. Read them if
 they are not already in your context.
@@ -73,7 +71,8 @@ they are not already in your context.
    node "${CLAUDE_PLUGIN_ROOT}/hooks/mode.mjs" off
    ```
 
-2. Confirm in one Polish line that the mode is off and the state is cleared — from the next
+2. Confirm in one Polish line — no skeleton, exempt like the activation line — that the mode is
+   off and the state is cleared — from the next
    message on, nothing is injected. Drop the rules immediately; do not keep writing under them
    out of habit.
 
@@ -85,7 +84,7 @@ Run:
 node "${CLAUDE_PLUGIN_ROOT}/hooks/mode.mjs" status
 ```
 
-Report the result in one Polish line and stop.
+Report the result in one Polish line and stop. No skeleton — a status confirmation is exempt.
 
 ## Rules
 
