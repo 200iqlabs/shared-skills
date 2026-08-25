@@ -34,8 +34,10 @@ Fetch PR review comments, fix valid issues, commit, push, and reply on GitHub â€
    Fetch ALL review comments (the GitHub API paginates at 30 per page by default â€” you MUST use `--paginate` or you will miss comments on long-running PRs):
 
    ```bash
-   gh api --paginate "repos/{owner}/{repo}/pulls/{pr}/comments?per_page=100" > pr-comments.json
+   gh api --paginate "repos/{owner}/{repo}/pulls/{pr}/comments?per_page=100" > "$SCRATCH/pr-comments.json"
    ```
+
+   Write it **outside the repository** â€” a scratch or temp directory, never the repo root. It is throwaway data and has no business appearing in `git status`. Expand the directory yourself and check it is set: an unset variable silently collapses the path to `/pr-comments.json` and the redirect dies with a permission error.
 
    `--paginate` with `gh api` automatically follows `Link: rel="next"` headers and concatenates pages into a single JSON array. `per_page=100` is the max â€” keeps the round-trips low.
 
@@ -67,7 +69,9 @@ Fetch PR review comments, fix valid issues, commit, push, and reply on GitHub â€
 
 5. **Verify**
 
-   Run `pnpm typecheck` after all fixes are applied. If it fails, fix the issue before committing.
+   Run whatever check this project actually has, after all fixes are applied. Find it rather than assuming it: a `typecheck`, `test` or `lint` script in `package.json`, a test runner, a self-test script, a schema validator. In this repository that is `node hooks/selftest.mjs` and `openspec validate --all`; in a TypeScript project it is usually `pnpm typecheck`.
+
+   If the project has no automated check at all, say so in the summary rather than letting silence imply one passed. If a check fails, fix it before committing.
 
 6. **Commit and push**
 
@@ -78,7 +82,7 @@ Fetch PR review comments, fix valid issues, commit, push, and reply on GitHub â€
 
    - <brief description of each fix>
 
-   Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+   Co-Authored-By: <the co-author line this session is configured to use>
    ```
 
    Push to the PR's branch (use `headRefName` from step 1):
@@ -94,8 +98,27 @@ Fetch PR review comments, fix valid issues, commit, push, and reply on GitHub â€
    Use the GitHub API to reply in-thread:
 
    ```bash
-   gh api repos/{owner}/{repo}/pulls/{pr}/comments/{comment_id}/replies -X POST -f body="<reply>"
+   node - "$SCRATCH/reply.json" <<'PAYLOAD'
+   const fs = require('fs')
+   const body = [
+     'Fixed in abc1234 â€” the first line of the reply.',
+     '',
+     'A later paragraph, free to contain `code spans` and $dollars.',
+   ].join('\n')
+   fs.writeFileSync(process.argv[2], JSON.stringify({ body }))
+   PAYLOAD
+   gh api repos/{owner}/{repo}/pulls/{pr}/comments/{comment_id}/replies --input "$SCRATCH/reply.json" > /dev/null
    ```
+
+   **Never pass the reply body as a shell string.** `-f body="<reply>"` runs any backtick in your text as command substitution and eats backslashes, so a reply that quotes code silently loses exactly the part that mattered â€” and returns HTTP 200 while doing it. This is not hypothetical: a reply on PR #2 of this repository lost three code spans that way and had to be re-posted with `PATCH repos/{owner}/{repo}/pulls/comments/{reply_id}`.
+
+   The **quoted** heredoc delimiter (`<<'PAYLOAD'`, not `<<PAYLOAD`) is what makes this safe â€” it stops the shell touching the text at all. Passing the reply as a shell argument instead, even in double quotes, does not help: backticks are substituted inside double quotes too.
+
+   The block above is indented to sit inside this list. **When you actually run it, the closing `PAYLOAD` must start at column 0** â€” an indented terminator does not close the heredoc and the shell reads to end of input.
+
+   Some shells strip a level of backslash escaping from heredoc bodies. Build multi-line text as an array joined on a newline, as above, rather than relying on escape sequences inside a single string literal.
+
+   **Re-read the thread after replying** and confirm the body says what you meant. A mangled reply is indistinguishable from a good one by response code alone.
 
    **Do NOT** pipe the output through `jq` or other tools that may not be installed. Redirect to `/dev/null` or use `> /dev/null 2>&1` if you don't need the response.
 
