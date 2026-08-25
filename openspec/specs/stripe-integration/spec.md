@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Read access to Stripe for the finance tooling: active subscriptions, revenue from invoices, and the monthly recurring revenue derived from those subscriptions.
+
+## Requirements
 
 ### Requirement: Fetch active subscriptions from Stripe
 The system SHALL provide `skills/cfo/scripts/get_subscriptions.py` that fetches subscriptions via `GET /v1/subscriptions`. The script SHALL support `--status` filter (active, past_due, canceled, ended, all) and `--limit`, handle pagination, and output JSON with total count and subscription list.

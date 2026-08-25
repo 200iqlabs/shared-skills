@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Governs how an agent skill is defined: the persona it speaks in, a description pushy enough to trigger on both Polish and English phrasing, explicit boundaries against neighbouring agents, reference files loaded only when the work needs them, and a location that follows the plugin layout. The CFO and tax-advisor skills are its worked examples.
+
+## Requirements
 
 ### Requirement: CFO agent SKILL.md with reactive financial advisor persona
 The system SHALL provide a CFO agent defined in `skills/cfo/SKILL.md` that acts as a reactive financial advisor. The agent SHALL respond to financial questions by gathering context from static files and dynamic API data. The SKILL.md SHALL follow Agent Skills spec format with YAML frontmatter (name + description) and markdown body under 500 lines.

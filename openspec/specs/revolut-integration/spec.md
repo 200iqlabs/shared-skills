@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Read access to Revolut Business for the finance tooling — account balances and transactions — configured from the shared environment file.
+
+## Requirements
 
 ### Requirement: Fetch account balances from Revolut Business API
 The system SHALL provide `skills/cfo/scripts/get_balances.py` that fetches all account balances via `GET /api/1.0/accounts`. The script SHALL output JSON to stdout, support `--currency` filter and `--active-only` flag, and authenticate using Bearer token from `REVOLUT_API_KEY` env var.

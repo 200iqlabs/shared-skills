@@ -1,3 +1,7 @@
+## Purpose
+
+Separates the LinkedIn skill's domain knowledge from the user's own identity. Author details, hashtags, audience and example posts come from context files rather than the skill body, so the skill ships domain-agnostic, adapts to whoever installs it, and degrades gracefully when a context file is missing.
+
 ## Requirements
 
 ### Requirement: Context-based author identity
