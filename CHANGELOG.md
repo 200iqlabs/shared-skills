@@ -52,6 +52,18 @@
   and commands appear only on request or when the user cannot act without them. **BREAKING** for
   anything matching on the old header lines. `/ss:orientation`, `/ss:decisions` and
   `ss:task-delegation` are unchanged; sessions already running keep the old rules until restarted.
+
+  Two exemptions exist and no others: a status note emitted mid-turn, and the `/ss:working-mode`
+  confirmations for `on`, `off` and `status` — three named replies. Each of those stays a single line —
+  the switch is run, waited for, and only then is the session's actual task stated, so sections
+  stacked above a one-line confirmation orient nobody.
+- **Work reaches the default branch through a branch, a pull request and a review.** A direct push
+  happens only when the user explicitly asks for it, and is announced in one line before it
+  happens rather than after. A repository's own history is explicitly not consent — this project
+  had never opened a pull request, and that absence was read as licence to push the working-mode
+  rules straight to `master` unreviewed. The stop list's first reason now names pushing to the
+  default branch, merging a pull request and publishing a release outright, because "targets
+  production" on its own reads as deployed systems and did not bring `git push` to mind.
 - **Plugin renamed `200iqlabs-agent-skills` → `ss`.** Skills and commands now carry the
   `ss:` prefix (`ss:cfo`, `ss:ingest`, `/ss:decisions`). The publisher identity moved to
   fields built for it: `displayName` ("200IQ LABS Agent Skills"), the marketplace `owner`,

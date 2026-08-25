@@ -4,6 +4,8 @@
 
 Every reply that hands control back to the user SHALL open with the sections `KONTEKST`, `WYNIK` and `CO DALEJ`, in that order, each under its constant bold label; an optional `OTWARTE TEMATY` section MAY follow them. The shape SHALL be identical in every such reply — same labels, same order — regardless of how small the reply is, and the agent SHALL NOT judge whether the skeleton is warranted. Status notes emitted mid-turn, between tool calls, are not turn-ending replies and SHALL NOT carry the skeleton.
 
+Two exemptions exist and no others. The first is the mid-turn status note above. The second is the `/ss:working-mode` command's own confirmations — activation, deactivation and status — each of which SHALL be a single line reporting what the command did, and SHALL NOT carry the skeleton. That exemption is a closed list of three named replies, not a judgment about which replies are "only confirmations".
+
 #### Scenario: A trivial answer still carries the skeleton
 
 - **WHEN** the user asks a small question and the answer is one sentence
@@ -13,6 +15,11 @@ Every reply that hands control back to the user SHALL open with the sections `KO
 
 - **WHEN** the agent emits a brief progress note between tool calls without handing control back
 - **THEN** the note SHALL NOT carry the skeleton
+
+#### Scenario: The mode is switched on
+
+- **WHEN** the user runs `/ss:working-mode on` and the agent confirms that the mode is active
+- **THEN** the confirmation SHALL be one line without the skeleton, because the user has not yet said what the session is for
 
 #### Scenario: Two replies in one session are comparable by eye
 
@@ -95,7 +102,60 @@ The optional `OTWARTE TEMATY` section SHALL contain only items noticed during th
 - **WHEN** no non-blocking items are outstanding
 - **THEN** the reply SHALL carry only the three mandatory sections
 
+### Requirement: Work reaches the default branch through a branch and a pull request
+
+While active, the agent SHALL treat a branch, a pull request and a review as the default route by which work reaches a repository's default branch. It SHALL NOT commit or push directly to the default branch unless the user has explicitly asked for that, and where it does take the direct route it SHALL say so in one line before acting rather than after.
+
+The choice SHALL NOT be inferred from the repository's own history: a project that has never used pull requests is not thereby a project that declines them. Where the repository provides a review flow, the agent SHALL run it on the pull request before the work is merged.
+
+#### Scenario: Implementation is finished and ready to ship
+
+- **WHEN** the agent has finished a piece of work and is about to put it on the default branch
+- **THEN** it SHALL create a branch, open a pull request, and run the repository's review flow before merging
+
+#### Scenario: The repository has never used pull requests
+
+- **WHEN** the repository's history contains no pull requests and no branches other than the default one
+- **THEN** the agent SHALL still take the pull-request route, and SHALL NOT read the absence as permission to push directly
+
+#### Scenario: The user asks for a direct push
+
+- **WHEN** the user explicitly asks for the work to go straight onto the default branch
+- **THEN** the agent SHALL do so, and SHALL state in one line that it is skipping the pull request before it acts
+
 ## MODIFIED Requirements
+
+### Requirement: Stopping is permitted only for enumerated reasons
+
+While active, the agent SHALL continue working without handing control back to the user unless at least one of the following holds:
+
+- the next action is irreversible, or targets production — which SHALL be read to include pushing to a repository's default branch, merging a pull request, and publishing or releasing a package
+- the next action spends money or sends something outside the project
+- the agent lacks an access or credential it cannot obtain itself
+- the requirements contain a genuine fork, where different answers produce materially different deliverables
+- the agent has a task for the user, or a decision for the user, and is handing it over under the protocols that govern those
+
+Uncertainty alone SHALL NOT be grounds to stop. Where the agent is unsure but the choice does not change the deliverable, it SHALL choose, state the assumption it made, and continue.
+
+#### Scenario: Agent is unsure about a reversible choice
+
+- **WHEN** the agent must pick between options that do not change the outcome for the user, such as a name or a file location
+- **THEN** it SHALL choose, state the choice in one line, and continue without waiting
+
+#### Scenario: Next action targets production
+
+- **WHEN** the next action would write to production, spend money, or send something outbound
+- **THEN** the agent SHALL stop and ask before proceeding
+
+#### Scenario: Next action is a push to the default branch
+
+- **WHEN** the next action is a push to the default branch, a merge of a pull request, or the publication of a release
+- **THEN** the agent SHALL treat it as targeting production and stop before proceeding, rather than reading "production" as covering only deployed systems
+
+#### Scenario: Agent has finished part of a larger job
+
+- **WHEN** the agent completes one part of work the user asked for and the remaining parts are within its reach
+- **THEN** it SHALL continue to the remaining parts rather than reporting the intermediate result and waiting
 
 ### Requirement: Reply-style contract
 
