@@ -57,6 +57,22 @@ gh api repos/<owner>/<repo>/pulls/<PR>/reviews
 Parse the JSON response. Compute:
 - `pre_loop_last_copilot_review_id` = maximum `id` among reviews where `user.login == "copilot-pull-request-reviewer[bot]"`, or `0` if no such reviews exist.
 
+1.3a. **Check that Copilot reviews this repo at all.**
+
+The loop cannot otherwise tell *Copilot has not answered yet* from *Copilot does not review here*, and both look identical for the whole `wait_initial + poll_timeout` window. Look for any prior review by the bot across recent pull requests:
+
+```bash
+gh api "repos/<owner>/<repo>/pulls?state=all&per_page=10" --jq '.[].number'
+```
+
+For each number returned, fetch `repos/<owner>/<repo>/pulls/<n>/reviews` and look for `user.login == "copilot-pull-request-reviewer[bot]"`. Then:
+
+- **Found at least one** — Copilot reviews here. Proceed.
+- **None found, and the repo has prior pull requests** — warn before starting: *"Copilot has never reviewed a pull request in this repository. If it is not enabled, this run will spend <wait_initial + poll_timeout>s per iteration and then report a timeout it cannot distinguish from Copilot simply being slow. Continue anyway?"* — wait for the user.
+- **The repo has no prior pull requests** — the check is inconclusive, not negative. Say so in one line and proceed; a first-ever PR has no history to read.
+
+This is advisory. Never abort on it by itself — a repo can have Copilot enabled today and no history of it.
+
 1.4. **Check for prior incomplete run.**
 
 ```bash
@@ -248,7 +264,11 @@ Log:
 
 **Known limitation — Actions-free trigger.** The `@copilot review` comment mechanism runs through a GitHub Actions workflow and therefore consumes Actions minutes. When Actions billing is exhausted, this path silently fails to fire a new review (the comment posts but Copilot never responds).
 
-The UI's "Re-request review" refresh icon next to Copilot in the PR reviewers sidebar uses a different path that does not depend on Actions. Attempts to reproduce it via REST (`DELETE` + `POST` to `/requested_reviewers` with `reviewers[]=Copilot`, login `Copilot`, bot id `175728472`) have been empirically observed not to trigger an immediate review — so the exact endpoint the UI uses is unknown from documentation alone. To add a reliable Actions-free retrigger here, the endpoint needs to be captured from the browser Network tab while clicking the refresh icon, then wired into Step 4 above as the primary path with `@copilot review` as fallback.
+The UI's "Re-request review" refresh icon next to Copilot in the PR reviewers sidebar uses a different path that does not depend on Actions.
+
+**Corrected observation (2026-08-25).** An earlier note here recorded that requesting the reviewer over REST does not trigger a review. Two runs on this repository contradict that. `POST /pulls/<n>/requested_reviewers` with `reviewers[]=copilot-pull-request-reviewer[bot]` returned 200, `requested_reviewers` came back **empty**, `gh pr view` showed it empty immediately afterwards — and Copilot posted a full review a few minutes later, both times.
+
+So: **an empty `requested_reviewers` right after the request is not evidence that the request failed.** Reading it as failure is the mistake this note previously encoded. The bot login that works is `copilot-pull-request-reviewer[bot]`, not `Copilot`, which may be why the earlier attempt was read as a dead end. To add a reliable Actions-free retrigger here, the endpoint needs to be captured from the browser Network tab while clicking the refresh icon, then wired into Step 4 above as the primary path with `@copilot review` as fallback.
 
 ### 5. Wait for Copilot review
 
@@ -332,7 +352,7 @@ PR: <url>
 - `no-comments`: *Copilot produced no new comments on the latest push — PR looks clean from Copilot's perspective.*
 - `no-fixes`: *Copilot's latest comments were all OUTDATED or DISAGREE — no code changes were needed.*
 - `max-iterations`: *Hit `--max <N>` iteration cap. Copilot may still have feedback; review manually or re-run with a higher `--max`.*
-- `timeout`: *Copilot didn't submit a review within `<poll_timeout>`s. Check the PR in GitHub UI; re-run when Copilot has responded.*
+- `timeout`: *Copilot didn't submit a review within `<poll_timeout>`s. This does not say which of two things happened: Copilot is slow, or Copilot does not review this repository. Check the PR in the GitHub UI — if a review is there, re-run; if the reviewers sidebar offers no Copilot entry at all, it is not enabled here and re-running will time out again.*
 - `error`: *Loop aborted due to an error (see log entries above). Manual intervention required.*
 
 ## Error handling reference
