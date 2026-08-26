@@ -1,6 +1,6 @@
 ---
 name: review-fix
-description: Use when you need to fetch PR review comments, fix issues in code, commit, push, and reply on GitHub. Invoke with /review-fix or /review-fix <PR-number>.
+description: Act on review feedback that already exists on a pull request — fetch every comment, fix what is genuinely wrong, push, and reply in-thread to each one. Use this whenever someone says a reviewer or Copilot left comments on a PR and wants them handled, addressed, gone through, fixed, or answered: "copilot zostawil uwagi na PR 12", "ogarnij komentarze z review", "przejdz po komentarzach i odpisz", "there is feedback on #21, deal with it", "apply the valid ones and push" — even when they never type /review-fix. Also use when only some comments are valid and the rest need reasoned pushback rather than a code change. Do NOT use to produce a review of a PR, to fix failing CI, to merge, or to answer issue comments; this skill acts on review comments that are already there. For repeating the cycle over several rounds until the reviewer goes quiet, use review-loop instead.
 ---
 
 # Review Fix

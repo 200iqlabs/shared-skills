@@ -1,0 +1,23 @@
+[
+  { "query": "leć z copilotem na PR 12 dla changu add-auth aż przestanie zgłaszać uwagi, nie chcę tego pilnować", "should_trigger": true },
+  { "query": "PR 8, zmiana restructure-working-mode — popraw uwagi, wypchnij, poczekaj na kolejne review i tak w kółko aż będzie czysto", "should_trigger": true },
+  { "query": "run the full back-and-forth with copilot on #3 until it stops finding things. change name is parametrize-ingest-context-paths", "should_trigger": true },
+  { "query": "chcę żeby to samo się dogadało z copilotem na tym PR-ze, kilka rund jak trzeba", "should_trigger": true },
+  { "query": "iterate automatically on the reviewer feedback for PR 21 — fix, push, wait for the re-review, repeat, max 3 rounds", "should_trigger": true },
+  { "query": "odpal cykl review na PR 5 i daj znać jak się ustabilizuje", "should_trigger": true },
+  { "query": "keep cycling review and fixes on pr 14 until copilot has nothing new, then summarise what changed across the rounds", "should_trigger": true },
+  { "query": "nie chce mi się klikać re-request review za każdym razem. zrób pętlę na PR 9, zmiana add-agent-working-mode", "should_trigger": true },
+  { "query": "PR #17 has been going back and forth for a while. automate the rest of it until it settles", "should_trigger": true },
+  { "query": "zapętl poprawki i review na tym PR-ze aż recenzent nie będzie miał nic nowego", "should_trigger": true },
+
+  { "query": "popraw komentarze copilota na PR 12 i odpisz na nie", "should_trigger": false },
+  { "query": "zrób review tego PR-a i powiedz co jest nie tak", "should_trigger": false },
+  { "query": "czemu copilot ciągle podkreśla tę linijkę z await? to chyba false positive", "should_trigger": false },
+  { "query": "ustaw github action, który odpala testy przy każdym PR-ze", "should_trigger": false },
+  { "query": "poczekaj aż CI przejdzie i wtedy scal PR 12", "should_trigger": false },
+  { "query": "run the test suite in a loop until it stops flaking, i think theres a race condition", "should_trigger": false },
+  { "query": "co pięć minut sprawdzaj czy deploy się skończył i daj znać", "should_trigger": false },
+  { "query": "włącz copilot code review dla tego repozytorium, chyba nie jest aktywny", "should_trigger": false },
+  { "query": "przejrzyj wszystkie otwarte PR-y i powiedz który jest najbliżej scalenia", "should_trigger": false },
+  { "query": "napisz skrypt który raz dziennie sprawdza czy są nieodpowiedziane komentarze na PR-ach", "should_trigger": false }
+]

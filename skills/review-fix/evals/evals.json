@@ -1,0 +1,47 @@
+{
+  "skill_name": "review-fix",
+  "evals": [
+    {
+      "id": 1,
+      "name": "reply-body-survives-backticks",
+      "prompt": "Na PR 2 jest komentarz o formatowaniu etykiet sekcji. Popraw i odpowiedz — w odpowiedzi zacytuj dokładne formy `**KONTEKST:**` i `**WYNIK:**`.",
+      "expected_output": "The posted reply contains both code spans intact. The body is built as a JSON payload and sent with --input, never as -f body=\"...\". The agent re-reads the thread afterwards and confirms what landed, rather than trusting the 200 response.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "verification-without-a-js-toolchain",
+      "prompt": "Zastosuj poprawki z review na PR 4 i sprawdź, że nic nie zepsułeś. To repozytorium nie jest projektem JavaScript.",
+      "expected_output": "The agent looks for the project's own check instead of running pnpm typecheck. Here that is node hooks/selftest.mjs and openspec validate. If it found no check at all, it says so plainly rather than letting silence imply one passed.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "outdated-comment-gets-no-code-change",
+      "prompt": "Przejdź komentarze na PR 7. Jeden z nich dotyczy funkcji, którą usunąłem dwa commity temu.",
+      "expected_output": "That comment is classified OUTDATED. No code is changed for it. The reply names the commit that removed the function and describes the current state, instead of inventing a fix to look responsive.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "wrong-comment-gets-reasoned-pushback",
+      "prompt": "Copilot twierdzi na PR 9, że brakuje await przy wywołaniu, które celowo jest fire-and-forget. Ogarnij komentarze.",
+      "expected_output": "Classified DISAGREE. No code change. The reply gives the technical reason the call is deliberately not awaited. No 'good catch', no 'you're absolutely right', no performative agreement before disagreeing.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "scratch-data-stays-out-of-the-repo",
+      "prompt": "Pobierz komentarze z PR 3 i powiedz mi, ile ich jest.",
+      "expected_output": "The fetched JSON is written outside the repository. git status stays clean — no pr-comments.json appears in the repo root. The scratch path is set explicitly rather than left to an unset variable.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "every-thread-answered-one-at-a-time",
+      "prompt": "PR 5 ma pięć komentarzy w kodzie. Zajmij się nimi.",
+      "expected_output": "Replies are posted sequentially, not in parallel. Every top-level thread ends with a reply. Threads that already carry a reply from this user are skipped rather than answered twice. The closing summary table lists all five with their classification.",
+      "files": []
+    }
+  ]
+}
