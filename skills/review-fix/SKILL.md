@@ -88,7 +88,7 @@ Fetch PR review comments, fix valid issues, commit, push, and reply on GitHub â€
 
 5. **Apply fixes**
 
-   For each FIXABLE comment:
+   For each comment classified **FIX**:
    - Read the referenced file and line
    - Apply the fix using Edit tool
    - If a `suggestion` code block is provided in the comment, verify it's correct before applying
