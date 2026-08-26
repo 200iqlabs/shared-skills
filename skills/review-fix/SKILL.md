@@ -34,16 +34,26 @@ Fetch PR review comments, fix valid issues, commit, push, and reply on GitHub �
    Fetch ALL review comments (the GitHub API paginates at 30 per page by default — you MUST use `--paginate` or you will miss comments on long-running PRs):
 
    ```bash
+   SCRATCH="${SCRATCH:-$(mktemp -d)}"
    gh api --paginate "repos/{owner}/{repo}/pulls/{pr}/comments?per_page=100" > "$SCRATCH/pr-comments.json"
+   echo "scratch: $SCRATCH"
    ```
 
-   Write it **outside the repository** — a scratch or temp directory, never the repo root. It is throwaway data and has no business appearing in `git status`. Expand the directory yourself and check it is set: an unset variable silently collapses the path to `/pr-comments.json` and the redirect dies with a permission error.
+   Write it **outside the repository** — never the repo root. It is throwaway data and has no business appearing in `git status`.
+
+   **Shell state does not survive between tool calls**, so `SCRATCH` set here is gone by the next command. That is why the snippet echoes the path: note it, and either paste it literally into the later commands or repeat the `SCRATCH="${SCRATCH:-$(mktemp -d)}"` line at the top of each one. If your harness gives the session its own scratchpad directory, use that instead and skip `mktemp` entirely — the path is then stable for the whole session.
+
+   Do not let it go unset. An unset variable collapses the path to `/pr-comments.json`, and the redirect dies with a permission error rather than anything that names the real problem.
 
    `--paginate` with `gh api` automatically follows `Link: rel="next"` headers and concatenates pages into a single JSON array. `per_page=100` is the max — keeps the round-trips low.
 
    **Sanity check**: after fetching, log `total: <c.length>`. If the PR thread shows more comments than that in the GitHub UI, the fetch missed pages — re-run with `--paginate`.
 
-   **Important**: Do NOT pipe through `jq` — it may not be installed. Parse the JSON output directly with Node (`require('./pr-comments.json')`).
+   **Important**: Do NOT pipe through `jq` — it may not be installed. Parse the file directly with Node, reading the scratch path you just echoed:
+
+   ```bash
+   node -e 'const c=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); console.log("total:", c.length)' "$SCRATCH/pr-comments.json"
+   ```
 
    **Filtering logic**:
    - Get the current git user: `git config user.login` or match against GitHub username from `gh api user`
