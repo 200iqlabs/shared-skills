@@ -1,7 +1,5 @@
 # Evals for `review-fix`
 
-Two sets, and one blocker worth keeping.
-
 - `evals.json` — 6 behavioural prompts, each aimed at a defect this skill actually shipped with:
   a reply body carrying code spans, verification in a repo with no JavaScript toolchain, an
   outdated comment, a wrong comment needing pushback, scratch data leaking into the repo, and
@@ -12,45 +10,51 @@ The negatives are deliberately near-misses: asking *for* a review, fixing failin
 what a reviewer said without touching code, replying to an issue comment, merging. Each shares
 vocabulary with this skill and belongs somewhere else.
 
-## Triggering is UNMEASURED, not measured-and-passing
+## Measured triggering: 90%, and the rewrite that was reverted
 
-The repo's 80% bar has not been cleared here, and the honest reason is that it could not be
-measured on this machine.
+Run with `tools/skill-trigger-eval.py`, 20 queries x 3 runs on `claude-opus-5`.
 
-`skill-creator`'s optimiser (`scripts/run_loop.py`) reads the `claude -p` subprocess with
-`select.select` on a pipe. On Windows that raises `OSError [WinError 10093]` — `select` there works
-on sockets only. Reproduced directly:
+| Description | Accuracy |
+|---|---|
+| Shipped (unchanged) | **18/20 = 90%** |
+| A hand-written rewrite | 18/20 = 90% |
 
-```
-select na potoku: BLAD -> OSError [WinError 10093]
-```
+The rewrite was **reverted**. It was wider, carried Polish triggers and named the boundary against
+`review-loop` — and it moved nothing. Same accuracy, same two failures, differences in per-query
+confidence well inside the noise of three runs.
 
-The consequence is a measurement that looks like a result. Trigger detection always returns "not
-triggered", so **every negative passes and every positive fails**, and the number never moves no
-matter what the description says. A full five-iteration run produced exactly that: `trigger_rate:
-0.0` on all 20 queries, a flat 50% score at every iteration, and a `best_description` chosen among
-candidates that had all scored identically on no signal at all.
+That is the whole finding. The shipped description was already over the bar; it only *looked* thin.
+Rewriting it was a change made on the way something read rather than on what it did, and the
+measurement is what caught that. This is also exactly what CLAUDE.md's `/skill-creator` mandate
+exists to prevent, and the reviewer on PR #5 was right to raise it.
 
-**That description was not applied.** Adopting it would have meant shipping a change justified by a
-measurement that never happened — the same pattern that let this skill ship broken in the first
-place.
+## The two failures are a boundary, not a wording problem
 
-## What one select-free run showed
+Both descriptions let these through:
 
-A hand-written runner without `select` does execute correctly. On one positive query the subprocess
-did not consult the skill — it went straight to `Bash` and started hunting for the PR across
-repositories. One data point, not a measurement, but it points the same way as the thin original
-description did.
+- *"zrób mi review tych zmian zanim zacommituję, szukam błędów w logice"*
+- *"can you review PR #12 and tell me what's wrong with it"*
 
-## What the current description rests on
+Both are requests to **produce** a review. `review-loop` fails the same way on
+*"zrób review tego PR-a i powiedz co jest nie tak"* — three failures across two skills, one shape.
+The pair has no clause separating *assess this code* from *act on feedback that already exists*,
+and no phrasing tried so far supplies one.
 
-Craft, not evidence. It was widened to carry natural-language triggers in both Polish and English,
-and to state the boundary against `review-loop` in both directions. It is untested. Treat the
-triggering rate as unknown until the measurement path works.
+A tightened variant stating that boundary as a principle was drafted and queued; the run was
+stopped before producing a number, so nothing is claimed for it. It is worth finishing — and it
+should be measured on both skills, not assumed to carry over.
 
-## To finish this properly
+## Two corrections to an earlier revision of this file
 
-Either fix the `select` call upstream in `skill-creator` (it lives in the plugin cache and must not
-be edited in place), or write a small local runner that reads the subprocess without `select` and
-detects a trigger from the `tool_use` blocks in the stream. The second is maybe an hour of work and
-would unblock the 80% bar for every skill in this repository, not just this one.
+**The runner already existed.** `tools/skill-trigger-eval.py`, committed in `504999d` on
+2026-08-18. An earlier revision recommended writing one, estimated at an hour, and nearly did.
+The tool was built, never used, and therefore invisible — the same pattern that let this skill ship
+broken.
+
+**The measurement failure had two causes, not one.** `skill-creator`'s optimiser reads its
+subprocess with `select.select` on a pipe, which raises `OSError [WinError 10093]` on Windows. But
+running the measurement from inside this repository also breaks it: the nested `claude -p` inherits
+`CLAUDE.md` and the open work, behaves like a coding agent on this codebase, and explores instead of
+consulting the skill. Every query then scores 0.00 for reasons unrelated to the description. Fixing
+`select` alone would not have been enough — which is why the local runner uses a neutral scratch
+directory.
