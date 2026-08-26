@@ -79,7 +79,7 @@ The agent SHALL use risk markers (🟢 BEZPIECZNE, 🟡 DO WERYFIKACJI, 🔴 WYM
 #### Scenario: The agent is preparing a brief
 
 - **WHEN** the agent is working in `/brief` mode
-- **THEN** it SHALL omit risk signalling entirely, the brief being written to be taken to a consultation
+- **THEN** it SHALL omit risk signaling entirely, the brief being written to be taken to a consultation
 
 ### Requirement: Source attribution for data provenance
 The agent SHALL cite the source and validity period for specific rates, thresholds, and deadlines: reference file name + last_updated date + when the data expires (e.g., "stawki ważne do końca roku podatkowego 2026"). General knowledge SHALL be marked as such.
