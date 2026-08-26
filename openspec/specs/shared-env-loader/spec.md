@@ -1,3 +1,7 @@
+## Purpose
+
+One environment loader shared by the tool scripts, so credentials are found the same way everywhere and a script that used to load them itself keeps working unchanged.
+
 ## Requirements
 
 ### Requirement: Shared load_env function

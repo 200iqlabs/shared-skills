@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Read access to inFakt for the finance tooling — invoices and costs — authenticated by an API key read from the shared environment file.
+
+## Requirements
 
 ### Requirement: Fetch invoices from inFakt API
 The system SHALL provide `skills/cfo/scripts/get_invoices.py` that fetches invoices via `GET /api/v3/invoices.json`. The script SHALL support `--unpaid` flag (filter by `paid_date_null=true`), `--from` and `--to` date filters, handle pagination, and output JSON with summary (count, total_net, total_gross) and invoice list.

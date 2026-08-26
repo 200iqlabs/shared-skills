@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+How the command-line tools are tested: a shared runner, readable failures when the environment is not configured, read-only integration tests against the live services, mocked write operations, and isolation between tests.
+
+## Requirements
 
 ### Requirement: Test runner configuration
 System SHALL use pytest as the sole test runner. Test files SHALL reside in `tests/` directory. Configuration SHALL be defined in `pyproject.toml` or `pytest.ini`.
