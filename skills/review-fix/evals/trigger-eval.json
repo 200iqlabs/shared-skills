@@ -1,0 +1,23 @@
+[
+  { "query": "copilot zostawił 6 uwag na PR 12, przejdź przez nie — popraw co sensowne i odpisz na każdą", "should_trigger": true },
+  { "query": "są komentarze z review na moim PR, ogarnij je i wypchnij", "should_trigger": true },
+  { "query": "PR #47 dostał feedback od recenzenta. część uwag jest moim zdaniem bez sensu, ale przejrzyj i zrób co trzeba", "should_trigger": true },
+  { "query": "my teammate left review comments on the auth PR — apply the valid ones, push, and answer each thread on GitHub", "should_trigger": true },
+  { "query": "the bot reviewed pr 3 and i havent touched it since. deal with what it flagged", "should_trigger": true },
+  { "query": "przejdź po komentarzach recenzji na tej gałęzi, część jest już nieaktualna bo zmieniałem ten plik", "should_trigger": true },
+  { "query": "there's feedback sitting on #21 from two days ago. fix what's real, push it, and leave a reply on every thread so nobody thinks i ignored them", "should_trigger": true },
+  { "query": "reviewer wants changes on the migration PR. handle the comments and reply, dont just silently push", "should_trigger": true },
+  { "query": "ok on PR 5 there are like 4 comments about error handling in src/api/client.ts. some are outdated. go through them properly", "should_trigger": true },
+  { "query": "odpowiedz na uwagi z code review i napraw to co faktycznie jest błędem", "should_trigger": true },
+
+  { "query": "zrób mi review tych zmian zanim zacommituję, szukam błędów w logice", "should_trigger": false },
+  { "query": "can you review PR #12 and tell me what's wrong with it", "should_trigger": false },
+  { "query": "testy na PR 8 się wywalają, zobacz czemu i napraw", "should_trigger": false },
+  { "query": "streść mi w dwóch zdaniach co recenzent napisał na tym PR, nie ruszaj kodu", "should_trigger": false },
+  { "query": "what does this copilot suggestion about the nullable field actually mean? i dont get it", "should_trigger": false },
+  { "query": "odpisz na komentarz w issue #40, ktoś pyta o roadmapę", "should_trigger": false },
+  { "query": "otwórz PR z tej gałęzi na master i opisz co się zmieniło", "should_trigger": false },
+  { "query": "scal PR 12, review już przeszedł", "should_trigger": false },
+  { "query": "odpal linter na src/ i popraw wszystkie warningi jakie wypluje", "should_trigger": false },
+  { "query": "cofnij ostatni commit na gałęzi PR-a, wrzuciłem tam nie ten plik", "should_trigger": false }
+]

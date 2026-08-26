@@ -1,0 +1,40 @@
+{
+  "skill_name": "review-loop",
+  "evals": [
+    {
+      "id": 1,
+      "name": "copilot-absence-detected-before-waiting",
+      "prompt": "Odpal pętlę review na PR 1 dla zmiany add-auth. To repozytorium nigdy nie miało recenzji od Copilota.",
+      "expected_output": "Pre-flight finds no prior Copilot review across recent pull requests and warns before starting, naming how long a fruitless run would take. It asks whether to continue rather than aborting on its own — absence of history is not proof Copilot is disabled.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "first-ever-pr-reported-as-inconclusive",
+      "prompt": "Uruchom cykl review na PR 1, zmiana add-auth. To pierwszy PR w tym repozytorium.",
+      "expected_output": "The availability check reports itself inconclusive rather than negative, in one line, and proceeds. A repository with no prior pull requests has no history to read, and treating that as a negative result would block a legitimate first run.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "timeout-names-both-possibilities",
+      "prompt": "[po wyczerpaniu poll_timeout bez nowej recenzji] Podsumuj przebieg.",
+      "expected_output": "The termination report distinguishes the two states a timeout cannot tell apart: Copilot being slow versus Copilot not reviewing this repository at all. It tells the user how to settle it — check whether the reviewers sidebar offers a Copilot entry — instead of asserting that a re-run will work.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "missing-change-directory-prompts",
+      "prompt": "Odpal review-loop na PR 6 dla zmiany restructure-reply-skeleton.",
+      "expected_output": "Pre-flight cannot find openspec/changes/restructure-reply-skeleton/, lists nearby candidates including the archived directory, and pauses for the user to choose. It does not guess the closest-looking name and carry on.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "clean-termination-when-nothing-new",
+      "prompt": "PR 12, zmiana add-agent-working-mode — poprowadź cykl aż się ustabilizuje.",
+      "expected_output": "When Copilot returns no new comments, the loop stops with reason no-comments and reports totals across iterations. It does not keep cycling to the iteration cap, and it does not report success in a way that conflates 'nothing new' with 'everything was fixed'.",
+      "files": []
+    }
+  ]
+}
