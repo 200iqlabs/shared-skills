@@ -61,7 +61,23 @@ Fetch PR review comments, fix valid issues, commit, push, and reply on GitHub â€
    - Skip top-level comments that already have a reply from our user (check reply chain)
    - Only process top-level comments from the latest review cycle
 
-3. **Triage each comment**
+3. **If there are no comments, you are in the wrong skill**
+
+   Zero top-level comments means no review has happened yet. The user most likely asked for a
+   review to be *produced* â€” "zrÃ³b mi review tego PR-a", "tell me what's wrong with it" â€” and this
+   skill acts on feedback that already exists.
+
+   Say so in one line and point at a code review instead. Do not invent findings to fill the gap,
+   and do not treat an empty fetch as "nothing to do" and stop silently: both leave the user with
+   the impression their request was handled.
+
+   This step exists because the description cannot prevent it. Three separate wordings were
+   measured against the trigger set in `evals/`, including one stating the exclusion as an explicit
+   principle, and all three trigger on those requests at the same rate. Topical overlap outweighs
+   an exclusion clause, so the boundary has to be enforced here, after the fetch, where the answer
+   is a fact rather than a guess.
+
+4. **Triage each comment**
 
    For each comment, read the referenced file and surrounding code, then classify:
    - **FIX**: Valid issue, code change needed
@@ -70,20 +86,20 @@ Fetch PR review comments, fix valid issues, commit, push, and reply on GitHub â€
 
    For OUTDATED and DISAGREE, do NOT change code â€” just prepare a reply.
 
-4. **Apply fixes**
+5. **Apply fixes**
 
-   For each FIXABLE comment:
+   For each comment classified **FIX**:
    - Read the referenced file and line
    - Apply the fix using Edit tool
    - If a `suggestion` code block is provided in the comment, verify it's correct before applying
 
-5. **Verify**
+6. **Verify**
 
    Run whatever check this project actually has, after all fixes are applied. Find it rather than assuming it: a `typecheck`, `test` or `lint` script in `package.json`, a test runner, a self-test script, a schema validator. In this repository that is `node hooks/selftest.mjs` and `openspec validate --all`; in a TypeScript project it is usually `pnpm typecheck`.
 
    If the project has no automated check at all, say so in the summary rather than letting silence imply one passed. If a check fails, fix it before committing.
 
-6. **Commit and push**
+7. **Commit and push**
 
    Stage only files that were changed by fixes. Create a single commit:
 
@@ -101,7 +117,7 @@ Fetch PR review comments, fix valid issues, commit, push, and reply on GitHub â€
    git push origin HEAD:<headRefName>
    ```
 
-7. **Reply to each comment**
+8. **Reply to each comment**
 
    **CRITICAL: Send replies ONE AT A TIME, sequentially.** Do NOT send multiple replies in parallel â€” if one fails, the rest get cancelled and you have to redo them.
 
@@ -138,7 +154,7 @@ Fetch PR review comments, fix valid issues, commit, push, and reply on GitHub â€
    - DISAGREE: State technical reasoning. No performative agreement.
    - **NEVER** write "Great point!", "You're absolutely right!", or "Thanks for catching that!"
 
-8. **Summary**
+9. **Summary**
 
    Print a table:
 
