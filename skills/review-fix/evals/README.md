@@ -6,49 +6,49 @@
   five threads that must each end with exactly one reply.
 - `trigger-eval.json` — 20 triggering queries, 10 positive and 10 negative.
 
-The negatives are deliberately near-misses: asking *for* a review, fixing failing CI, summarising
-what a reviewer said without touching code, replying to an issue comment, merging. Each shares
-vocabulary with this skill and belongs somewhere else.
-
-## Measured triggering: 90%, and the rewrite that was reverted
+## Measured triggering: 90%, and it does not move
 
 Run with `tools/skill-trigger-eval.py`, 20 queries x 3 runs on `claude-opus-5`.
 
-| Description | Accuracy |
-|---|---|
-| Shipped (unchanged) | **18/20 = 90%** |
-| A hand-written rewrite | 18/20 = 90% |
+| Description | Accuracy | The two contested negatives |
+|---|---|---|
+| Shipped (unchanged) | **18/20 = 90%** | 1.00 / 0.67 |
+| A hand-written rewrite | 18/20 = 90% | 1.00 / 1.00 |
+| Rewrite + the exclusion stated as an explicit principle | 18/20 = 90% | 1.00 / 1.00 |
 
-The rewrite was **reverted**. It was wider, carried Polish triggers and named the boundary against
-`review-loop` — and it moved nothing. Same accuracy, same two failures, differences in per-query
-confidence well inside the noise of three runs.
+Three descriptions, one number. The rewrite was reverted; the tightened variant was never adopted.
+**The shipped description stands unchanged**, because nothing measured beat it.
 
-That is the whole finding. The shipped description was already over the bar; it only *looked* thin.
-Rewriting it was a change made on the way something read rather than on what it did, and the
-measurement is what caught that. This is also exactly what CLAUDE.md's `/skill-creator` mandate
-exists to prevent, and the reviewer on PR #5 was right to raise it.
+## The finding: an exclusion clause is a weak signal
 
-## The two failures are a boundary, not a wording problem
-
-Both descriptions let these through:
+Every failure, in every variant, is the same shape — a request to **produce** a review:
 
 - *"zrób mi review tych zmian zanim zacommituję, szukam błędów w logice"*
 - *"can you review PR #12 and tell me what's wrong with it"*
 
-Both are requests to **produce** a review. `review-loop` fails the same way on
-*"zrób review tego PR-a i powiedz co jest nie tak"* — three failures across two skills, one shape.
-The pair has no clause separating *assess this code* from *act on feedback that already exists*,
-and no phrasing tried so far supplies one.
+`review-loop` fails identically on *"zrób review tego PR-a i powiedz co jest nie tak"*, at 95%
+across two variants of its own. Three failures, two skills, one missing distinction.
 
-A tightened variant stating that boundary as a principle was drafted and queued; the run was
-stopped before producing a number, so nothing is claimed for it. It is worth finishing — and it
-should be measured on both skills, not assumed to carry over.
+The third variant above says outright that a request to look at code and say what is wrong remains
+a code review even when it names a pull request. It changed nothing: both queries still trigger on
+every run. The working explanation is that this skill's positive territory — review comments, a PR,
+fixing, replying — overlaps these requests so heavily on the surface that relevance is settled
+before an exclusion is weighed.
+
+**Generalisable to any skill here: describing what a skill is for works; describing what it is not
+for does not.** Do not spend a fourth wording on this.
+
+## Where the boundary is enforced instead
+
+Step 3 of the skill. After the fetch, "are there comments?" is a fact rather than a guess — zero
+top-level comments means no review has happened and the user wanted one written. The skill says so
+and points at a code review. Triggering stays wrong; the outcome stops being wrong.
 
 ## Two corrections to an earlier revision of this file
 
 **The runner already existed.** `tools/skill-trigger-eval.py`, committed in `504999d` on
-2026-08-18. An earlier revision recommended writing one, estimated at an hour, and nearly did.
-The tool was built, never used, and therefore invisible — the same pattern that let this skill ship
+2026-08-18. An earlier revision recommended writing one, estimated at an hour, and nearly did. The
+tool was built, never used, and therefore invisible — the same pattern that let this skill ship
 broken.
 
 **The measurement failure had two causes, not one.** `skill-creator`'s optimiser reads its

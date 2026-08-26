@@ -73,6 +73,20 @@ For each number returned, fetch `repos/<owner>/<repo>/pulls/<n>/reviews` and loo
 
 This is advisory. Never abort on it by itself — a repo can have Copilot enabled today and no history of it.
 
+1.3b. **Check the user wants a cycle driven, not a review written.**
+
+Requests like *"zrób review tego PR-a i powiedz co jest nie tak"* trigger this skill at full rate,
+and no wording of the description prevents it — three variants were measured against the trigger
+set in `evals/` and none moved the number. Topical overlap beats an exclusion clause, so the check
+belongs here instead.
+
+If nothing in the request implies repetition — no *until*, *aż*, *keep going*, *repeat*, no round
+count, no complaint about having to re-request the review by hand — then the user wants an opinion
+on the pull request, not an unattended loop over it. Say so in one line and point at a code review.
+
+A single pass over comments that already exist is the neighbouring case, and it belongs to
+`review-fix`. The giveaway between the two is the same: nothing is repeated.
+
 1.4. **Check for prior incomplete run.**
 
 ```bash
