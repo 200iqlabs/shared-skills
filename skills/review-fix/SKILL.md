@@ -61,9 +61,37 @@ Fetch PR review comments, fix valid issues, commit, push, and reply on GitHub �
    - Skip top-level comments that already have a reply from our user (check reply chain)
    - Only process top-level comments from the latest review cycle
 
+   **Fetch the review bodies too — some findings are not comments.** The comments endpoint
+   returns threads, and returns nothing for a finding the reviewer chose to suppress. Copilot
+   suppresses routinely: a review can arrive carrying `### Suppressed comments (2)` in its
+   **body** with zero new threads behind it.
+
+   ```bash
+   gh api --paginate "repos/{owner}/{repo}/pulls/{pr}/reviews?per_page=100" > "$SCRATCH/pr-reviews.json"
+   ```
+
+   Read the body of every review newer than your last reply and scan it for a suppressed block.
+   Each entry names a file and a line and reads exactly like a review comment, because it is one
+   — it just has no thread to answer in.
+
+   **Treat them as first-class findings.** Measured on `shorts-lab-ai/saas-platform` PR #824: a
+   review with zero new threads carried two suppressed ones, both substantive — they caught a
+   document asserting a conclusion it warned three paragraphs later could not be drawn. Reading
+   threads only reports "nothing to answer", which is wrong in the direction that matters: what
+   gets dropped is what the reviewer judged too minor to interrupt with, not too minor to be
+   right.
+
+   A suppressed finding has no `comment_id`, so step 8's in-thread reply cannot carry it. Answer
+   those together in one top-level PR comment
+   (`gh api repos/{owner}/{repo}/issues/{pr}/comments`), naming which you took and which you did
+   not.
+
 3. **If there are no comments, you are in the wrong skill**
 
-   Zero top-level comments means no review has happened yet. The user most likely asked for a
+   Zero top-level comments **and no suppressed findings in any review body** means no review has
+   happened yet — check both, because a review carrying only suppressed findings is
+   indistinguishable from no review at all through the comments endpoint. The user most likely
+   asked for a
    review to be *produced* — "zrób mi review tego PR-a", "tell me what's wrong with it" — and this
    skill acts on feedback that already exists.
 
