@@ -221,13 +221,6 @@ If `parsed.fixed == 0` AND `parsed.outdated == 0` AND `parsed.disagreed == 0`:
 - Set `termination_reason = "no-comments"`.
 - Go to Step 6.
 
-This branch is only as trustworthy as the fetch behind it. A Copilot review can carry findings
-that never become threads — they appear as `### Suppressed comments (N)` in the review body —
-and a sub-agent reading the comments endpoint alone returns all zeros for such a review, which
-lands here and terminates the loop as clean. `review-fix` step 2 reads the review bodies for
-exactly this reason; a sub-agent that skipped it will end the loop one round early and report
-success.
-
 3.3. **Push happened — continue to retrigger.**
 
 If `parsed.fixed > 0` AND `parsed.pushed_commit_sha` is non-null:
