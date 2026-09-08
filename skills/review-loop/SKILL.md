@@ -310,9 +310,10 @@ while now() < poll_deadline:
   candidates = [r for r in reviews
                  if r.user.login == "copilot-pull-request-reviewer[bot]"
                  and r.id > last_copilot_review_id]
-  if candidates and (last_pushed_sha is None
-                     or any(c.commit_id == last_pushed_sha for c in candidates)):
-    new_id = max(c.id for c in candidates)
+  fresh = [c for c in candidates
+            if last_pushed_sha == null or c.commit_id == last_pushed_sha]
+  if fresh:
+    new_id = max(c.id for c in fresh)
     last_copilot_review_id = new_id
     log {"ts":"<ISO>","pr":<PR>,"event":"review-detected","review_id":new_id}
     goto 5.4 (continue)
@@ -325,6 +326,8 @@ while now() < poll_deadline:
 ```bash
 gh api repos/<owner>/<repo>/pulls/<PR>/reviews --jq '.[] | "\(.id) \(.commit_id) \(.submitted_at)"'
 ```
+
+**Take the max over `fresh`, not over `candidates`.** Gating on "some candidate matches" while selecting the highest id among *all* of them hands back a review written against a different sha — and since the next pass keeps only `r.id > last_copilot_review_id`, the fresh review that was skipped over becomes permanently invisible. The loop then waits out `poll_timeout` for a review it already had.
 
 **Do not use a completed Actions run as the signal.** The review object appears a few seconds *after* the run reports completion, so a watcher keyed on `Running Copilot Code Review` finishing reports "run done, no review" while the review is a minute from landing. Poll the reviews endpoint; keep run state at most as a secondary exit condition.
 
