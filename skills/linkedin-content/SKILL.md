@@ -1,15 +1,14 @@
 ---
 name: linkedin-content
-description: "LinkedIn post creator and content strategist for personal brand building.
-  Use when the user wants to write a LinkedIn post, draft LinkedIn content, brainstorm
-  post ideas for LinkedIn, optimize an existing LinkedIn post, create hooks, or build
-  a content calendar for LinkedIn. Also trigger when the user mentions 'post na LinkedIn',
-  'LI', 'personal brand', 'ghostwriter', or wants to share a professional insight,
-  case study, behind-the-scenes story, or opinion piece on LinkedIn. Trigger on Polish
-  requests like 'napisz post na LinkedIn', 'pomysl na post', 'hook', 'zasieg na LinkedIn',
-  'seria postow'. Do NOT trigger for blog posts, website copy, email drafts, PowerPoint
-  presentations, or social media graphics — only for LinkedIn text content. Can work
-  standalone or be invoked by the marketing agent."
+description: "Content engine that turns a brief into LinkedIn post text. Use when a
+  publication loop, another skill, or the user hands over a brief that names the channel,
+  the thesis with its grounds, and the constraints — this skill writes the material and
+  returns it against the result contract the brief declares. Do NOT trigger on a bare
+  request to write a LinkedIn post, draft content, brainstorm post ideas, create hooks, or
+  build a content calendar. Where a publication loop exists, material for LinkedIn is
+  written through the loop and this skill is its engine, not a second entry point; without
+  a brief it runs only when the user invokes it by name. Never for blog posts, website
+  copy, email drafts, presentations, or social media graphics."
 license: Apache-2.0
 metadata:
   author: Pawel Lipowczan
@@ -19,7 +18,45 @@ metadata:
 
 # LinkedIn Content Generator
 
-Ghostwriter i strateg content marketingowy. Pomagam tworzyc posty na LinkedIn ktore buduja pozycje eksperta w jego dziedzinie.
+Silnik treści: zamieniam brief na tekst posta. Ghostwriter i strateg content marketingowy —
+ale wywoływany, nie zgłaszający się sam.
+
+## Wejście: brief albo jawne wywołanie
+
+**Ten skill nie jest wejściem do pisania postów na LinkedIna.** Tam, gdzie działa pętla
+publikacji, materiał powstaje przez nią, a ten skill jest jej silnikiem. Drugie wejście
+oznacza drugi zestaw bramek i drugi licznik dni, a materiał, który je ominął, wygląda
+identycznie jak materiał, który przez nie przeszedł.
+
+### 1. Wywołanie z briefem — tryb silnika
+
+Brief jest jedynym źródłem zadania. Rozpoznasz go po tym, że nazywa **kanał**, **tezę
+z podstawami** i **ograniczenia**, a na końcu wypisuje **kontrakt wyniku**.
+
+Wtedy obowiązuje brief, nie ta instrukcja:
+
+- Czytasz **wyłącznie** brief i pliki doktryny, które brief wymienia, w podanej kolejności.
+  Nie doczytujesz `context/author-profile.md` ani niczego innego z własnej inicjatywy —
+  jeżeli brief tego chce, sam to wskaże.
+- **Teza bez podstawy nie wchodzi do treści**, także gdy jest prawdziwa i powszechnie znana.
+- **Podstawę przepisujesz dosłownie**, tak jak stoi w briefie. Streszczona podstawa przestaje
+  być podstawą, a bramka porównująca ją z nagłówkiem tematu parafrazy nie przyjmie.
+- Nie dopisujesz liczb. Liczba, której nie ma w briefie, nie istnieje.
+- Czego brief nie mówi — **zgłaszasz jako brak**. Nie zgadujesz i nie doczytujesz
+  z repozytorium.
+- Oddajesz **każdą** pozycję kontraktu wyniku. Pozycję niedotyczącą materiału piszesz wprost
+  („nie dotyczy"); pominięta jest nieodróżnialna od zapomnianej.
+
+Reszta tego pliku (typy postów, hashtagi, uczenie się ze wzorcowych postów) w tym trybie
+**nie obowiązuje**, chyba że brief wskaże ją wprost. Doktryna z briefu jest ważniejsza.
+
+### 2. Wywołanie bez briefu — tryb zapasowy
+
+Dotyczy sytuacji, w której nie ma pętli publikacji, a użytkownik wywołał ten skill **wprost,
+po nazwie**. Wtedy obowiązuje reszta tego pliku.
+
+Zanim zaczniesz pisać, powiedz jedno zdanie: jeżeli w repozytorium jest pętla publikacji,
+materiał na LinkedIna powinien iść przez nią, a nie tędy. Powiedz to raz i nie wracaj do tego.
 
 ## Instructions
 
