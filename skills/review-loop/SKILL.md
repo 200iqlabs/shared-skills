@@ -51,7 +51,7 @@ Ask the user: *"I can't find `openspec/changes/<change-name>/`. Candidates liste
 1.3. **Compute Copilot baseline.**
 
 ```bash
-gh api repos/<owner>/<repo>/pulls/<PR>/reviews
+gh api --paginate "repos/<owner>/<repo>/pulls/<PR>/reviews?per_page=100"
 ```
 
 Parse the JSON response. Compute:
@@ -306,7 +306,7 @@ Loop:
 
 ```
 while now() < poll_deadline:
-  reviews = gh api repos/<owner>/<repo>/pulls/<PR>/reviews
+  reviews = gh api --paginate "repos/<owner>/<repo>/pulls/<PR>/reviews?per_page=100"
   candidates = [r for r in reviews
                  if r.user.login == "copilot-pull-request-reviewer[bot]"
                  and r.id > last_copilot_review_id]
@@ -324,8 +324,10 @@ while now() < poll_deadline:
 **Freshness is decided by `commit_id`, not by time and not by id alone.** Every entry in `pulls/<n>/reviews` carries the sha it was written against. That is the only cheap way to tell "the reviewer saw my fix" from "an older review just surfaced", and it is why the filter above compares against `last_pushed_sha`:
 
 ```bash
-gh api repos/<owner>/<repo>/pulls/<PR>/reviews --jq '.[] | "\(.id) \(.commit_id) \(.submitted_at)"'
+gh api --paginate "repos/<owner>/<repo>/pulls/<PR>/reviews?per_page=100" --jq '.[] | "\(.id) \(.commit_id) \(.submitted_at)"'
 ```
+
+**Every reviews fetch needs `--paginate`.** The endpoint pages at 30 by default and returns reviews oldest-first, so the newest review sits on the *last* page — an unpaginated fetch reads precisely the wrong half for a "has a new review landed?" check, and the loop times out staring at page one. This bites sooner than 30 rounds suggests: posting an in-thread reply creates a review object too, so one iteration adds the Copilot review plus one per reply. PR #9 of this repository reached four reviews after two rounds.
 
 **Take the max over `fresh`, not over `candidates`.** Gating on "some candidate matches" while selecting the highest id among *all* of them hands back a review written against a different sha — and since the next pass keeps only `r.id > last_copilot_review_id`, the fresh review that was skipped over becomes permanently invisible. The loop then waits out `poll_timeout` for a review it already had.
 
