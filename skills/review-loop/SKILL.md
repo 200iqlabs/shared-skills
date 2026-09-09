@@ -51,7 +51,7 @@ Ask the user: *"I can't find `openspec/changes/<change-name>/`. Candidates liste
 1.3. **Compute Copilot baseline.**
 
 ```bash
-gh api repos/<owner>/<repo>/pulls/<PR>/reviews
+gh api --paginate "repos/<owner>/<repo>/pulls/<PR>/reviews?per_page=100"
 ```
 
 Parse the JSON response. Compute:
@@ -161,13 +161,22 @@ Use the OpenSpec context to inform your FIX / OUTDATED / DISAGREE classification
 CRITICAL RETURN FORMAT:
 The LAST LINE of your response must be a single-line JSON object, nothing else on that line. Lines above may contain prose summary.
 
-{"fixed": <int>, "outdated": <int>, "disagreed": <int>, "pushed_commit_sha": "<sha or null>", "error": "<message or null>"}
+{"fixed": <int>, "outdated": <int>, "disagreed": <int>, "pushed_commit_sha": <"40-char sha"|null>, "error": <"message"|null>}
 
 - `fixed`: count of FIX-classified comments that resulted in code changes.
 - `outdated`: count of OUTDATED comments (reply-only, no code change).
 - `disagreed`: count of DISAGREE comments (reply-only with technical reasoning).
-- `pushed_commit_sha`: the sha of your commit if you pushed, otherwise null.
+- `pushed_commit_sha`: the **full 40-character** sha of your commit if you pushed, otherwise null. Take it from `git rev-parse HEAD`, not `--short` — the loop matches this against `commit_id` from the reviews endpoint, which is always full-length.
 - `error`: null on success, or a short string describing why you couldn't complete (e.g., "typecheck failed", "push rejected").
+
+Both nullable fields take a JSON string or the bare literal null. Never the string "null" —
+it is truthy, and the loop reads it as a real error and a real sha.
+
+Fixed two, pushed:
+{"fixed": 2, "outdated": 0, "disagreed": 1, "pushed_commit_sha": "5b431277b031648832d09305755ed48431374a4c", "error": null}
+
+Nothing needed a code change:
+{"fixed": 0, "outdated": 1, "disagreed": 2, "pushed_commit_sha": null, "error": null}
 ```
 
 2.3. **Parse the sub-agent return.** Take the sub-agent's full return text, split on newlines, find the last non-empty line, and `JSON.parse` it. If parsing fails:
@@ -175,6 +184,8 @@ The LAST LINE of your response must be a single-line JSON object, nothing else o
 - Set `termination_reason = "error"`.
 - Show the user the raw sub-agent output (full, not truncated) so they can debug.
 - Go to Step 6.
+
+Then normalise the two nullable fields. If `parsed.pushed_commit_sha` or `parsed.error` came back as the *string* `"null"` (or `"none"`, or empty), replace it with a real `null`. The string is truthy, so without this Step 2.4 ends every clean iteration as an error, and Step 5 compares shas against `"null"` and never matches. Same reasoning as the sha length above: the return format is a prompt, not a schema the runtime enforces, so the parser should not assume it was obeyed.
 
 2.4. **If `parsed.error` is non-null:**
 - Log: `{"ts":"<ISO>","pr":<PR>,"event":"iter-error","iteration":<N>,"error":"<parsed.error>"}`
@@ -242,36 +253,32 @@ If `parsed.fixed > 0` AND `parsed.pushed_commit_sha` is null:
 
 ### 4. Retrigger Copilot review
 
-4.1. **Idempotency check — skip if recent duplicate.**
+**Request the reviewer over REST. Do not post a comment.** `@copilot review` as a PR comment does not order a re-review — it wakes the Copilot **coding agent**, which reads the thread, replies in prose that the findings are already addressed, and finishes green having produced no review at all. `pulls/<n>/reviews` does not grow. A successful run plus a polite reply is indistinguishable from a real review arriving, and the loop then spends `wait_initial + poll_timeout` before reporting a `timeout` it cannot tell apart from "Copilot does not review this repository".
 
-Fetch the most recent PR issue comment (top-level conversation, not review comments):
+The two are distinguishable in `gh run list --branch <branch>` if you ever need to confirm it: the automatic review on PR open runs as `Running Copilot Code Review`; the comment runs as `Addressing comment on PR #<n>`.
 
-```bash
-gh api repos/<owner>/<repo>/issues/<PR>/comments
-```
-
-Parse JSON. Take the last element of the array. Determine the current user's login:
+4.1. **Request the review.**
 
 ```bash
-gh api user --jq .login
+gh api --method POST repos/<owner>/<repo>/pulls/<PR>/requested_reviewers \
+  -f "reviewers[]=copilot-pull-request-reviewer[bot]"
 ```
 
-If the last comment's `user.login` equals the current user's login AND `body` is exactly `@copilot review` (trimmed) AND `created_at` is within the last 5 minutes of current time:
-- Log: `{"ts":"<ISO>","pr":<PR>,"event":"retrigger-skipped","reason":"recent-duplicate"}`
-- Skip to Step 5.
+Two traps live in this one call:
 
-4.2. **Post retrigger comment.**
+- **The login must carry the `[bot]` suffix.** Without it GitHub answers `422 Reviews may only be requested from collaborators`, which reads as "Copilot cannot be requested on this repository" and is why this path was once written off.
+- **The response comes back with `requested_reviewers: []`, and that is not a failure.** An empty list immediately after the request is normal — `gh pr view` shows it empty too — and the review still arrives, measured at 2-4 minutes across four consecutive runs. Reading that empty list as failure is the main way this path gets abandoned.
 
-```bash
-gh pr comment <PR> --body "@copilot review"
-```
+There is no idempotency check to do here. Re-requesting a reviewer who is already requested is harmless, unlike posting the same comment twice.
 
-If exit code is non-zero, sleep 30 seconds and retry once. If the retry also fails:
+If the `gh api` call itself returns non-zero, sleep 30 seconds and retry once. If the retry also fails:
 - Log: `{"ts":"<ISO>","pr":<PR>,"event":"retrigger-failed","exit_code":<code>}`
 - Set `termination_reason = "error"`.
 - Go to Step 6.
 
-4.3. **Record retrigger timestamp** (used as the start point for `poll_timeout` in Step 5):
+Do **not** fall back to `gh pr comment <PR> --body "@copilot review"`. It is not a weaker version of this call; it summons a different agent and guarantees the timeout described above.
+
+4.2. **Record retrigger timestamp** (used as the start point for `poll_timeout` in Step 5):
 
 ```
 retrigger_started_at = now()
@@ -283,13 +290,7 @@ Log:
 {"ts":"<ISO>","pr":<PR>,"event":"copilot-retrigger"}
 ```
 
-**Known limitation — Actions-free trigger.** The `@copilot review` comment mechanism runs through a GitHub Actions workflow and therefore consumes Actions minutes. When Actions billing is exhausted, this path silently fails to fire a new review (the comment posts but Copilot never responds).
-
-The UI's "Re-request review" refresh icon next to Copilot in the PR reviewers sidebar uses a different path that does not depend on Actions.
-
-**Corrected observation (2026-08-25).** An earlier note here recorded that requesting the reviewer over REST does not trigger a review. Two runs on this repository contradict that. `POST /pulls/<n>/requested_reviewers` with `reviewers[]=copilot-pull-request-reviewer[bot]` returned 200, `requested_reviewers` came back **empty**, `gh pr view` showed it empty immediately afterwards — and Copilot posted a full review a few minutes later, both times.
-
-So: **an empty `requested_reviewers` right after the request is not evidence that the request failed.** Reading it as failure is the mistake this note previously encoded. The bot login that works is `copilot-pull-request-reviewer[bot]`, not `Copilot`, which may be why the earlier attempt was read as a dead end. To add a reliable Actions-free retrigger here, the endpoint needs to be captured from the browser Network tab while clicking the refresh icon, then wired into Step 4 above as the primary path with `@copilot review` as fallback.
+**Why not the comment, in one more place.** The comment mechanism also runs through a GitHub Actions workflow and consumes Actions minutes; when Actions billing is exhausted it fails silently, the comment posting successfully either way. The UI's "Re-request review" refresh icon beside Copilot in the reviewers sidebar does not depend on Actions — the REST call above is the scriptable equivalent.
 
 ### 5. Wait for Copilot review
 
@@ -316,18 +317,40 @@ Loop:
 
 ```
 while now() < poll_deadline:
-  reviews = gh api repos/<owner>/<repo>/pulls/<PR>/reviews
+  reviews = gh api --paginate "repos/<owner>/<repo>/pulls/<PR>/reviews?per_page=100"
   candidates = [r for r in reviews
                  if r.user.login == "copilot-pull-request-reviewer[bot]"
                  and r.id > last_copilot_review_id]
-  if candidates:
-    new_id = max(c.id for c in candidates)
+  fresh = [c for c in candidates
+            if last_pushed_sha == null or sha_eq(c.commit_id, last_pushed_sha)]
+  if fresh:
+    new_id = max(c.id for c in fresh)
     last_copilot_review_id = new_id
     log {"ts":"<ISO>","pr":<PR>,"event":"review-detected","review_id":new_id}
     goto 5.4 (continue)
   else:
     sleep(poll_interval)   # default 30s — use ScheduleWakeup if >= 60s remain
 ```
+
+**Freshness is decided by `commit_id`, not by time and not by id alone.** Every entry in `pulls/<n>/reviews` carries the sha it was written against. That is the only cheap way to tell "the reviewer saw my fix" from "an older review just surfaced", and it is why the filter above compares against `last_pushed_sha`:
+
+```bash
+gh api --paginate "repos/<owner>/<repo>/pulls/<PR>/reviews?per_page=100" --jq '.[] | "\(.id) \(.commit_id) \(.submitted_at)"'
+```
+
+**Compare shas by prefix, not by equality.** `commit_id` from the API is always the full 40 characters. `last_pushed_sha` arrives from the sub-agent's `pushed_commit_sha`, and a sub-agent asked for "the sha" returns the 7-character one about as readily — `review-fix`, the sub-agent in question, is told to write replies as `Fixed in {commit_sha_short}`, so the short form is the value already in its hand. Strict `==` then never matches, `fresh` stays empty, and the loop times out with the right review sitting in the list it just fetched.
+
+```
+sha_eq(a, b) = a.startswith(b) or b.startswith(a)
+```
+
+Step 2.2 asks for the full sha as well. Both, not either: the contract is a prompt, not a validated schema, so instructing a sub-agent is not the same as being able to rely on it.
+
+**Every reviews fetch needs `--paginate`.** The endpoint pages at 30 by default and returns reviews oldest-first, so the newest review sits on the *last* page — an unpaginated fetch reads precisely the wrong half for a "has a new review landed?" check, and the loop times out staring at page one. This bites sooner than 30 rounds suggests: posting an in-thread reply creates a review object too, so one iteration adds the Copilot review plus one per reply. PR #9 of this repository reached four reviews after two rounds.
+
+**Take the max over `fresh`, not over `candidates`.** Gating on "some candidate matches" while selecting the highest id among *all* of them hands back a review written against a different sha — and since the next pass keeps only `r.id > last_copilot_review_id`, the fresh review that was skipped over becomes permanently invisible. The loop then waits out `poll_timeout` for a review it already had.
+
+**Do not use a completed Actions run as the signal.** The review object appears a few seconds *after* the run reports completion, so a watcher keyed on `Running Copilot Code Review` finishing reports "run done, no review" while the review is a minute from landing. Poll the reviews endpoint; keep run state at most as a secondary exit condition.
 
 If the loop exits without finding a new review, go to 5.3.
 
@@ -387,7 +410,7 @@ PR: <url>
 | `pnpm typecheck` failed inside review-fix | sub-agent returns `pushed_commit_sha=null` + non-null `error` | `termination_reason="error"`, user fixes manually |
 | `git push` rejected | sub-agent `error` mentions push failure | `termination_reason="error"`, user resolves rebase/merge |
 | Copilot silent past `poll_timeout` | polling loop exits without match | `termination_reason="timeout"`, suggest manual UI check |
-| `gh pr comment` for `@copilot review` fails | non-zero exit code | retry once after 30s; still failing → `termination_reason="error"` |
+| Reviewer request over REST fails | non-zero exit code from `gh api` | retry once after 30s; still failing → `termination_reason="error"` (no comment fallback — see Step 4) |
 | Session closed mid-wait | `ScheduleWakeup` doesn't fire | loop dies silently; log preserves last state; re-invoke offers resume via 1.4 |
 | Fixed > 0 but no pushed_commit_sha | defensive check in Step 3.4 | `termination_reason="error"` |
 
