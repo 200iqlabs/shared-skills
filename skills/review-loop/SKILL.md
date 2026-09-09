@@ -161,13 +161,22 @@ Use the OpenSpec context to inform your FIX / OUTDATED / DISAGREE classification
 CRITICAL RETURN FORMAT:
 The LAST LINE of your response must be a single-line JSON object, nothing else on that line. Lines above may contain prose summary.
 
-{"fixed": <int>, "outdated": <int>, "disagreed": <int>, "pushed_commit_sha": "<sha or null>", "error": "<message or null>"}
+{"fixed": <int>, "outdated": <int>, "disagreed": <int>, "pushed_commit_sha": <"40-char sha"|null>, "error": <"message"|null>}
 
 - `fixed`: count of FIX-classified comments that resulted in code changes.
 - `outdated`: count of OUTDATED comments (reply-only, no code change).
 - `disagreed`: count of DISAGREE comments (reply-only with technical reasoning).
 - `pushed_commit_sha`: the **full 40-character** sha of your commit if you pushed, otherwise null. Take it from `git rev-parse HEAD`, not `--short` — the loop matches this against `commit_id` from the reviews endpoint, which is always full-length.
 - `error`: null on success, or a short string describing why you couldn't complete (e.g., "typecheck failed", "push rejected").
+
+Both nullable fields take a JSON string or the bare literal null. Never the string "null" —
+it is truthy, and the loop reads it as a real error and a real sha.
+
+Fixed two, pushed:
+{"fixed": 2, "outdated": 0, "disagreed": 1, "pushed_commit_sha": "5b431277b031648832d09305755ed48431374a4c", "error": null}
+
+Nothing needed a code change:
+{"fixed": 0, "outdated": 1, "disagreed": 2, "pushed_commit_sha": null, "error": null}
 ```
 
 2.3. **Parse the sub-agent return.** Take the sub-agent's full return text, split on newlines, find the last non-empty line, and `JSON.parse` it. If parsing fails:
@@ -175,6 +184,8 @@ The LAST LINE of your response must be a single-line JSON object, nothing else o
 - Set `termination_reason = "error"`.
 - Show the user the raw sub-agent output (full, not truncated) so they can debug.
 - Go to Step 6.
+
+Then normalise the two nullable fields. If `parsed.pushed_commit_sha` or `parsed.error` came back as the *string* `"null"` (or `"none"`, or empty), replace it with a real `null`. The string is truthy, so without this Step 2.4 ends every clean iteration as an error, and Step 5 compares shas against `"null"` and never matches. Same reasoning as the sha length above: the return format is a prompt, not a schema the runtime enforces, so the parser should not assume it was obeyed.
 
 2.4. **If `parsed.error` is non-null:**
 - Log: `{"ts":"<ISO>","pr":<PR>,"event":"iter-error","iteration":<N>,"error":"<parsed.error>"}`
