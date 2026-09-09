@@ -166,7 +166,7 @@ The LAST LINE of your response must be a single-line JSON object, nothing else o
 - `fixed`: count of FIX-classified comments that resulted in code changes.
 - `outdated`: count of OUTDATED comments (reply-only, no code change).
 - `disagreed`: count of DISAGREE comments (reply-only with technical reasoning).
-- `pushed_commit_sha`: the sha of your commit if you pushed, otherwise null.
+- `pushed_commit_sha`: the **full 40-character** sha of your commit if you pushed, otherwise null. Take it from `git rev-parse HEAD`, not `--short` — the loop matches this against `commit_id` from the reviews endpoint, which is always full-length.
 - `error`: null on success, or a short string describing why you couldn't complete (e.g., "typecheck failed", "push rejected").
 ```
 
@@ -311,7 +311,7 @@ while now() < poll_deadline:
                  if r.user.login == "copilot-pull-request-reviewer[bot]"
                  and r.id > last_copilot_review_id]
   fresh = [c for c in candidates
-            if last_pushed_sha == null or c.commit_id == last_pushed_sha]
+            if last_pushed_sha == null or sha_eq(c.commit_id, last_pushed_sha)]
   if fresh:
     new_id = max(c.id for c in fresh)
     last_copilot_review_id = new_id
@@ -326,6 +326,14 @@ while now() < poll_deadline:
 ```bash
 gh api --paginate "repos/<owner>/<repo>/pulls/<PR>/reviews?per_page=100" --jq '.[] | "\(.id) \(.commit_id) \(.submitted_at)"'
 ```
+
+**Compare shas by prefix, not by equality.** `commit_id` from the API is always the full 40 characters. `last_pushed_sha` arrives from the sub-agent's `pushed_commit_sha`, and a sub-agent asked for "the sha" returns the 7-character one about as readily — `review-fix`, the sub-agent in question, is told to write replies as `Fixed in {commit_sha_short}`, so the short form is the value already in its hand. Strict `==` then never matches, `fresh` stays empty, and the loop times out with the right review sitting in the list it just fetched.
+
+```
+sha_eq(a, b) = a.startswith(b) or b.startswith(a)
+```
+
+Step 2.2 asks for the full sha as well. Both, not either: the contract is a prompt, not a validated schema, so instructing a sub-agent is not the same as being able to rely on it.
 
 **Every reviews fetch needs `--paginate`.** The endpoint pages at 30 by default and returns reviews oldest-first, so the newest review sits on the *last* page — an unpaginated fetch reads precisely the wrong half for a "has a new review landed?" check, and the loop times out staring at page one. This bites sooner than 30 rounds suggests: posting an in-thread reply creates a review object too, so one iteration adds the Copilot review plus one per reply. PR #9 of this repository reached four reviews after two rounds.
 
