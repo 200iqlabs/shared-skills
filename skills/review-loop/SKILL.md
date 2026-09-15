@@ -14,7 +14,7 @@ Orchestrate an automated Claude↔Copilot review cycle on a pull request. Each i
 - `--max N` — safety-net iteration cap (default `5`).
 - `--wait-initial S` — seconds to sleep after each push before polling (default `180`).
 - `--poll-interval S` — seconds between polls (default `30`).
-- `--poll-timeout S` — total seconds to wait for a new Copilot review after a push (default `600`).
+- `--poll-timeout S` — total seconds to wait for a new Copilot review after a push (default `1500`). Copilot's review time scales with the size of the diff: measured across six consecutive rounds on one PR, 8m2s → 12m3s → 8m6s → 9m47s → 15m42s, growing as the branch grew. A 600s default expires mid-review on anything substantial, and the run that expires looks exactly like a run that never started.
 
 ## Steps
 
@@ -308,7 +308,7 @@ The main session ends here; wakeup continues in Step 5.2.
 Set a polling deadline:
 
 ```
-poll_deadline = retrigger_started_at + poll_timeout   # poll_timeout default 600s
+poll_deadline = retrigger_started_at + poll_timeout   # poll_timeout default 1500s
 ```
 
 (In the pre-review wait case where no retrigger happened, use `iter_started_at + poll_timeout` as the deadline instead. `iter_started_at` is the timestamp from Step 2.1.)
@@ -354,7 +354,29 @@ Step 2.2 asks for the full sha as well. Both, not either: the contract is a prom
 
 If the loop exits without finding a new review, go to 5.3.
 
-5.3. **Timeout.**
+5.3. **Timeout — but check whether the review is still running first.**
+
+The deadline expiring is not evidence that nothing is coming. Before declaring a timeout,
+read the review workflow's state:
+
+```bash
+gh run list --branch <branch> --limit 5
+```
+
+- **A `Running Copilot Code Review` run is `in_progress`** — this is *not* a timeout. The
+  review is still being computed and the window was simply too short. Extend the wait and
+  keep polling; log the extension with the run's elapsed time so the next run of this loop
+  inherits a calibrated window rather than rediscovering the same thing.
+- **No such run, or the run finished and no review object appeared within ~90s** — a real
+  timeout. Proceed below.
+
+This check exists because the two states are indistinguishable from the polling loop alone,
+and they call for opposite responses: one wants more patience, the other wants the user to
+look at the PR. Reporting the first as the second sends somebody to debug a working system.
+It is the mirror of the rule above about not keying on a *completed* run — a finished run is
+not proof a review landed, and an unfinished one is proof a verdict would be premature.
+
+Once a real timeout is established:
 
 - Log: `{"ts":"<ISO>","pr":<PR>,"event":"copilot-timeout","seconds":<poll_timeout>}`
 - Set `termination_reason = "timeout"`.
@@ -396,7 +418,7 @@ PR: <url>
 - `no-comments`: *Copilot produced no new comments on the latest push — PR looks clean from Copilot's perspective.*
 - `no-fixes`: *Copilot's latest comments were all OUTDATED or DISAGREE — no code changes were needed.*
 - `max-iterations`: *Hit `--max <N>` iteration cap. Copilot may still have feedback; review manually or re-run with a higher `--max`.*
-- `timeout`: *Copilot didn't submit a review within `<poll_timeout>`s. This does not say which of two things happened: Copilot is slow, or Copilot does not review this repository. Check the PR in the GitHub UI — if a review is there, re-run; if the reviewers sidebar offers no Copilot entry at all, it is not enabled here and re-running will time out again.*
+- `timeout`: *Copilot didn't submit a review within `<poll_timeout>`s, and step 5.3 confirmed no review run was still in progress. What it does not say is whether Copilot is merely slow or does not review this repository at all. Check the PR in the GitHub UI — if a review is there, re-run; if the reviewers sidebar offers no Copilot entry at all, it is not enabled here and re-running will time out again.*
 - `error`: *Loop aborted due to an error (see log entries above). Manual intervention required.*
 
 ## Error handling reference
@@ -409,7 +431,8 @@ PR: <url>
 | Sub-agent reports error | JSON `error` field non-null | `termination_reason="error"`, show, abort |
 | `pnpm typecheck` failed inside review-fix | sub-agent returns `pushed_commit_sha=null` + non-null `error` | `termination_reason="error"`, user fixes manually |
 | `git push` rejected | sub-agent `error` mentions push failure | `termination_reason="error"`, user resolves rebase/merge |
-| Copilot silent past `poll_timeout` | polling loop exits without match | `termination_reason="timeout"`, suggest manual UI check |
+| Copilot silent past `poll_timeout` | polling loop exits without match, **and** no review run is `in_progress` (step 5.3) | `termination_reason="timeout"`, suggest manual UI check |
+| Review run still `in_progress` at the deadline | `gh run list` in step 5.3 | not a timeout — extend the window, log the elapsed time, keep polling |
 | Reviewer request over REST fails | non-zero exit code from `gh api` | retry once after 30s; still failing → `termination_reason="error"` (no comment fallback — see Step 4) |
 | Session closed mid-wait | `ScheduleWakeup` doesn't fire | loop dies silently; log preserves last state; re-invoke offers resume via 1.4 |
 | Fixed > 0 but no pushed_commit_sha | defensive check in Step 3.4 | `termination_reason="error"` |
