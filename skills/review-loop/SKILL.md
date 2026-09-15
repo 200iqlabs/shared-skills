@@ -399,6 +399,43 @@ PR: <url>
 - `timeout`: *Copilot didn't submit a review within `<poll_timeout>`s. This does not say which of two things happened: Copilot is slow, or Copilot does not review this repository. Check the PR in the GitHub UI — if a review is there, re-run; if the reviewers sidebar offers no Copilot entry at all, it is not enabled here and re-running will time out again.*
 - `error`: *Loop aborted due to an error (see log entries above). Manual intervention required.*
 
+6.4. **Open the sign-off issue — this is the human gate.**
+
+The loop has just finished and, up to this point, nothing requires a person to look. The
+printed report dies with the session, and a failing check goes stale the moment the next push
+paints the branch green. So the record of "this needs human eyes" has to be an object that
+outlives the run and that **only a person can close**.
+
+Search first, create once:
+
+```bash
+gh issue list --repo <owner>/<repo> --state open   --search "review-loop PR #<PR> in:title" --json number --jq '.[0].number'
+```
+
+- A number comes back → append this run's report as a comment. Do not open a second issue.
+- Nothing comes back → open it, with the report from 6.2 and 6.3 as the body:
+
+```bash
+gh issue create --repo <owner>/<repo>   --title "review-loop finished on PR #<PR> — human sign-off required"   --body "<report>"
+```
+
+The body ends with this line, verbatim:
+
+> Closing this issue is the sign-off. A person closes it after reading the pull request —
+> nothing else may: not this loop, not a later run, not a workflow.
+
+Three things about this step are deliberate:
+
+- **It runs for every termination reason, `error` included.** The reasons differ in what the
+  person will find, not in whether one is needed; an aborted loop needs a human more than a
+  clean one, not less.
+- **The list-then-create is not atomic.** Two loops finishing on the same pull request can
+  both see nothing and both open an issue. A duplicate is noise; a missing one is a gate that
+  was never there. Prefer the noise.
+- **Add `--label` only for a label that exists in that repository.** A label that exists
+  nowhere fails the create, and a failed create loses the record — which is the one outcome
+  this step exists to prevent.
+
 ## Error handling reference
 
 | Scenario | Detection | Reaction |
@@ -420,5 +457,8 @@ PR: <url>
 - **Never** pipe `gh api` output through `jq` in generated commands — `jq` may be absent. Parse JSON inline or with `gh --jq` (built-in, always available).
 - **Never** post multiple PR review replies in parallel — the `review-fix` skill already enforces sequential posting; don't override.
 - **Never** merge, close, approve, or request-changes on the PR — `review-loop` only iterates on review comments.
+- **Never** close the sign-off issue from Step 6.4, in this run or any later one. An issue a
+  machine can close is a gate that closes itself, and the whole point of it is that it waits
+  for a person.
 - **Never** invoke the `review-fix` skill directly in the orchestrator session — always delegate via the `Agent` tool so the main session keeps a clean context across iterations.
 - **Never** guess the `openspec-change-name` if the directory is missing — always ask the user (Step 1.2).

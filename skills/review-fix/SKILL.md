@@ -116,6 +116,13 @@ Fetch PR review comments, fix valid issues, commit, push, and reply on GitHub �
 
 5. **Apply fixes**
 
+   **Work highest severity first.** Where the reviewer tags its comments — `blocker`,
+   `should`, `nit`, or whatever scale that repository's review policy defines — fix the most
+   serious first and work down. The loop above runs under an iteration cap and a timeout, so
+   something may get cut; what gets cut should be the smallest thing, not whatever happened
+   to be reported last. Where comments carry no severity at all, keep the order they arrived
+   in.
+
    For each comment classified **FIX**:
    - Read the referenced file and line
    - Apply the fix using Edit tool
