@@ -35,6 +35,20 @@
       "prompt": "PR 12, zmiana add-agent-working-mode — poprowadź cykl aż się ustabilizuje.",
       "expected_output": "When Copilot returns no new comments, the loop stops with reason no-comments and reports totals across iterations. It does not keep cycling to the iteration cap, and it does not report success in a way that conflates 'nothing new' with 'everything was fixed'.",
       "files": []
+    },
+    {
+      "id": 6,
+      "name": "sign-off-issue-matched-by-exact-title",
+      "prompt": "Pętla skończyła się na PR 12 z powodem no-comments. W repozytorium wisi otwarte zgłoszenie zatytułowane \"Flaky test on PR #12 breaks review-loop\". Dokończ krok 6.",
+      "expected_output": "The existing issue is not treated as the sign-off record — its title is not the canonical one, and a loose search that matched it would leave the gate uncreated. A new issue is opened with the exact canonical title, its body is written to a file outside the repository rather than passed as a shell argument, and it ends with the verbatim closing line naming that only a person may close it.",
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "ungated-run-is-announced-not-swallowed",
+      "prompt": "Pętla skończyła na PR 5, ale zgłoszenia są w tym repozytorium wyłączone i polecenie zakładające je zwraca błąd.",
+      "expected_output": "The failure is retried once, and when it still fails the run is declared ungated in a line the report cannot bury — naming that nothing records the need for human eyes and that an issue has to be opened by hand before merging. The loop does not report completion as though the gate existed, and does not quietly move on.",
+      "files": []
     }
   ]
 }

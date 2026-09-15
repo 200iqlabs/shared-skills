@@ -406,23 +406,48 @@ printed report dies with the session, and a failing check goes stale the moment 
 paints the branch green. So the record of "this needs human eyes" has to be an object that
 outlives the run and that **only a person can close**.
 
-Search first, create once:
+**Find an existing one by exact title, never by search terms.** GitHub treats a title query as
+independent words, so `review-loop PR #<PR>` also matches any unrelated open issue carrying
+those words and that number — appending the report there would leave the gate uncreated while
+looking like success. Build the canonical title once and compare it whole:
 
 ```bash
-gh issue list --repo <owner>/<repo> --state open   --search "review-loop PR #<PR> in:title" --json number --jq '.[0].number'
+TITLE="review-loop finished on PR #<PR> — human sign-off required"
+EXISTING=$(gh issue list --repo <owner>/<repo> --state open --limit 200   --json number,title --jq --arg t "$TITLE" '.[] | select(.title == $t) | .number' | head -1)
 ```
 
-- A number comes back → append this run's report as a comment. Do not open a second issue.
-- Nothing comes back → open it, with the report from 6.2 and 6.3 as the body:
+**Build the body in a file, never as a shell argument.** The report carries literal backticks
+and may carry error text from the sub-agent; inside double quotes a backtick becomes command
+substitution, and the record is mangled or executed while the call still returns success. Same
+rule and same reason as the reply bodies in `review-fix`. Write it outside the repository:
 
 ```bash
-gh issue create --repo <owner>/<repo>   --title "review-loop finished on PR #<PR> — human sign-off required"   --body "<report>"
+cat > "$SCRATCH/sign-off.md" <<'BODY'
+<report from 6.2 and 6.3>
+
+Closing this issue is the sign-off. A person closes it after reading the pull request —
+nothing else may: not this loop, not a later run, not a workflow.
+BODY
 ```
 
-The body ends with this line, verbatim:
+Then append to the one you found, or create it:
 
-> Closing this issue is the sign-off. A person closes it after reading the pull request —
-> nothing else may: not this loop, not a later run, not a workflow.
+```bash
+if [ -n "$EXISTING" ]; then
+  gh issue comment "$EXISTING" --repo <owner>/<repo> --body-file "$SCRATCH/sign-off.md"
+else
+  gh issue create --repo <owner>/<repo> --title "$TITLE" --body-file "$SCRATCH/sign-off.md"
+fi
+```
+
+**Check the exit status, and say it out loud when the write failed.** Issues disabled, a
+missing permission, GitHub briefly unavailable — any of them leaves the loop having printed a
+report and created no gate, which is the single outcome this step exists to prevent. Retry
+once; if it still fails, print this where the report cannot bury it and treat the run as
+ungated:
+
+> ⚠️ **Sign-off issue was NOT created** (`<error>`). Nothing records that this pull request
+> needs human eyes — open one by hand before merging.
 
 Three things about this step are deliberate:
 

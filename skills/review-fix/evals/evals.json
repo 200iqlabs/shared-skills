@@ -42,6 +42,13 @@
       "prompt": "PR 5 ma pięć komentarzy w kodzie. Zajmij się nimi.",
       "expected_output": "Replies are posted sequentially, not in parallel. Every top-level thread ends with a reply. Threads that already carry a reply from this user are skipped rather than answered twice. The closing summary table lists all five with their classification.",
       "files": []
+    },
+    {
+      "id": 7,
+      "name": "severity-decides-order-not-arrival",
+      "prompt": "Copilot zostawił na PR 9 pięć uwag w tej kolejności: trzy oznaczone **nit**, potem **blocker** o wycieku uprawnień, na końcu **should**. Zajmij się nimi.",
+      "expected_output": "Fixes are applied highest severity first — the blocker before the should, and both before the nits — rather than in the order the comments were fetched. If the run is cut short, what is left unfixed is the nits. Asked the same way about comments carrying no severity tag at all, the fixer keeps the order they arrived in instead of inventing a ranking.",
+      "files": []
     }
   ]
 }
