@@ -425,10 +425,17 @@ rule and same reason as the reply bodies in `review-fix`. Write it outside the r
 cat > "$SCRATCH/sign-off.md" <<'BODY'
 <report from 6.2 and 6.3>
 
+<when termination_reason is "error": the error text and the last log lines>
+
 Closing this issue is the sign-off. A person closes it after reading the pull request —
 nothing else may: not this loop, not a later run, not a workflow.
 BODY
 ```
+
+**On an `error` termination the body carries the error itself, not a pointer to it.** The
+follow-up line in 6.3 sends the reader to the log entries above — which is the session
+transcript, and that is exactly what the issue exists to outlive. A gate that cannot say what
+failed hands the next person a dead reference.
 
 Then append to the one you found, or create it:
 
