@@ -418,9 +418,12 @@ TITLE="review-loop finished on PR #<PR> — human sign-off required"
 
 # Every open issue, not the newest page. `gh issue list --limit N` stops at N, so a gate
 # older than N newer issues reads as absent and the loop opens a duplicate; `gh api
-# --paginate` follows the Link headers to the end.
+# --paginate` follows the Link headers to the end and merges the pages of an array
+# endpoint into one array — measured on gh 2.92.0: 11 pages at `per_page=1` came back as
+# one valid array of 11. Do not add `--slurp` here; it is for endpoints returning an
+# object, and it would wrap this array in another one the `find` below would miss.
 if gh api --paginate "repos/<owner>/<repo>/issues?state=open&per_page=100" \
-     > "$SCRATCH/open-issues.json"; then
+     > "$SCRATCH/open-issues.json" 2> "$SCRATCH/lookup-err.txt"; then
   EXISTING=$(TITLE="$TITLE" node -e '
     const all = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
     const hit = all.find(i => !i.pull_request && i.title === process.env.TITLE);
@@ -450,18 +453,41 @@ Three things that block is written to avoid:
 **Build the body in a file, never as a shell argument.** The report carries literal backticks
 and may carry error text from the sub-agent; inside double quotes a backtick becomes command
 substitution, and the record is mangled or executed while the call still returns success. Same
-rule and same reason as the reply bodies in `review-fix`. Write it outside the repository:
+rule and same reason as the reply bodies in `review-fix`. Write it outside the repository.
+
+**A quoted heredoc is not enough either — the delimiter is still live.** `<<'BODY'` stops
+command substitution, but nothing stops a line reading exactly `BODY`: one such line anywhere
+in the report, in the sub-agent's error text or in the log tail closes the heredoc early, the
+record is truncated there, and everything after it is handed to the shell as commands. Sub-agent
+output and log lines are not text you chose, so they never travel through a heredoc. They arrive
+as **files**, written with your file-writing tool; only the fixed closing sentence, which you
+author and which carries no delimiter, comes from a heredoc:
 
 ```bash
-cat > "$SCRATCH/sign-off.md" <<'BODY'
-<report from 6.2 and 6.3>
+# Written with your file-writing tool, not with a shell heredoc:
+#   $SCRATCH/report.md  — the report from 6.2 and 6.3
+#   $SCRATCH/error.txt  — on an `error` termination, the error text and the last log lines;
+#                         absent or empty otherwise
+{
+  if [ -n "$LOOKUP_FAILED" ]; then
+    cat <<'WARN'
+> ⚠️ **The open-issue lookup failed**, so this record was opened without knowing whether one
+> was already open for this pull request. Check for a duplicate before closing.
 
-<when termination_reason is "error": the error text and the last log lines>
+WARN
+  fi
+  cat "$SCRATCH/report.md"
+  if [ -s "$SCRATCH/error.txt" ]; then printf '\n'; cat "$SCRATCH/error.txt"; fi
+  cat <<'BODY'
 
 Closing this issue is the sign-off. A person closes it after reading the pull request —
 nothing else may: not this loop, not a later run, not a workflow.
 BODY
+} > "$SCRATCH/sign-off.md"
 ```
+
+`cat` of a file cannot terminate anything, so no line of the report and no line of the error
+text can end the body early. That is the property a quoted delimiter alone does not give you.
 
 **On an `error` termination the body carries the error itself, not a pointer to it.** The
 follow-up line in 6.3 sends the reader to the log entries above — which is the session
@@ -499,7 +525,17 @@ The two are not interchangeable. Telling a reader that nothing was created when 
 #`<EXISTING>` is sitting open invites them to open the duplicate the exact-title lookup exists
 to avoid.
 
-Four things about this step are deliberate:
+**The lookup failed** — the record was written, but written blind. `LOOKUP_FAILED` is why the
+warning above is built into the body as well; print the same thing into the report:
+
+> ⚠️ **The open-issue lookup failed** (`<contents of $SCRATCH/lookup-err.txt>`), so this run
+> could not tell whether a sign-off issue was already open. It opened one anyway. If a
+> duplicate is sitting beside it, close the one you did not read.
+
+It goes in both places on purpose. The report is read by whoever watched the run; the issue is
+read by whoever opens it tomorrow, and only one of them knows the lookup never completed.
+
+Five things about this step are deliberate:
 
 - **It runs for every termination reason, `error` included.** The reasons differ in what the
   person will find, not in whether one is needed; an aborted loop needs a human more than a
@@ -509,6 +545,12 @@ Four things about this step are deliberate:
   was never there. Prefer the noise.
 - **A failed lookup takes the create path too**, for the same reason: `LOOKUP_FAILED` means the
   loop does not know whether a gate exists, and guessing "yes" loses the record.
+- **The lookup asks for open issues only, and a closed record is never reopened.** A closed
+  record is a sign-off somebody gave, for the state of the branch they read. A run finishing
+  after it is work nobody has signed off, so it gets its own record rather than reviving a
+  settled one. Reopening would be an automation undoing a person's close — the single act this
+  whole step reserves for a human, and the reason a duplicate title may legitimately appear in
+  the closed list over the life of a pull request.
 - **No label is passed, and none is required.** This repository defines no label for the gate,
   and the create path above deliberately does not invent one. Add `--label` only in a
   repository where you have checked the label exists: a label that exists nowhere fails the

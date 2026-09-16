@@ -47,7 +47,18 @@
       so, instead of passing for "no record exists".
 - [x] 5.5 Split the ungated warning: a failed append names the open issue rather than telling
       the reader nothing was created.
-- [ ] 5.6 Re-run the review loop until the reviewer has nothing new.
+- [ ] 5.6 Re-run the review loop until the reviewer has nothing new. Open by construction: it is
+      the loop this change is being reviewed by, and it closes when a round comes back with no new
+      findings — not before. The change staying in `openspec/changes/` rather than the archive is
+      what marks it in progress.
+- [x] 5.7 Keep dynamic text out of the heredoc: the report, the sub-agent error and the log tail
+      arrive as files, so a line reading `BODY` cannot close the body early.
+- [x] 5.8 Consume `LOOKUP_FAILED` — the warning goes into the report *and* into the record, since
+      only one of their readers watched the run.
+- [x] 5.9 Resolve the spec's own contradiction: one **open** record is the normal outcome, and a
+      duplicate from a race or an incomplete lookup is stated as accepted in the same requirement.
+- [x] 5.10 State what happens to a record a person closed — a new one is opened, the closed one is
+      never reopened or reused — in the spec, in the skill and in an eval.
 
 ## Out of scope
 

@@ -2,11 +2,15 @@
 
 ### Requirement: The loop terminates into a record only a person can close
 
-When the review loop terminates, it SHALL create or update exactly one issue per pull request
-whose closing constitutes the human sign-off for that pull request. The record SHALL be created
-for every termination reason, including `error` — an aborted run needs a person more than a
-clean one, not less. The loop, any later run of it, and any workflow SHALL NOT close that
-issue.
+When the review loop terminates, it SHALL leave the pull request carrying an open issue whose
+closing constitutes the human sign-off: it SHALL append its report to the open sign-off record
+it finds, and SHALL create one where it finds none. One open record per pull request is the
+normal outcome, not an invariant the loop can guarantee — where two runs finish concurrently,
+or where the lookup cannot complete, a duplicate SHALL be accepted, because the requirement
+below resolves that race in favour of creating. The record SHALL be created for every
+termination reason, including `error` — an aborted run needs a person more than a clean one,
+not less. The loop, any later run of it, and any workflow SHALL NOT close that issue, and SHALL
+NOT reopen one a person has closed.
 
 The record SHALL state, verbatim, that a person closes it after reading the pull request and
 that nothing else may. The record SHALL NOT claim to block the merge, and the loop SHALL NOT
@@ -30,11 +34,21 @@ request changes, approve, or merge in order to make it blocking.
 - **THEN** it SHALL append its report to that issue
 - **AND** SHALL NOT close it, and SHALL NOT open a second one
 
+#### Scenario: The previous record was signed off and closed
+
+- **WHEN** the loop terminates on a pull request whose earlier sign-off record a person has
+  closed
+- **THEN** it SHALL open a new record for this run
+- **AND** SHALL NOT reopen the closed one and SHALL NOT append to it — the closed record is the
+  sign-off given for the branch that person read, and work finished after it has not been
+  signed off
+
 ### Requirement: An existing record is identified by its exact title
 
-The loop SHALL locate an existing sign-off record by comparing the whole canonical title, and
-SHALL NOT rely on a term-based issue search. Where the lookup cannot be made exhaustive, the
-loop SHALL create rather than skip: a duplicate record is acceptable, a missing one is not.
+The loop SHALL locate an existing sign-off record by comparing the whole canonical title
+against the **open** issues of the repository, and SHALL NOT rely on a term-based issue search.
+Where the lookup cannot be made exhaustive, or cannot complete at all, the loop SHALL create
+rather than skip: a duplicate record is acceptable, a missing one is not.
 
 #### Scenario: An unrelated issue shares the words and the number
 
@@ -43,15 +57,32 @@ loop SHALL create rather than skip: a duplicate record is acceptable, a missing 
 - **THEN** the loop SHALL NOT treat that issue as the sign-off record
 - **AND** SHALL create a new one under the canonical title
 
+#### Scenario: The lookup itself fails
+
+- **WHEN** listing the repository's open issues returns an error
+- **THEN** the loop SHALL take the create path rather than read the failure as "no record
+  exists"
+- **AND** the report and the record SHALL both state that the lookup did not complete and that
+  a duplicate may exist
+
 ### Requirement: The record's body is built in a file, never as a shell argument
 
 The loop SHALL write the record body to a file outside the repository and pass it by file
-reference. It SHALL NOT interpolate the report into a shell argument.
+reference. It SHALL NOT interpolate the report into a shell argument, and SHALL NOT carry text
+it did not author — the report, a sub-agent error, a log tail — through a shell heredoc. Such
+text SHALL reach the body as a file whose contents are concatenated.
 
 #### Scenario: The report contains backticks
 
 - **WHEN** the report or a sub-agent error message contains backticks
 - **THEN** the text SHALL reach the record unchanged and SHALL NOT be executed
+
+#### Scenario: The error text contains the heredoc delimiter
+
+- **WHEN** a line of the report or of the sub-agent's error reads exactly as the delimiter of
+  the heredoc that carries the fixed closing sentence
+- **THEN** the body SHALL still contain that line and everything after it
+- **AND** no part of the text SHALL be handed to the shell as a command
 
 ### Requirement: A run that could not create its record is declared ungated
 
