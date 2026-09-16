@@ -389,14 +389,22 @@ The deadline expiring is not evidence that nothing is coming. Before declaring a
 read the state of the review workflow — **scoped to the current review request**:
 
 ```bash
-gh run list --branch <branch> --limit 100 --json databaseId,name,status,conclusion,createdAt,updatedAt,headSha
+gh run list --branch <branch> --workflow Copilot --limit 100 --json databaseId,name,status,conclusion,createdAt,updatedAt,headSha
 ```
 
-**`--limit` is applied by `gh` before every filter below**, so it has to comfortably exceed the
-number of runs the branch can collect while this loop waits — every push starts CI, and a branch
-carrying a few workflows passes twenty in a couple of rounds. Truncated, the Copilot run falls off
-the end and this step reads it as *no run at all*: the false timeout the check exists to prevent,
-manufactured by the check itself.
+**`--workflow` is what keeps `--limit` honest.** `gh` applies the limit server-side, before every
+filter below runs on the client, so an unscoped listing spends those 100 slots on whatever else
+the branch triggers — every push starts CI, and a branch carrying a few workflows passes twenty in
+a couple of rounds. Truncated, the Copilot run falls off the end and this step reads it as *no run
+at all*: the false timeout the check exists to prevent, manufactured by the check itself. Scoped to
+the one workflow, 100 is decades of headroom instead of a bet on how much other CI the branch runs.
+
+**The workflow is called `Copilot`; `Running Copilot Code Review` is the name of its *runs*.**
+`--workflow "Running Copilot Code Review"` does not narrow the listing — it exits non-zero with
+`could not find any workflows named …`, and the failure rule below would turn that into an aborted
+loop. Verified against this repository: `gh workflow list --all` answers `Copilot`, while every run
+it produces reads `Running Copilot Code Review` in `--json name`. Keep the client-side name filter
+below regardless — `--workflow` selects the workflow, the name filter selects its review runs.
 
 **A failed command is not an empty list.** A non-zero exit, or JSON that will not parse — expired
 auth, no network, a rate limit — says nothing about whether a run exists, and reading it as "no
@@ -405,6 +413,14 @@ does with its own `gh api` call. If the retry also fails: log
 `{"ts":"<ISO>","pr":<PR>,"event":"run-check-failed","exit_code":<code>}`, set
 `termination_reason = "error"`, and go to Step 6. An unknown state reported as an error sends the
 user to look at it; reported as a timeout it sends them to debug Copilot.
+
+**A workflow that does not resolve is the exception to that rule.** If the command fails *because*
+no workflow named `Copilot` exists, that is an answer rather than an unknown state: Copilot code
+review has never run in this repository. Set `timeout_outcome = "no-run"` and fall through to the
+timeout below — 6.3's `no-run` line already sends the operator to check whether Copilot is enabled
+here, which is exactly the question that failure raises. Every other failure keeps the
+retry-then-`error` path above; routing this one there would send somebody to debug their auth over
+a repository setting.
 
 Keep only runs named `Running Copilot Code Review` whose `headSha` matches the sha this wait is
 about, under the `sha_eq` prefix rule above: `last_pushed_sha` in the retrigger case,
@@ -419,6 +435,18 @@ timeout this step exists to prevent, manufactured by the step itself for the sec
 carries that case on its own and loses nothing, because with no push there is nothing to tell
 apart: a run left on the branch by an abandoned earlier loop sits on the same head sha and *is*
 the initial review this wait is waiting for.
+
+**More than one run can survive that filter — take the newest.** The cases below read a singular
+`run`, and the filter routinely leaves two: a push starts a review run on its own, and 4.2 then
+re-requests review on the same sha, which starts another; an abandoned earlier loop leaves a third.
+All carry the same `headSha` and all fall inside the created-at bound, so the set is ordinary, not
+an edge case. Reading the older one — `completed`, `success`, no review attached — reports
+`run-completed-no-review` while the review that is actually coming is still `in_progress` in the
+newer, which is the false timeout again, dressed as a diagnosis. After filtering:
+
+```
+run = max(matching_runs, key=createdAt)     # empty set → the no-run case below
+```
 
 **The 60 seconds of slack on that lower bound are load-bearing.** 4.2 stamps
 `retrigger_started_at` *after* the POST returns, while GitHub creates the run as it processes that
@@ -450,7 +478,15 @@ how a run that failed comes to read as a run that never existed.
       poll_deadline    = now() + 300      # seconds — then back to the Loop: block in 5.2
   else:
       timeout_outcome  = "run-unfinished" # cap reached — fall through to the timeout below
+      timeout_status   = run.status       # 6.3 renders both; the run object is gone by then
+      timeout_run_id   = run.databaseId
   ```
+
+  **`run-unfinished` is two different verdicts and the status is what tells them apart.** This case
+  deliberately covers `queued`, `waiting`, `requested` and `pending` alongside `in_progress` — but
+  a run that spent the whole window *executing* is a slow review, while one that never started is
+  stuck or waiting on approval, and a longer `--poll-timeout` does nothing for the second. Record
+  the status rather than making 6.3 guess which of the two it is looking at.
 
   **The cap has to be the guard, not a remark beside it.** Written as an unconditional increment
   with "stop at three" standing next to it, the fourth visit increments to four and hands out
@@ -481,7 +517,7 @@ how a run that failed comes to read as a run that never existed.
   was skipped, so no review was ever going to land. Set `timeout_outcome = "run-failed"`,
   `timeout_conclusion = run.conclusion` and `timeout_run_id = run.databaseId` — 6.3 renders those
   two names, and the run object itself is long out of scope by the time it does. This is what the
-  query asks for `conclusion` and `databaseId` for. Folded into the next case, an Actions failure
+  query asks for `conclusion` for, and one of the two places it needs `databaseId`. Folded into the next case, an Actions failure
   would send the operator off to check whether Copilot is enabled on the repository, when what
   happened is a run they can open and read.
 
@@ -489,7 +525,7 @@ how a run that failed comes to read as a run that never existed.
   review** — a real timeout of a third kind: the review ran, finished cleanly, and left nothing
   the reviews endpoint returns. Set `timeout_outcome = "run-completed-no-review"`.
 
-- **No matching run at all** — a real timeout, and the only one of the three that leaves
+- **No matching run at all** — a real timeout, and the only one of the four that leaves
   Copilot's availability in question. `timeout_outcome` stays `"no-run"`.
 
 The check exists because the first case and the last are indistinguishable from the polling
@@ -544,7 +580,7 @@ PR: <url>
 - `no-fixes`: *Copilot's latest comments were all OUTDATED or DISAGREE — no code changes were needed.*
 - `max-iterations`: *Hit `--max <N>` iteration cap. Copilot may still have feedback; review manually or re-run with a higher `--max`.*
 - `timeout`: *Copilot didn't submit a review within `<poll_elapsed>`s — `<poll_timeout>`s, `<poll_extensions>` extension(s) of 300s granted by step 5.3, and any completion grace it added on top of those.* Then one line for the `timeout_outcome` that step set, and only that one — the four endings send the user to four different places:
-  - `run-unfinished`: *A review run for this review request was still going at the extension cap. The review is slow, not absent: re-run with a higher `--poll-timeout`.*
+  - `run-unfinished`: *A review run for this review request was still `<timeout_status>` at the extension cap (run `<timeout_run_id>`). If it was `in_progress`, the review is slow rather than absent: re-run with a higher `--poll-timeout`. If it never started — `queued`, `waiting`, `requested`, `pending` — a longer window changes nothing; open that run, it is stuck or waiting on approval.*
   - `run-failed`: *The review run for this review request finished as `<timeout_conclusion>` (run `<timeout_run_id>`). Open that run — Copilot's availability is not in question here, the workflow is.*
   - `run-completed-no-review`: *The review run for this review request finished cleanly and no review object followed. Check the PR in the GitHub UI: a review visible there but absent from `pulls/<n>/reviews` is a different fault from Copilot never having run.*
   - `no-run`: *No review run was created for this review request. This does not say whether Copilot is merely slow or does not review this repository — check the PR in the GitHub UI: if a review is there, re-run; if the reviewers sidebar offers no Copilot entry at all, it is not enabled here and re-running will time out again.*
@@ -561,11 +597,11 @@ PR: <url>
 | `pnpm typecheck` failed inside review-fix | sub-agent returns `pushed_commit_sha=null` + non-null `error` | `termination_reason="error"`, user fixes manually |
 | `git push` rejected | sub-agent `error` mentions push failure | `termination_reason="error"`, user resolves rebase/merge |
 | Copilot silent past `poll_timeout` | polling loop exits without match, **and** step 5.3 finds no review run at all for the current review request | `termination_reason="timeout"` with `timeout_outcome="no-run"`, suggest manual UI check |
-| Review run for this review request not `completed` at the deadline | scoped `gh run list` in step 5.3 (any status but `completed`) | not a timeout — extend `poll_deadline` by 300s, log the elapsed time, return to 5.2; at most 3 extensions, counted per wait (5.1 resets the counter) |
+| Review run for this review request not `completed` at the deadline | scoped `gh run list` in step 5.3 (any status but `completed`) | not a timeout *while extensions remain* — extend `poll_deadline` by 300s, log the elapsed time, return to 5.2; at most 3, counted per wait (5.1 resets the counter). At the cap it does become one: `termination_reason="timeout"` with `timeout_outcome="run-unfinished"` |
 | Review run finished seconds before the deadline | scoped run `completed` less than ~90s ago | not a timeout — poll until `updatedAt + 90s` before concluding (review objects trail the run) |
 | Review run failed, was cancelled, or was skipped | scoped run `completed` with a `conclusion` other than `success` | `termination_reason="timeout"` with `timeout_outcome="run-failed"` — the report points at that run, not at Copilot availability |
 | Review run finished clean but no review object followed | scoped run `completed` > 90s ago, `conclusion: success` | `termination_reason="timeout"` with `timeout_outcome="run-completed-no-review"` — a reporting fault, not an availability one |
-| `gh run list` in step 5.3 fails or returns unparseable JSON | non-zero exit code, or output that will not parse | retry once after 30s; still failing → `termination_reason="error"`. Never read as "no matching run" — that is the false timeout the step exists to prevent |
+| `gh run list` in step 5.3 fails or returns unparseable JSON | non-zero exit code, or output that will not parse | retry once after 30s; still failing → `termination_reason="error"`. Never read as "no matching run" — that is the false timeout the step exists to prevent. One exception: a failure that names the `Copilot` workflow as not found is `timeout_outcome="no-run"`, not an error |
 | Stale unfinished run from an earlier loop on the branch | a different `headSha`, or — in the retrigger case only — created before `wait_started_at - 60s` | excluded by 5.3's scoping — unscoped, it would burn every extension the cap allows |
 | Reviewer request over REST fails | non-zero exit code from `gh api` | retry once after 30s; still failing → `termination_reason="error"` (no comment fallback — see Step 4) |
 | Session closed mid-wait | `ScheduleWakeup` doesn't fire | loop dies silently; log preserves last state; re-invoke offers resume via 1.4 |
