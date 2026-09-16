@@ -14,7 +14,7 @@ Orchestrate an automated Claude↔Copilot review cycle on a pull request. Each i
 - `--max N` — safety-net iteration cap (default `5`).
 - `--wait-initial S` — seconds to sleep after each push before polling (default `180`).
 - `--poll-interval S` — seconds between polls (default `30`).
-- `--poll-timeout S` — seconds to wait for a new Copilot review after a push before step 5.3 checks the workflow state (default `1500`). **Not a hard cap**: 5.3 extends the window while a review run for this push is still unfinished, so the total wait can exceed it — the final report quotes what was actually waited, not this flag. Copilot's review time scales with the size of the diff: measured across five consecutive rounds on one PR, 8m2s → 12m3s → 8m6s → 9m47s → 15m42s, growing as the branch grew. A 600s default expires mid-review on anything substantial, and the run that expires looks exactly like a run that never started.
+- `--poll-timeout S` — seconds to wait for a new Copilot review after a push before step 5.3 checks the workflow state (default `1500`). **Not a hard cap**: 5.3 extends the window while a review run for the current review request is still unfinished, so the total wait can exceed it — the final report quotes what was actually waited, not this flag. Copilot's review time scales with the size of the diff: measured across five consecutive rounds on one PR, 8m2s → 12m3s → 8m6s → 9m47s → 15m42s, growing as the branch grew. A 600s default expires mid-review on anything substantial, and the run that expires looks exactly like a run that never started.
 
 ## Steps
 
@@ -26,12 +26,15 @@ Run once before iteration 1.
 
 ```bash
 gh repo view --json nameWithOwner --jq .nameWithOwner
-gh pr view <PR> --json number,url,headRefName,state
+gh pr view <PR> --json number,url,headRefName,headRefOid,state
 ```
 
 **Note**: do not pipe `gh api` JSON output through `jq` — it may not be installed on all machines. Parse JSON inline. The `--jq` flag above is safe because it's processed by `gh` itself.
 
-If `state` is not `OPEN`, abort with: `PR #<PR> is not OPEN — current state: <state>`. Otherwise store `headRefName`, `url`, and `nameWithOwner`.
+If `state` is not `OPEN`, abort with: `PR #<PR> is not OPEN — current state: <state>`. Otherwise store `headRefName`, `url`, `nameWithOwner`, and `headRefOid` as `pr_head_sha`.
+
+`pr_head_sha` is what 5.3 scopes its run check by in the pre-review case from 3.2a, where no push
+ever happens and `last_pushed_sha` stays null.
 
 1.2. **Verify OpenSpec change directory exists.**
 
@@ -383,7 +386,7 @@ If the loop exits without finding a new review, go to 5.3.
 5.3. **Timeout — but check whether the review is still running first.**
 
 The deadline expiring is not evidence that nothing is coming. Before declaring a timeout,
-read the state of the review workflow — **scoped to this push's request**:
+read the state of the review workflow — **scoped to the current review request**:
 
 ```bash
 gh run list --branch <branch> --limit 100 --json databaseId,name,status,conclusion,createdAt,updatedAt,headSha
@@ -403,10 +406,19 @@ does with its own `gh api` call. If the retry also fails: log
 `termination_reason = "error"`, and go to Step 6. An unknown state reported as an error sends the
 user to look at it; reported as a timeout it sends them to debug Copilot.
 
-Keep only runs named `Running Copilot Code Review` that were created at or after
-`wait_started_at - 60s` **and** whose `headSha` matches `last_pushed_sha` under the `sha_eq`
-prefix rule above; when `last_pushed_sha` is null — the pre-review case — the created-at bound is
-the whole filter.
+Keep only runs named `Running Copilot Code Review` whose `headSha` matches the sha this wait is
+about, under the `sha_eq` prefix rule above: `last_pushed_sha` in the retrigger case,
+`pr_head_sha` from 1.1 in the pre-review case from 3.2a. In the retrigger case, **additionally**
+require `createdAt >= wait_started_at - 60s`.
+
+**That created-at bound belongs to the retrigger case alone.** In the pre-review case the run was
+created when the PR opened — before this loop started, let alone before 5.1 stamped
+`wait_started_at` at the end of a fixer pass that can itself run for minutes — so a lower bound
+anchored to this wait discards the one run it is looking for and reports `no-run`: the false
+timeout this step exists to prevent, manufactured by the step itself for the second time. The sha
+carries that case on its own and loses nothing, because with no push there is nothing to tell
+apart: a run left on the branch by an abandoned earlier loop sits on the same head sha and *is*
+the initial review this wait is waiting for.
 
 **The 60 seconds of slack on that lower bound are load-bearing.** 4.2 stamps
 `retrigger_started_at` *after* the POST returns, while GitHub creates the run as it processes that
@@ -416,9 +428,9 @@ the false timeout. The slack costs nothing in the other direction: a stale run f
 earlier loop is minutes or hours old, not seconds, and the `headSha` scoping catches it as well.
 
 A bare `gh run list --branch <branch>` is worse than no check at all: an unfinished run left on the
-branch by an abandoned or resumed earlier loop satisfies the first case below forever, so a
-request that never started would wait indefinitely — this step's own failure, pointed the
-other way. `--json` is also what supplies the timestamps the cases below read; the default
+branch by an abandoned or resumed earlier loop satisfies the first case below on every visit, so
+a request that never started would spend every extension the cap allows before reporting
+anything — this step's own failure, pointed the other way. `--json` is also what supplies the timestamps the cases below read; the default
 table output carries no completion time.
 
 Start from `timeout_outcome = "no-run"` and let the cases below overwrite it. Every path out of
@@ -428,21 +440,28 @@ how a run that failed comes to read as a run that never existed.
 - **A matching run exists and its `status` is not `completed`** — `queued`, `waiting`,
   `requested`, `pending` and `in_progress` all say the same thing here, and exempting only
   `in_progress` would declare a timeout on a run that has not begun executing yet. This is
-  *not* a timeout: the review is still being computed and the window was simply too short. Do
-  not fall through to the timeout below — give the loop a new deadline and **go back to the
-  `Loop:` block in 5.2**:
+  *not* a timeout: the review is still being computed and the window was simply too short. Give
+  the loop a new deadline and **go back to the `Loop:` block in 5.2** instead of falling through
+  to the timeout below — until the extension cap says otherwise:
 
   ```
-  poll_extensions += 1
-  poll_deadline    = now() + 300          # seconds
+  if poll_extensions < 3:
+      poll_extensions += 1
+      poll_deadline    = now() + 300      # seconds — then back to the Loop: block in 5.2
+  else:
+      timeout_outcome  = "run-unfinished" # cap reached — fall through to the timeout below
   ```
 
-  Log it: `{"ts":"<ISO>","pr":<PR>,"event":"copilot-poll-extended","run_elapsed_seconds":<now() - run.createdAt>,"extension":<poll_extensions>}`.
+  **The cap has to be the guard, not a remark beside it.** Written as an unconditional increment
+  with "stop at three" standing next to it, the fourth visit increments to four and hands out
+  another 300 seconds before anything tests anything — the wedged run this bound exists to bound
+  holds the loop open exactly as long as it would with no bound at all. The test comes first, so
+  the third extension is the last one granted.
+
+  On an extension, log it: `{"ts":"<ISO>","pr":<PR>,"event":"copilot-poll-extended","run_elapsed_seconds":<now() - run.createdAt>,"extension":<poll_extensions>}`.
   5.2 resumes polling the reviews endpoint and comes back here when the new deadline expires;
-  the same cases apply again. **Stop extending at `poll_extensions == 3`** — a wedged run
-  would otherwise hold the loop open for hours. At the cap, fall through to the timeout below
-  with `timeout_outcome = "run-unfinished"`, which the report renders differently from a
-  missing run.
+  the same cases apply again. At the cap the loop does not go back: `run-unfinished` is what the
+  report renders differently from a missing run.
 
   **That log line is diagnostic, not a feedback loop.** Nothing reads it back: 1.4 restores the
   iteration number only, and 1.6 takes `poll_timeout` from the flag or the default on every
@@ -459,11 +478,12 @@ how a run that failed comes to read as a run that never existed.
 
 - **A matching run that `completed` more than ~90s ago with a `conclusion` other than
   `success`** — a real timeout that names its own cause: the workflow failed, was cancelled or
-  was skipped, so no review was ever going to land. Set `timeout_outcome = "run-failed"` and
-  carry `conclusion` and `databaseId` into the report. This is what the query asks for
-  `conclusion` for. Folded into the next case, an Actions failure would send the operator off to
-  check whether Copilot is enabled on the repository, when what happened is a run they can open
-  and read.
+  was skipped, so no review was ever going to land. Set `timeout_outcome = "run-failed"`,
+  `timeout_conclusion = run.conclusion` and `timeout_run_id = run.databaseId` — 6.3 renders those
+  two names, and the run object itself is long out of scope by the time it does. This is what the
+  query asks for `conclusion` and `databaseId` for. Folded into the next case, an Actions failure
+  would send the operator off to check whether Copilot is enabled on the repository, when what
+  happened is a run they can open and read.
 
 - **A matching run that `completed` more than ~90s ago with `conclusion: success` and still no
   review** — a real timeout of a third kind: the review ran, finished cleanly, and left nothing
@@ -480,8 +500,9 @@ run is not proof a review landed, and an unfinished one is proof a verdict would
 
 Once a real timeout is established:
 
-- Compute the wait actually served: `poll_elapsed = now() - wait_started_at`. With extensions
-  this exceeds `poll_timeout`, and it — not the flag — is what the report quotes.
+- Compute the wait actually served: `poll_elapsed = now() - wait_started_at`. With extensions or
+  a completion grace this exceeds `poll_timeout`, and it — not the flag — is what the report
+  quotes.
 - Log: `{"ts":"<ISO>","pr":<PR>,"event":"copilot-timeout","seconds":<poll_elapsed>,"poll_timeout":<poll_timeout>,"extensions":<poll_extensions>,"outcome":"<timeout_outcome>"}`
 - Set `termination_reason = "timeout"`.
 - Go to Step 6.
@@ -522,11 +543,11 @@ PR: <url>
 - `no-comments`: *Copilot produced no new comments on the latest push — PR looks clean from Copilot's perspective.*
 - `no-fixes`: *Copilot's latest comments were all OUTDATED or DISAGREE — no code changes were needed.*
 - `max-iterations`: *Hit `--max <N>` iteration cap. Copilot may still have feedback; review manually or re-run with a higher `--max`.*
-- `timeout`: *Copilot didn't submit a review within `<poll_elapsed>`s — `<poll_timeout>`s plus `<poll_extensions>` extension(s) granted by step 5.3.* Then one line for the `timeout_outcome` that step set, and only that one — the four endings send the user to four different places:
-  - `run-unfinished`: *A review run for this push was still going at the extension cap. The review is slow, not absent: re-run with a higher `--poll-timeout`.*
-  - `run-failed`: *The review run for this push finished as `<conclusion>` (run `<databaseId>`). Open that run — Copilot's availability is not in question here, the workflow is.*
-  - `run-completed-no-review`: *The review run for this push finished cleanly and no review object followed. Check the PR in the GitHub UI: a review visible there but absent from `pulls/<n>/reviews` is a different fault from Copilot never having run.*
-  - `no-run`: *No review run was created for this push. This does not say whether Copilot is merely slow or does not review this repository — check the PR in the GitHub UI: if a review is there, re-run; if the reviewers sidebar offers no Copilot entry at all, it is not enabled here and re-running will time out again.*
+- `timeout`: *Copilot didn't submit a review within `<poll_elapsed>`s — `<poll_timeout>`s, `<poll_extensions>` extension(s) of 300s granted by step 5.3, and any completion grace it added on top of those.* Then one line for the `timeout_outcome` that step set, and only that one — the four endings send the user to four different places:
+  - `run-unfinished`: *A review run for this review request was still going at the extension cap. The review is slow, not absent: re-run with a higher `--poll-timeout`.*
+  - `run-failed`: *The review run for this review request finished as `<timeout_conclusion>` (run `<timeout_run_id>`). Open that run — Copilot's availability is not in question here, the workflow is.*
+  - `run-completed-no-review`: *The review run for this review request finished cleanly and no review object followed. Check the PR in the GitHub UI: a review visible there but absent from `pulls/<n>/reviews` is a different fault from Copilot never having run.*
+  - `no-run`: *No review run was created for this review request. This does not say whether Copilot is merely slow or does not review this repository — check the PR in the GitHub UI: if a review is there, re-run; if the reviewers sidebar offers no Copilot entry at all, it is not enabled here and re-running will time out again.*
 - `error`: *Loop aborted due to an error (see log entries above). Manual intervention required.*
 
 ## Error handling reference
@@ -539,13 +560,13 @@ PR: <url>
 | Sub-agent reports error | JSON `error` field non-null | `termination_reason="error"`, show, abort |
 | `pnpm typecheck` failed inside review-fix | sub-agent returns `pushed_commit_sha=null` + non-null `error` | `termination_reason="error"`, user fixes manually |
 | `git push` rejected | sub-agent `error` mentions push failure | `termination_reason="error"`, user resolves rebase/merge |
-| Copilot silent past `poll_timeout` | polling loop exits without match, **and** step 5.3 finds no review run at all for this push | `termination_reason="timeout"` with `timeout_outcome="no-run"`, suggest manual UI check |
-| Review run for this push not `completed` at the deadline | scoped `gh run list` in step 5.3 (any status but `completed`) | not a timeout — extend `poll_deadline` by 300s, log the elapsed time, return to 5.2; at most 3 extensions, counted per wait (5.1 resets the counter) |
+| Copilot silent past `poll_timeout` | polling loop exits without match, **and** step 5.3 finds no review run at all for the current review request | `termination_reason="timeout"` with `timeout_outcome="no-run"`, suggest manual UI check |
+| Review run for this review request not `completed` at the deadline | scoped `gh run list` in step 5.3 (any status but `completed`) | not a timeout — extend `poll_deadline` by 300s, log the elapsed time, return to 5.2; at most 3 extensions, counted per wait (5.1 resets the counter) |
 | Review run finished seconds before the deadline | scoped run `completed` less than ~90s ago | not a timeout — poll until `updatedAt + 90s` before concluding (review objects trail the run) |
 | Review run failed, was cancelled, or was skipped | scoped run `completed` with a `conclusion` other than `success` | `termination_reason="timeout"` with `timeout_outcome="run-failed"` — the report points at that run, not at Copilot availability |
 | Review run finished clean but no review object followed | scoped run `completed` > 90s ago, `conclusion: success` | `termination_reason="timeout"` with `timeout_outcome="run-completed-no-review"` — a reporting fault, not an availability one |
 | `gh run list` in step 5.3 fails or returns unparseable JSON | non-zero exit code, or output that will not parse | retry once after 30s; still failing → `termination_reason="error"`. Never read as "no matching run" — that is the false timeout the step exists to prevent |
-| Stale unfinished run from an earlier loop on the branch | run created before `wait_started_at - 60s`, or a different `headSha` | excluded by 5.3's scoping — unscoped, it would extend the wait forever |
+| Stale unfinished run from an earlier loop on the branch | a different `headSha`, or — in the retrigger case only — created before `wait_started_at - 60s` | excluded by 5.3's scoping — unscoped, it would burn every extension the cap allows |
 | Reviewer request over REST fails | non-zero exit code from `gh api` | retry once after 30s; still failing → `termination_reason="error"` (no comment fallback — see Step 4) |
 | Session closed mid-wait | `ScheduleWakeup` doesn't fire | loop dies silently; log preserves last state; re-invoke offers resume via 1.4 |
 | Fixed > 0 but no pushed_commit_sha | defensive check in Step 3.4 | `termination_reason="error"` |
