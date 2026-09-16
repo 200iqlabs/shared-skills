@@ -2,15 +2,21 @@
 
 ### Requirement: The loop terminates into a record only a person can close
 
-When the review loop terminates, it SHALL leave the pull request carrying an open issue whose
-closing constitutes the human sign-off: it SHALL append its report to the open sign-off record
-it finds, and SHALL create one where it finds none. One open record per pull request is the
-normal outcome, not an invariant the loop can guarantee — where two runs finish concurrently,
-or where the lookup cannot complete, a duplicate SHALL be accepted, because the requirement
-below resolves that race in favour of creating. The record SHALL be created for every
-termination reason, including `error` — an aborted run needs a person more than a clean one,
-not less. The loop, any later run of it, and any workflow SHALL NOT close that issue, and SHALL
-NOT reopen one a person has closed.
+When the review loop terminates, it SHALL attempt to leave the pull request carrying an open
+issue whose closing constitutes the human sign-off: it SHALL append its report to the open
+sign-off record it finds, and SHALL create one where it finds none. Where the write succeeds,
+such a record SHALL exist; where it fails on both attempts, the requirement *A run that could
+not create its record is declared ungated* governs instead, and the loop SHALL announce the
+absence rather than assert this guarantee. **The obligation is to write the record or to say it
+could not** — a record the platform refused is not an outcome the loop can produce, and a spec
+demanding it would be unimplementable rather than strict.
+
+One open record per pull request is the normal outcome, not an invariant the loop can
+guarantee — where two runs finish concurrently, or where the lookup cannot complete, a
+duplicate SHALL be accepted, because the requirement below resolves that race in favour of
+creating. The attempt SHALL be made for every termination reason, including `error` — an
+aborted run needs a person more than a clean one, not less. The loop, any later run of it, and
+any workflow SHALL NOT close that issue, and SHALL NOT reopen one a person has closed.
 
 The record SHALL state, verbatim, that a person closes it after reading the pull request and
 that nothing else may. The record SHALL NOT claim to block the merge, and the loop SHALL NOT

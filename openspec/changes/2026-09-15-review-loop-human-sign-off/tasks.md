@@ -59,6 +59,18 @@
       duplicate from a race or an incomplete lookup is stated as accepted in the same requirement.
 - [x] 5.10 State what happens to a record a person closed — a new one is opened, the closed one is
       never reopened or reused — in the spec, in the skill and in an eval.
+- [x] 5.11 Produce `report.md` and `error.txt` where 6.4 expects them: 6.2 and 6.3 wrote to the
+      session only, so every `cat` in the body assembly had nothing to read.
+- [x] 5.12 Carry `SCRATCH`, `TITLE`, `EXISTING` and `LOOKUP_FAILED` across tool calls — shell
+      state dies between them, and the write block was reading four empty variables.
+- [x] 5.13 Mark the lookup failed when the *parser* fails, not only the fetch: a `node` that
+      cannot run yields the same empty `EXISTING` as "no record matched".
+- [x] 5.14 Put the write behind one callable and invoke it at most twice — the retry the prose
+      promised existed nowhere in the block a reader copies.
+- [x] 5.15 Re-read the record's state immediately before appending: `gh issue comment` succeeds
+      on a closed issue, which would file a run under a sign-off already given.
+- [x] 5.16 Qualify the terminal guarantee by a successful write, so it stops contradicting the
+      requirement that lets both attempts fail and declares the run ungated.
 
 ## Out of scope
 
