@@ -1,10 +1,12 @@
 # Evals for `review-loop`
 
-- `evals.json` — 5 behavioural prompts covering the states this loop handles badly when it handles
+- `evals.json` — 7 behavioural prompts covering the states this loop handles badly when it handles
   them badly: a repository where Copilot has never reviewed, a first-ever pull request where the
   availability check has nothing to read, a timeout that must not assert which of two causes it
-  hit, a missing OpenSpec change directory, and a clean termination that must not read as
-  "all fixed".
+  hit, a missing OpenSpec change directory, a clean termination that must not read as
+  "all fixed", an unrelated open issue whose title carries the same words and pull-request number
+  and must not be mistaken for the sign-off record, and a failed create that must be announced as
+  an ungated run instead of being reported as complete.
 - `trigger-eval.json` — 20 triggering queries, 10 positive and 10 negative.
 
 ## Measured triggering: 95%, and it does not move either

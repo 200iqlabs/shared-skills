@@ -31,15 +31,23 @@
       complete.
 - [x] 4.3 `review-fix`: severity decides order, and the no-severity fallback keeps arrival
       order.
-- [ ] 4.4 Update `skills/review-fix/evals/README.md` — it still states six prompts and omits
+- [x] 4.4 Update `skills/review-fix/evals/README.md` — it still states six prompts and omits
       the severity case.
-- [ ] 4.5 Update `skills/review-loop/evals/README.md` for the two added cases.
+- [x] 4.5 Update `skills/review-loop/evals/README.md` for the two added cases.
 
 ## 5. Open in review
 
-- [ ] 5.1 Paginate the open-issue lookup, or otherwise make the exact-title match complete —
+- [x] 5.1 Paginate the open-issue lookup, or otherwise make the exact-title match complete —
       `--limit 200` can miss an older record and create a duplicate.
-- [ ] 5.2 Re-run the review loop until the reviewer has nothing new.
+- [x] 5.2 Define `SCRATCH` inside `review-loop` — the loop never set it, so every `--body-file`
+      path collapsed and no gate could be written.
+- [x] 5.3 Replace the malformed `--jq --arg` lookup: `gh` consumes the next token as the whole
+      expression, so the match never ran and `head` hid the failure.
+- [x] 5.4 Read the listing's own exit status — a failed lookup takes the create path and says
+      so, instead of passing for "no record exists".
+- [x] 5.5 Split the ungated warning: a failed append names the open issue rather than telling
+      the reader nothing was created.
+- [ ] 5.6 Re-run the review loop until the reviewer has nothing new.
 
 ## Out of scope
 

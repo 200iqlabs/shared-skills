@@ -412,9 +412,40 @@ those words and that number — appending the report there would leave the gate 
 looking like success. Build the canonical title once and compare it whole:
 
 ```bash
+SCRATCH="${SCRATCH:-$(mktemp -d)}"   # outside the repository; throwaway
+echo "scratch: $SCRATCH"
 TITLE="review-loop finished on PR #<PR> — human sign-off required"
-EXISTING=$(gh issue list --repo <owner>/<repo> --state open --limit 200   --json number,title --jq --arg t "$TITLE" '.[] | select(.title == $t) | .number' | head -1)
+
+# Every open issue, not the newest page. `gh issue list --limit N` stops at N, so a gate
+# older than N newer issues reads as absent and the loop opens a duplicate; `gh api
+# --paginate` follows the Link headers to the end.
+if gh api --paginate "repos/<owner>/<repo>/issues?state=open&per_page=100" \
+     > "$SCRATCH/open-issues.json"; then
+  EXISTING=$(TITLE="$TITLE" node -e '
+    const all = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+    const hit = all.find(i => !i.pull_request && i.title === process.env.TITLE);
+    if (hit) console.log(hit.number);
+  ' "$SCRATCH/open-issues.json")
+else
+  EXISTING=""; LOOKUP_FAILED=1
+fi
 ```
+
+Three things that block is written to avoid:
+
+- **`SCRATCH` is set here, in this skill.** Nothing else in the loop defines it, and an unset
+  variable collapses every path below to `/sign-off.md` — the heredoc and both `--body-file`
+  calls then die on a permission error, and the gate is never opened.
+- **The title is compared in Node against the file, not inside a `--jq` expression.** `gh` does
+  not pass jq's `--arg` through `--jq`: the flag consumes the next token as the whole
+  expression, so `--jq --arg t "$TITLE" '...'` is a malformed call. Piping it through `head`
+  then masks the failure, leaving `EXISTING` empty and the loop creating a fresh issue every
+  run. The `issues` endpoint also returns pull requests, which is what `!i.pull_request` drops.
+- **A lookup that errored is not a lookup that found nothing.** The `if` reads the listing's own
+  status rather than the status of a pipeline ending in `head`, so an API or permission failure
+  is visible as `LOOKUP_FAILED` instead of being read as "no record exists". Say so in the
+  report, then take the create path anyway — by the rule below, a duplicate beats a missing
+  gate.
 
 **Build the body in a file, never as a shell argument.** The report carries literal backticks
 and may carry error text from the sub-agent; inside double quotes a backtick becomes command
@@ -450,13 +481,25 @@ fi
 **Check the exit status, and say it out loud when the write failed.** Issues disabled, a
 missing permission, GitHub briefly unavailable — any of them leaves the loop having printed a
 report and created no gate, which is the single outcome this step exists to prevent. Retry
-once; if it still fails, print this where the report cannot bury it and treat the run as
-ungated:
+once; if it still fails, print the line for the branch you were on, where the report cannot
+bury it, and treat the run as ungated.
+
+**The create path failed** — nothing at all records this pull request:
 
 > ⚠️ **Sign-off issue was NOT created** (`<error>`). Nothing records that this pull request
 > needs human eyes — open one by hand before merging.
 
-Three things about this step are deliberate:
+**The append path failed** — the gate exists and is open, it just does not carry this run:
+
+> ⚠️ **Sign-off issue #`<EXISTING>` was NOT updated** (`<error>`). The gate is open but its
+> last report is from an earlier run — read the pull request itself before merging, and do
+> **not** open a second issue.
+
+The two are not interchangeable. Telling a reader that nothing was created when issue
+#`<EXISTING>` is sitting open invites them to open the duplicate the exact-title lookup exists
+to avoid.
+
+Four things about this step are deliberate:
 
 - **It runs for every termination reason, `error` included.** The reasons differ in what the
   person will find, not in whether one is needed; an aborted loop needs a human more than a
@@ -464,9 +507,13 @@ Three things about this step are deliberate:
 - **The list-then-create is not atomic.** Two loops finishing on the same pull request can
   both see nothing and both open an issue. A duplicate is noise; a missing one is a gate that
   was never there. Prefer the noise.
-- **Add `--label` only for a label that exists in that repository.** A label that exists
-  nowhere fails the create, and a failed create loses the record — which is the one outcome
-  this step exists to prevent.
+- **A failed lookup takes the create path too**, for the same reason: `LOOKUP_FAILED` means the
+  loop does not know whether a gate exists, and guessing "yes" loses the record.
+- **No label is passed, and none is required.** This repository defines no label for the gate,
+  and the create path above deliberately does not invent one. Add `--label` only in a
+  repository where you have checked the label exists: a label that exists nowhere fails the
+  create, and a failed create loses the record — which is the one outcome this step exists to
+  prevent.
 
 ## Error handling reference
 
