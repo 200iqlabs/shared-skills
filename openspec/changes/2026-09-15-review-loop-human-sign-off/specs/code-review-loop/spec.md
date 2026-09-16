@@ -55,6 +55,9 @@ request changes, approve, or merge in order to make it blocking.
 - **THEN** it SHALL re-read that record's state immediately before appending, and SHALL treat
   anything other than a confirmed open state — including an unreachable or ambiguous answer —
   as no record, taking the create path
+- **AND** it SHALL do so before **every** attempt, the retry included: a state read taken before
+  a failed attempt says nothing about the seconds that pass before the next one, which is time
+  enough for the close it exists to detect
 - **AND** the obligation SHALL be read as best-effort: the two calls are not atomic, so a close
   landing between them still appends, and the loop SHALL document that residual window rather
   than claim to have closed it. Narrowing it to those two calls is the most a non-atomic pair
@@ -132,6 +135,23 @@ step prints the warning, and SHALL NOT be left in state that step cannot read.
   carry the report
 - **AND** the loop SHALL NOT publish a record consisting only of its fixed closing sentence as
   though it carried the run
+
+#### Scenario: An `error` termination whose error text never reached the body
+
+- **WHEN** the termination reason is `error` and the error file is missing or empty at
+  body-assembly time
+- **THEN** the record SHALL say in its own body that it does not carry the error text the
+  follow-up line promises below itself, and the loop SHALL treat the body as incomplete
+- **AND** on any other termination reason an absent error file SHALL pass without a warning —
+  the obligation follows from the reason, not from whether a file happens to exist
+
+#### Scenario: The run log cannot be read
+
+- **WHEN** the run log is missing or unreadable while the error file is being assembled
+- **THEN** the record SHALL carry a line stating that the iteration history could not be
+  captured, in the place that history would have occupied
+- **AND** the loop SHALL NOT publish a record that is silently missing it — an empty file left
+  behind by a failed read is not an empty log
 
 ### Requirement: Fixes are applied in the reviewer's order of severity
 

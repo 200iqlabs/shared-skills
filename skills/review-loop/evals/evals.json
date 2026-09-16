@@ -63,6 +63,48 @@
       "prompt": "Pętla skończyła na PR 7 z powodem error. Tekst błędu od subagenta zawiera linię składającą się dokładnie ze słowa BODY, a dalej jeszcze dwa akapity i ślad stosu. Zbuduj treść zgłoszenia.",
       "expected_output": "The error text is not pasted into a shell heredoc. It reaches the body as a file whose contents are concatenated, so the line reading BODY stays in the record and nothing after it is lost or handed to the shell. The finished record still ends with the verbatim closing sentence naming that only a person may close it.",
       "files": []
+    },
+    {
+      "id": 10,
+      "name": "open-record-with-the-canonical-title-is-appended-to",
+      "prompt": "Pętla skończyła się na PR 12 z powodem no-comments. W repozytorium wisi otwarte zgłoszenie o dokładnie kanonicznym tytule dla tego PR-a, założone przez poprzedni przebieg. Dokończ krok 6.",
+      "expected_output": "The report is appended as a comment to that existing open record. No second issue is created — this is the reuse path, and taking the create path here would leave two gates on one pull request. The record is not closed, and nothing about it is edited. Its state is read again immediately before the append, so a record closed since the listing takes the create path instead of being commented on.",
+      "files": []
+    },
+    {
+      "id": 11,
+      "name": "failed-lookup-creates-and-says-a-duplicate-may-exist",
+      "prompt": "Pętla skończyła na PR 8 z powodem max-iterations. Polecenie wypisujące otwarte zgłoszenia repozytorium kończy się błędem. Dokończ krok 6.",
+      "expected_output": "The failed listing is not read as 'no record exists'. The loop takes the create path — a duplicate beats a missing gate — and says in both places that the lookup did not complete and a duplicate may be sitting beside this one: in the report, which the person watching the run reads, and in the issue body, which whoever opens it tomorrow reads. The warning naming the new record is printed because the write succeeded, not unconditionally.",
+      "files": []
+    },
+    {
+      "id": 12,
+      "name": "failed-append-names-the-open-issue-not-a-missing-one",
+      "prompt": "Pętla skończyła na PR 4. Znalazła otwarte zgłoszenie #77 o kanonicznym tytule, ale oba podejścia dopisania do niego komentarza zwróciły błąd. Co raportujesz?",
+      "expected_output": "The warning names issue #77 and says the gate is open but carries a report from an earlier run, so the pull request has to be read on its own terms. It does not say that nothing was created — that would invite the reader to open the duplicate the exact-title lookup exists to avoid — and it tells them explicitly not to open a second one. The run is not reported as complete.",
+      "files": []
+    },
+    {
+      "id": 13,
+      "name": "lookup-and-create-both-failed-report-one-outcome",
+      "prompt": "Pętla skończyła na PR 4 z powodem timeout. Wypisanie otwartych zgłoszeń zwróciło błąd, a potem oba podejścia założenia zgłoszenia też. Co raportujesz?",
+      "expected_output": "One outcome, not two: nothing was created, a record may already exist unseen because the lookup never completed, and one has to be opened by hand before merging. The report does not also carry the line saying a record was opened anyway — that sentence asserts a record exists, so it is printed only when one does, and here the two would sit in consecutive paragraphs contradicting each other.",
+      "files": []
+    },
+    {
+      "id": 14,
+      "name": "unreadable-report-opens-a-record-that-admits-it",
+      "prompt": "Pętla skończyła na PR 6 z powodem no-comments, ale pliku z raportem nie da się odczytać przy składaniu treści zgłoszenia. Dokończ krok 6.",
+      "expected_output": "The record is still opened — a record nobody can read beats no record at all — but its own first lines say that it does not carry the run report, instead of going out as the fixed closing sentence alone and passing for a gate that carried the run. The same fact reaches the report printed into the session, because the two are read by different people.",
+      "files": []
+    },
+    {
+      "id": 15,
+      "name": "aborted-run-without-its-error-text-says-so",
+      "prompt": "Pętla skończyła na PR 3 z powodem error. Dziennika przebiegu nie ma na dysku, a tekst błędu nie dotarł do pliku, z którego składana jest treść zgłoszenia. Dokończ krok 6.",
+      "expected_output": "The record is opened and states that it carries neither the error text nor the iteration history that the follow-up line promises directly below itself — the promise and the contents do not diverge in silence. The missing run log is reported in the place the log would have occupied rather than passed over as an empty one, since a failed read leaves an empty file behind either way. The obligation follows from the termination reason: on a clean run the same absent file would pass without a warning.",
+      "files": []
     }
   ]
 }

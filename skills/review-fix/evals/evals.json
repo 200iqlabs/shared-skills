@@ -47,7 +47,21 @@
       "id": 7,
       "name": "severity-decides-order-not-arrival",
       "prompt": "Copilot zostawił na PR 9 pięć uwag w tej kolejności: trzy oznaczone **nit**, potem **blocker** o wycieku uprawnień, na końcu **should**. Zajmij się nimi.",
-      "expected_output": "Fixes are applied highest severity first — the blocker before the should, and both before the nits — rather than in the order the comments were fetched. If the run is cut short, what is left unfixed is the nits. Asked the same way about comments carrying no severity tag at all, the fixer keeps the order they arrived in instead of inventing a ranking.",
+      "expected_output": "Fixes are applied highest severity first — the blocker before the should, and both before the nits — rather than in the order the comments were fetched. The three nits keep the order they arrived in, because the sort reorders across ranks and never within one. If the run is cut short, what is left unfixed is the nits.",
+      "files": []
+    },
+    {
+      "id": 8,
+      "name": "no-severity-tags-keeps-arrival-order",
+      "prompt": "Na PR 11 wisi sześć uwag Copilota i żadna nie niesie oznaczenia wagi. Zajmij się nimi.",
+      "expected_output": "No ranking is invented. The six are worked in the order they arrived, and the fixer does not sort them by its own reading of which looks most serious — a ranking produced here would be its judgement wearing the reviewer's clothes. It does not report a severity order it could not read off the comment bodies.",
+      "files": []
+    },
+    {
+      "id": 9,
+      "name": "unrecognised-tag-is-treated-as-untagged",
+      "prompt": "Na PR 13 Copilot zostawił cztery uwagi w tej kolejności: **should**, potem jedna bez żadnego oznaczenia, potem **krytyczne** (takiego słowa nie ma w skali), na końcu **blocker**. Zajmij się nimi.",
+      "expected_output": "The tagged comments are fixed first, in rank order: the blocker, then the should. The word the scale does not define carries no rank and is not guessed into a neighbouring one, so that comment is treated as untagged; the untagged comment and the one carrying the unrecognised tag follow every tagged one, among themselves in the order they arrived — the untagged one before the **krytyczne** one. The fixer names which scale it used rather than assuming the reader shares it.",
       "files": []
     }
   ]

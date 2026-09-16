@@ -91,14 +91,32 @@
       non-atomic window between `view` and `comment`; it does not close it.
 - [x] 5.24 Align `proposal.md` with the spec on duplicates: "one issue per pull request" read as
       an invariant the change had already, deliberately, declined to guarantee.
+- [x] 5.25 Re-check the record's state **inside each write attempt**. Checked once above
+      `write_gate`, the answer was inherited by the retry — and the five-second gap between the
+      two is exactly long enough for the close the check exists to detect, so the retry would
+      comment on a closed issue and file the run under a signature already given.
+- [x] 5.26 Key the error text on the **termination reason**, not on whether a file exists. An
+      `error` run whose `error.txt` never arrived published a record promising the error and the
+      log "directly below this line" with nothing below it. `REASON` travels in `gate.env` with
+      the other four values.
+- [x] 5.27 Read `tail`'s exit status: the `>` redirect creates `log-tail.txt` before `tail` runs,
+      so a missing run log left an empty file that the following `cat` appended happily — the
+      record lost its iteration history and nothing said so. The failure now writes a line where
+      the history would have been, and tells the session too.
+- [x] 5.28 Cover the warning matrix (`GATE_WRITTEN` × `EXISTING` × `LOOKUP_FAILED`) and the
+      unreadable-report path with evals: `review-loop` 12, 13 and 14. Add 15 for an aborted run
+      whose error text and run log never arrived.
+- [x] 5.29 Cover the two paths the exact-title eval never exercised: appending to an open record
+      under the canonical title (`review-loop` 10) and a lookup that errored taking the create
+      path (11). Without 10, a regression that always creates passes the whole suite.
+- [x] 5.30 Split the severity eval into its three branches (`review-fix` 7, 8, 9). The shipped
+      one asserted the no-severity fallback in its expected output while its prompt carried only
+      recognised tags — an expectation no run could falsify.
 
 ## Still open at the end of the review rounds
 
-- **5.6 above**, by construction: the loop closes when a round returns nothing new.
-- **No eval covers the warning matrix** (`GATE_WRITTEN` × `EXISTING` × `LOOKUP_FAILED`) or the
-  unreadable-report path added in 5.19/5.20. The spec has scenarios for both; the behavioural
-  suites do not, and writing them was not attempted in the round that added the requirements.
-  Worth one eval each before this change is archived.
+- **5.6 above**, by construction: the loop closes when a round returns nothing new, and a run
+  cannot tick the box for its own completion from inside itself.
 
 ## Out of scope
 

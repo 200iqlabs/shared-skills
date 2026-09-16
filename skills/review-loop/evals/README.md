@@ -1,14 +1,31 @@
 # Evals for `review-loop`
 
-- `evals.json` — 9 behavioural prompts covering the states this loop handles badly when it handles
-  them badly: a repository where Copilot has never reviewed, a first-ever pull request where the
-  availability check has nothing to read, a timeout that must not assert which of two causes it
-  hit, a missing OpenSpec change directory, a clean termination that must not read as
-  "all fixed", an unrelated open issue whose title carries the same words and pull-request number
-  and must not be mistaken for the sign-off record, a failed create that must be announced as
-  an ungated run instead of being reported as complete, a sign-off record a person already closed
-  and which must not be reopened or reused, and an error text carrying the heredoc delimiter,
-  which must not truncate the record it is written into.
+- `evals.json` — 15 behavioural prompts covering the states this loop handles badly when it
+  handles them badly, in four groups.
+
+  **The loop itself (1–5):** a repository where Copilot has never reviewed, a first-ever pull
+  request where the availability check has nothing to read, a timeout that must not assert which
+  of two causes it hit, a missing OpenSpec change directory, and a clean termination that must
+  not read as "all fixed".
+
+  **Which record the gate lands in (6, 8, 10, 11):** an unrelated open issue whose title carries
+  the same words and pull-request number and must not be mistaken for the sign-off record; a
+  record a person already closed, which must not be reopened or reused; an open record under the
+  canonical title, which must be appended to rather than duplicated; and a lookup that errored,
+  which must create rather than read its own failure as "none exists". The fourth is what keeps
+  the sixth honest: alone, it passes a regression that always takes the create path.
+
+  **What the run says about its outcome (7, 12, 13):** a failed create announced as an ungated
+  run instead of reported as complete; a failed *append*, which must name the open issue rather
+  than claim nothing was created; and a failed lookup followed by a failed create, which must
+  produce one outcome instead of two contradictory paragraphs. Between them the three walk the
+  `GATE_WRITTEN` × `EXISTING` × `LOOKUP_FAILED` matrix that decides which warning is printed.
+
+  **What the record carries (9, 14, 15):** an error text carrying the heredoc delimiter, which
+  must not truncate the record it is written into; a report that could not be read, where the
+  record is opened anyway and says so rather than passing for a gate that carried the run; and an
+  aborted run whose error text and run log never arrived, where the body must not promise them
+  below a line that carries nothing.
 - `trigger-eval.json` — 20 triggering queries, 10 positive and 10 negative.
 
 ## Measured triggering: 95%, and it does not move either

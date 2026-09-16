@@ -428,8 +428,22 @@ recorded:
 ```bash
 SCRATCH="<paste the path 6.2 echoed>"        # 6.2 ran in a different shell; this one has nothing
 REPO_ROOT=$(git rev-parse --show-toplevel)   # 1.4 set it, and that shell is gone too
-tail -n 20 "$REPO_ROOT/.review-loop.log" > "$SCRATCH/log-tail.txt"
+if ! tail -n 20 "$REPO_ROOT/.review-loop.log" > "$SCRATCH/log-tail.txt" 2> "$SCRATCH/tail-err.txt"; then
+  printf '> ⚠️ **The run log could not be read** (`%s`), so this record carries the error text\n> without the iteration history that preceded it.\n' \
+    "$(tr '\n' ' ' < "$SCRATCH/tail-err.txt")" > "$SCRATCH/log-tail.txt"
+  echo "log tail: FAILED — the record will say so in its own body"
+fi
 ```
+
+**A failed `tail` leaves its file behind, which is why the status is read rather than the
+file.** The `>` redirect creates `log-tail.txt` before `tail` ever runs, so a missing or
+unreadable `.review-loop.log` leaves an *empty* file that the `cat` below appends happily: the
+record goes out without the iteration history the spec requires of it, and nothing anywhere
+says so. The branch replaces that empty file with a line stating the absence, so it reaches the
+record by the same route the log would have, and the `echo` tells the person watching the run —
+a different reader, who will not open the issue. The stderr text is substituted through
+`printf`'s `%s` argument rather than into its format string, so whatever `tail` wrote cannot be
+read as formatting.
 
 **Every shell block from here to the end of step 6 opens by restoring what it reads.** Shell
 state does not survive a tool call, and these two variables are the ones that fail silently:
@@ -446,8 +460,10 @@ SCRATCH="<paste the path 6.2 echoed>"
 cat "$SCRATCH/log-tail.txt" >> "$SCRATCH/error.txt"
 ```
 
-On every other termination reason leave `$SCRATCH/error.txt` absent — 6.4 tests it with `-s`
-and skips it when it is missing or empty.
+On every other termination reason leave `$SCRATCH/error.txt` absent. 6.4 decides what to do
+about it from the **termination reason**, not from whether the file happens to exist: absent on
+a clean run is the expected state and passes silently, absent on an `error` run is a record
+that promised the error below the follow-up line and did not carry it, and says so.
 
 Both files are the reason 6.4 can promise a durable record: they are what the follow-up line
 points at, and they are what stays behind when the session ends.
@@ -467,6 +483,7 @@ looking like success. Build the canonical title once and compare it whole:
 ```bash
 SCRATCH="<paste the path 6.2 echoed>"   # outside the repository; throwaway
 TITLE="review-loop finished on PR #<PR> — human sign-off required"
+REASON="<termination_reason>"           # the body block needs it and cannot re-derive it
 EXISTING=""; LOOKUP_FAILED=""
 
 # Every open issue, not the newest page. `gh issue list --limit N` stops at N, so a gate
@@ -487,8 +504,9 @@ else
   LOOKUP_FAILED=1
 fi
 
-# Shell state does not survive to the next tool call; these three do have to.
+# Shell state does not survive to the next tool call; these four do have to.
 { printf 'TITLE=%q\n'         "$TITLE"
+  printf 'REASON=%q\n'        "$REASON"
   printf 'EXISTING=%q\n'      "$EXISTING"
   printf 'LOOKUP_FAILED=%q\n' "$LOOKUP_FAILED"
 } > "$SCRATCH/gate.env"
@@ -513,11 +531,11 @@ Four things that block is written to avoid:
   otherwise indistinguishable from "no record matched". Both routes set `LOOKUP_FAILED`. Say so
   in the report, then take the create path anyway — by the rule below, a duplicate beats a
   missing gate.
-- **The three values are persisted before the block ends.** Every command below runs in a new
-  shell that inherits nothing, so `TITLE`, `EXISTING` and `LOOKUP_FAILED` would arrive empty:
-  the loop would then take the create path on a pull request that already has a gate, and create
-  it with an empty title. `printf %q` writes them back in a form `.` can read. The blocks below
-  begin with the two lines that restore them.
+- **The four values are persisted before the block ends.** Every command below runs in a new
+  shell that inherits nothing, so `TITLE`, `REASON`, `EXISTING` and `LOOKUP_FAILED` would arrive
+  empty: the loop would then take the create path on a pull request that already has a gate,
+  create it with an empty title, and read every termination as a clean one. `printf %q` writes
+  them back in a form `.` can read. The blocks below begin with the two lines that restore them.
 
 **Build the body in a file, never as a shell argument.** The report carries literal backticks
 and may carry error text from the sub-agent; inside double quotes a backtick becomes command
@@ -558,9 +576,18 @@ WARN
 
 NOREPORT
   fi
-  if [ -s "$SCRATCH/error.txt" ]; then
+  if [ "$REASON" = "error" ]; then
     printf '\n'
-    cat "$SCRATCH/error.txt" || BODY_INCOMPLETE=1
+    if [ -s "$SCRATCH/error.txt" ] && cat "$SCRATCH/error.txt"; then :; else
+      BODY_INCOMPLETE=1
+      cat <<'NOERROR'
+> ⚠️ **The error text could not be read.** This run ended in an error, and the follow-up line
+> above promises the error and the tail of the run log directly below it — neither reached this
+> record. Both were produced in the session that opened this issue and cannot be recovered from
+> here; re-run the loop on this pull request to get them.
+
+NOERROR
+    fi
   fi
   cat <<'BODY'
 
@@ -583,29 +610,38 @@ carries the same fact into the report, because the two are read by different peo
 group runs in this shell rather than a subshell, which is what lets the flag survive the
 redirect; it is appended to `gate.env` because the write block below is another tool call.
 
+**The error text is mandatory on an `error` termination, so it is keyed on the reason and not
+on the file.** `[ -s error.txt ]` alone answers "is there one", and a missing file then reads as
+"there was nothing to say" — which on a clean run is true and on an aborted one is the record
+losing the only thing it was opened to carry, while 6.3's follow-up line still promises it
+below. `REASON` comes from `gate.env` for the same cause as everything else in this step: the
+tool call that knew it has ended. On any other reason the branch is not entered at all, so a
+clean run neither warns nor leaves an empty gap where the error would have been.
+
 **On an `error` termination the body carries the error itself, not a pointer to it.** The
 follow-up line in 6.3 points below itself and `error.txt` is concatenated below the report, so
 the two agree. An earlier wording sent the reader to "the log entries above" — which in the
 issue is nothing at all, since the entries above it are the session's, and outliving that
 session is the whole purpose of the record.
 
-Then append to the one you found, or create it — checking first that it is still open, and
-retrying once before giving up:
+Then append to the one you found, or create it — checking that it is still open before each
+attempt, and retrying once before giving up:
 
 ```bash
 SCRATCH="<paste the path 6.2 echoed>"
 . "$SCRATCH/gate.env"
 
-# The listing was a snapshot. A person may have closed the record in the seconds since, and
-# `gh issue comment` succeeds on a closed-but-unlocked issue — which would file this run under
-# a sign-off already given, the one thing the closed-record rule below forbids. Ask for the
-# state now, and on anything other than a confirmed OPEN, create instead.
-if [ -n "$EXISTING" ]; then
-  STATE=$(gh issue view "$EXISTING" --repo <owner>/<repo> --json state --jq .state) || STATE=""
-  [ "$STATE" = "OPEN" ] || EXISTING=""
-fi
-
+# The listing was a snapshot, and so is every re-read of it. A person may close the record in
+# the seconds before *either* attempt, and `gh issue comment` succeeds on a closed-but-unlocked
+# issue — which would file this run under a sign-off already given, the one thing the
+# closed-record rule below forbids. So the state is asked for inside the attempt, not once
+# outside it: the retry five seconds later asks again rather than trusting what the first one
+# was told. On anything other than a confirmed OPEN, create instead.
 write_gate() {
+  if [ -n "$EXISTING" ]; then
+    STATE=$(gh issue view "$EXISTING" --repo <owner>/<repo> --json state --jq .state) || STATE=""
+    [ "$STATE" = "OPEN" ] || EXISTING=""     # no `local`: the clear has to outlive the call
+  fi
   if [ -n "$EXISTING" ]; then
     gh issue comment "$EXISTING" --repo <owner>/<repo> --body-file "$SCRATCH/sign-off.md"
   else
@@ -620,8 +656,10 @@ write_gate 2> "$SCRATCH/write-err.txt" || {
 }
 
 # Both of these have to reach the reporting step, which is another tool call: EXISTING because
-# the re-check above may have cleared it, GATE_WRITTEN because it is the only record that both
-# attempts failed. `.` reads the last assignment of each, so appending is enough.
+# the re-check inside the last attempt may have cleared it, GATE_WRITTEN because it is the only
+# record that both attempts failed. `.` reads the last assignment of each, so appending is
+# enough — and `write_gate` deliberately assigns EXISTING in the caller's scope, so the value
+# persisted here is the one the attempt actually acted on.
 { printf 'EXISTING=%q\n'       "$EXISTING"
   printf 'GATE_WRITTEN=%q\n'   "$GATE_WRITTEN"
 } >> "$SCRATCH/gate.env"
@@ -636,6 +674,14 @@ missing permission, GitHub briefly unavailable — any of them leaves the loop h
 report and created no gate, which is the single outcome this step exists to prevent. The
 function above exists so the retry is one call rather than a second copy of the branch that can
 drift from the first; an empty `GATE_WRITTEN` after it means both attempts failed.
+
+**The state check lives inside the function for the same reason the function exists.** Put once
+above it, it is read by the first attempt and inherited by the second — and the five-second gap
+between them is exactly the window a person needs to read the pull request and close the
+record. The retry would then comment on a closed issue, succeed, and file the run under a
+signature already given: the failure this check exists to prevent, reintroduced by the retry
+that was supposed to make the step more robust. Inside, each attempt asks for itself, and a
+close landing between them turns the retry into a create.
 
 **`GATE_WRITTEN` is written down, not left in the shell.** The block ends with a successful
 assignment either way, so its exit status says nothing, and the variable itself dies with the
@@ -712,7 +758,7 @@ Five things about this step are deliberate:
   was never there. Prefer the noise.
 - **A failed lookup takes the create path too**, for the same reason: `LOOKUP_FAILED` means the
   loop does not know whether a gate exists, and guessing "yes" loses the record.
-- **The lookup asks for open issues only, the state is re-read before appending, and a closed
+- **The lookup asks for open issues only, the state is re-read before every append, and a closed
   record is never reopened.** A closed record is a sign-off somebody gave, for the state of the
   branch they read. A run finishing after it is work nobody has signed off, so it gets its own
   record rather than reviving a settled one. Reopening would be an automation undoing a

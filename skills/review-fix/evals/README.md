@@ -1,11 +1,17 @@
 # Evals for `review-fix`
 
-- `evals.json` — 7 behavioural prompts. Six are aimed at a defect this skill actually shipped
+- `evals.json` — 9 behavioural prompts. Six are aimed at a defect this skill actually shipped
   with: a reply body carrying code spans, verification in a repo with no JavaScript toolchain,
   an outdated comment, a wrong comment needing pushback, scratch data leaking into the repo,
-  and five threads that must each end with exactly one reply. The seventh covers the ordering
-  rule added afterwards — severity decides which fix goes first, and where no comment carries a
-  severity tag the arrival order is kept rather than a ranking invented.
+  and five threads that must each end with exactly one reply.
+
+  The last three cover the ordering rule added afterwards, one branch each, because a single
+  prompt cannot exercise three: **7** ranks a fully tagged batch (and checks that equal ranks
+  keep their arrival order), **8** gives a batch with no tag anywhere and expects the arrival
+  order kept rather than a ranking invented, and **9** mixes tagged, untagged and a word the
+  scale does not define — which must be treated as untagged rather than guessed into a
+  neighbouring rank. Prompt 7 used to state 8's expectation in its own expected output without
+  ever asking for it, which no run could have falsified.
 - `trigger-eval.json` — 20 triggering queries, 10 positive and 10 negative.
 
 ## Measured triggering: 90%, and it does not move
