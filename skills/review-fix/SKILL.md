@@ -116,12 +116,30 @@ Fetch PR review comments, fix valid issues, commit, push, and reply on GitHub �
 
 5. **Apply fixes**
 
-   **Work highest severity first.** Where the reviewer tags its comments — `blocker`,
-   `should`, `nit`, or whatever scale that repository's review policy defines — fix the most
-   serious first and work down. The loop above runs under an iteration cap and a timeout, so
-   something may get cut; what gets cut should be the smallest thing, not whatever happened
-   to be reported last. Where comments carry no severity at all, keep the order they arrived
-   in.
+   **Work highest severity first.** The loop above runs under an iteration cap and a timeout,
+   so something may get cut; what gets cut should be the smallest thing, not whatever happened
+   to be reported last.
+
+   **Where the ranking comes from**, in this order — the first that applies wins:
+
+   1. the scale the repository's own review policy defines, if it has one (`CLAUDE.md`,
+      `AGENTS.md`, or a review guide the policy points at);
+   2. otherwise `blocker` > `should` > `nit`, the scale Copilot uses in this repository.
+
+   Read the tag off the comment body, where the reviewer puts it: a leading bold word
+   (`**blocker**`), a bracketed prefix (`[nit]`), or a `severity:` line. Then sort, with three
+   rules that keep the sort from inventing what it does not know:
+
+   - **Equal severity keeps arrival order.** The sort is stable; it reorders across ranks and
+     never within one.
+   - **An unrecognised tag is not guessed into the scale.** A word the scale does not define
+     carries no rank — treat that comment as untagged rather than mapping it to a neighbour.
+   - **In a mixed batch, untagged comments follow every tagged one**, among themselves in
+     arrival order. Not because untagged means unimportant, but because it is the one group
+     whose order carries no information about severity, so it is the group to leave until last.
+
+   Where **no** comment carries a severity at all, keep the order they arrived in and rank
+   nothing — a ranking invented here would be your judgement wearing the reviewer's clothes.
 
    For each comment classified **FIX**:
    - Read the referenced file and line

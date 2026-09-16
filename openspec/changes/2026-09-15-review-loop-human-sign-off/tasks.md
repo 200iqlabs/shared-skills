@@ -71,6 +71,34 @@
       on a closed issue, which would file a run under a sign-off already given.
 - [x] 5.16 Qualify the terminal guarantee by a successful write, so it stops contradicting the
       requirement that lets both attempts fail and declares the run ungated.
+- [x] 5.17 Restore `SCRATCH` **and `REPO_ROOT`** at the top of the 6.3 error block — both died
+      with the earlier tool call, so the log tail went to `/log-tail.txt` and the record lost the
+      iteration history the spec requires of it.
+- [x] 5.18 Carry `GATE_WRITTEN`, and the `EXISTING` the state re-check may have cleared, into
+      `gate.env`: the write block ends with a successful assignment either way, so its status
+      says nothing and the reporting step could call an ungated run complete.
+- [x] 5.19 Test `report.md` before assembling the body — the fixed closing heredoc always
+      succeeds, so a missing report yielded a footer-only record published as though it carried
+      the run. It is opened anyway, saying so in the body and through `BODY_INCOMPLETE`.
+- [x] 5.20 Make the lookup-failed line conditional on a successful write, so the report stops
+      saying that nothing was created and that one was opened anyway in consecutive paragraphs.
+- [x] 5.21 Point the `error` follow-up line *below* itself: the error text and log tail are
+      concatenated after the report, and an issue has no "above" — that was the session.
+- [x] 5.22 Encode the severity scale in `review-fix` rather than gesturing at it: where the
+      precedence comes from, a stable sort, an unrecognised tag treated as untagged, and untagged
+      comments last in a mixed batch.
+- [x] 5.23 State the closed-record rule as best-effort in the spec — the re-check narrows the
+      non-atomic window between `view` and `comment`; it does not close it.
+- [x] 5.24 Align `proposal.md` with the spec on duplicates: "one issue per pull request" read as
+      an invariant the change had already, deliberately, declined to guarantee.
+
+## Still open at the end of the review rounds
+
+- **5.6 above**, by construction: the loop closes when a round returns nothing new.
+- **No eval covers the warning matrix** (`GATE_WRITTEN` × `EXISTING` × `LOOKUP_FAILED`) or the
+  unreadable-report path added in 5.19/5.20. The spec has scenarios for both; the behavioural
+  suites do not, and writing them was not attempted in the round that added the requirements.
+  Worth one eval each before this change is archived.
 
 ## Out of scope
 

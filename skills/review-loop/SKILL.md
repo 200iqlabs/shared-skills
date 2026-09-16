@@ -412,7 +412,13 @@ to `cat`, and the gate is opened empty.
 - `no-fixes`: *Copilot's latest comments were all OUTDATED or DISAGREE — no code changes were needed.*
 - `max-iterations`: *Hit `--max <N>` iteration cap. Copilot may still have feedback; review manually or re-run with a higher `--max`.*
 - `timeout`: *Copilot didn't submit a review within `<poll_timeout>`s. This does not say which of two things happened: Copilot is slow, or Copilot does not review this repository. Check the PR in the GitHub UI — if a review is there, re-run; if the reviewers sidebar offers no Copilot entry at all, it is not enabled here and re-running will time out again.*
-- `error`: *Loop aborted due to an error (see log entries above). Manual intervention required.*
+- `error`: *Loop aborted due to an error. Manual intervention required — the error text and the tail of the run log follow directly below this line.*
+
+**The `error` line points below itself, and nothing points "above".** Above is the session
+transcript, which the sign-off issue exists precisely to outlive; a reader opening that issue
+tomorrow has no "above" at all. So the error text goes *under* the follow-up line in the
+session too, and 6.4 concatenates it under the report in the record — the same direction in
+both places.
 
 **On an `error` termination, also write `$SCRATCH/error.txt`** — again with your file-writing
 tool. It carries two things: the error text itself, as the sub-agent or the failing call
@@ -420,15 +426,31 @@ produced it, and the tail of the run log, which is the only place the preceding 
 recorded:
 
 ```bash
+SCRATCH="<paste the path 6.2 echoed>"        # 6.2 ran in a different shell; this one has nothing
+REPO_ROOT=$(git rev-parse --show-toplevel)   # 1.4 set it, and that shell is gone too
 tail -n 20 "$REPO_ROOT/.review-loop.log" > "$SCRATCH/log-tail.txt"
 ```
 
-Write the error text into `$SCRATCH/error.txt`, then append `log-tail.txt` to it (`cat
-"$SCRATCH/log-tail.txt" >> "$SCRATCH/error.txt"`). On every other termination reason leave
-`$SCRATCH/error.txt` absent — 6.4 tests it with `-s` and skips it when it is missing or empty.
+**Every shell block from here to the end of step 6 opens by restoring what it reads.** Shell
+state does not survive a tool call, and these two variables are the ones that fail silently:
+an unset `REPO_ROOT` makes the tail read `/.review-loop.log` — no log tail, so the record loses
+the iteration history the spec requires of it — and an unset `SCRATCH` writes every file to the
+filesystem root or dies on a permission error. Neither announces itself; both produce a gate
+that looks written.
 
-Both files are the reason 6.4 can promise a durable record: the follow-up line above points at
-"log entries above", and those entries die with the session.
+Write the error text into `$SCRATCH/error.txt` with your file-writing tool, then append the
+tail to it in a block that restores `SCRATCH` for itself:
+
+```bash
+SCRATCH="<paste the path 6.2 echoed>"
+cat "$SCRATCH/log-tail.txt" >> "$SCRATCH/error.txt"
+```
+
+On every other termination reason leave `$SCRATCH/error.txt` absent — 6.4 tests it with `-s`
+and skips it when it is missing or empty.
+
+Both files are the reason 6.4 can promise a durable record: they are what the follow-up line
+points at, and they are what stays behind when the session ends.
 
 6.4. **Open the sign-off issue — this is the human gate.**
 
@@ -518,6 +540,7 @@ SCRATCH="<paste the path 6.2 echoed>"
 #   $SCRATCH/report.md  — the report from 6.2 and its follow-up line from 6.3
 #   $SCRATCH/error.txt  — on an `error` termination, the error text and the log tail;
 #                         absent or empty otherwise
+BODY_INCOMPLETE=""
 {
   if [ -n "$LOOKUP_FAILED" ]; then
     cat <<'WARN'
@@ -526,23 +549,45 @@ SCRATCH="<paste the path 6.2 echoed>"
 
 WARN
   fi
-  cat "$SCRATCH/report.md"
-  if [ -s "$SCRATCH/error.txt" ]; then printf '\n'; cat "$SCRATCH/error.txt"; fi
+  if [ -s "$SCRATCH/report.md" ] && cat "$SCRATCH/report.md"; then :; else
+    BODY_INCOMPLETE=1
+    cat <<'NOREPORT'
+> ⚠️ **The run report could not be read**, so this record carries the closing sentence and
+> little else. The report was produced in the session that opened this issue and cannot be
+> recovered from here — re-run the loop on this pull request to get one.
+
+NOREPORT
+  fi
+  if [ -s "$SCRATCH/error.txt" ]; then
+    printf '\n'
+    cat "$SCRATCH/error.txt" || BODY_INCOMPLETE=1
+  fi
   cat <<'BODY'
 
 Closing this issue is the sign-off. A person closes it after reading the pull request —
 nothing else may: not this loop, not a later run, not a workflow.
 BODY
 } > "$SCRATCH/sign-off.md"
+printf 'BODY_INCOMPLETE=%q\n' "$BODY_INCOMPLETE" >> "$SCRATCH/gate.env"
 ```
 
 `cat` of a file cannot terminate anything, so no line of the report and no line of the error
 text can end the body early. That is the property a quoted delimiter alone does not give you.
 
+**A read that failed is not an empty report.** The closing sentence comes from a heredoc and
+always succeeds, so without the test above a missing or unreadable `report.md` yields a
+footer-only body, a group that still exits 0, and a gate published as though it carried the
+run. The record is still opened — a record nobody can read beats no record, which is the trade
+this whole step is built on — but it says so in its own first lines, and `BODY_INCOMPLETE`
+carries the same fact into the report, because the two are read by different people. The brace
+group runs in this shell rather than a subshell, which is what lets the flag survive the
+redirect; it is appended to `gate.env` because the write block below is another tool call.
+
 **On an `error` termination the body carries the error itself, not a pointer to it.** The
-follow-up line in 6.3 sends the reader to the log entries above — which is the session
-transcript, and that is exactly what the issue exists to outlive. A gate that cannot say what
-failed hands the next person a dead reference.
+follow-up line in 6.3 points below itself and `error.txt` is concatenated below the report, so
+the two agree. An earlier wording sent the reader to "the log entries above" — which in the
+issue is nothing at all, since the entries above it are the session's, and outliving that
+session is the whole purpose of the record.
 
 Then append to the one you found, or create it — checking first that it is still open, and
 retrying once before giving up:
@@ -573,15 +618,32 @@ write_gate 2> "$SCRATCH/write-err.txt" || {
   sleep 5
   write_gate 2> "$SCRATCH/write-err.txt" || GATE_WRITTEN=""
 }
+
+# Both of these have to reach the reporting step, which is another tool call: EXISTING because
+# the re-check above may have cleared it, GATE_WRITTEN because it is the only record that both
+# attempts failed. `.` reads the last assignment of each, so appending is enough.
+{ printf 'EXISTING=%q\n'       "$EXISTING"
+  printf 'GATE_WRITTEN=%q\n'   "$GATE_WRITTEN"
+} >> "$SCRATCH/gate.env"
+
+if [ -n "$EXISTING" ]; then WHERE="append to #$EXISTING"; else WHERE="create"; fi
+if [ -n "$GATE_WRITTEN" ]; then echo "gate: written ($WHERE)"
+else echo "gate: NOT WRITTEN after two attempts ($WHERE) — the run is ungated"; fi
 ```
 
 **Check the exit status, and say it out loud when the write failed.** Issues disabled, a
 missing permission, GitHub briefly unavailable — any of them leaves the loop having printed a
 report and created no gate, which is the single outcome this step exists to prevent. The
 function above exists so the retry is one call rather than a second copy of the branch that can
-drift from the first; an empty `GATE_WRITTEN` after it means both attempts failed. Print the
-line for the branch `EXISTING` put you on, where the report cannot bury it, with `<error>` taken
-from `$SCRATCH/write-err.txt`, and treat the run as ungated.
+drift from the first; an empty `GATE_WRITTEN` after it means both attempts failed.
+
+**`GATE_WRITTEN` is written down, not left in the shell.** The block ends with a successful
+assignment either way, so its exit status says nothing, and the variable itself dies with the
+tool call — a reporting step reading it would see an unset variable on a failed write and on a
+clean one alike, and would call an ungated run complete. It is appended to `gate.env` and
+echoed; the reporting step restores `SCRATCH`, runs `. "$SCRATCH/gate.env"`, and chooses its
+warning from `GATE_WRITTEN`, `EXISTING`, `LOOKUP_FAILED` and `BODY_INCOMPLETE` — with `<error>`
+taken from `$SCRATCH/write-err.txt`.
 
 **The re-check narrows the window; it does not close it.** Nothing holds the issue open between
 `gh issue view` and `gh issue comment`, so a close landing in that gap still appends to a
@@ -590,10 +652,22 @@ non-atomic pair of calls can offer — and it fails in the direction the rest of
 prefers: an unreachable or ambiguous state reads as "not open" and takes the create path, so
 the worst case is a duplicate rather than a report filed under somebody's signature.
 
+Which line to print is decided by the values restored from `gate.env`, in this order. Exactly
+one of the first three applies:
+
+| `GATE_WRITTEN` | `EXISTING` | Print |
+|---|---|---|
+| empty | empty | **the create path failed** |
+| empty | set | **the append path failed** |
+| set | either | **the gate was written** — add the lookup line below if `LOOKUP_FAILED` |
+
 **The create path failed** — nothing at all records this pull request:
 
 > ⚠️ **Sign-off issue was NOT created** (`<error>`). Nothing records that this pull request
 > needs human eyes — open one by hand before merging.
+>
+> The open-issue lookup also failed, so a record may already exist and this run could not see
+> it — check before opening one. *(this sentence only when `LOOKUP_FAILED` is set)*
 
 **The append path failed** — the gate exists and is open, it just does not carry this run:
 
@@ -605,8 +679,8 @@ The two are not interchangeable. Telling a reader that nothing was created when 
 #`<EXISTING>` is sitting open invites them to open the duplicate the exact-title lookup exists
 to avoid.
 
-**The lookup failed** — the record was written, but written blind. `LOOKUP_FAILED` is why the
-warning above is built into the body as well; print the same thing into the report:
+**The lookup failed and the write succeeded** — the record exists, but was written blind.
+`LOOKUP_FAILED` is why the same warning is built into the body; print it into the report too:
 
 > ⚠️ **The open-issue lookup failed** (`<contents of $SCRATCH/lookup-err.txt>`), so this run
 > could not tell whether a sign-off issue was already open. It opened one anyway. If a
@@ -614,6 +688,19 @@ warning above is built into the body as well; print the same thing into the repo
 
 It goes in both places on purpose. The report is read by whoever watched the run; the issue is
 read by whoever opens it tomorrow, and only one of them knows the lookup never completed.
+
+**This line claims a record exists, so it is printed only when one does.** Unconditionally, it
+sits under the create-path warning saying "it opened one anyway" directly below a line saying
+nothing was created — a report asserting both outcomes, which a reader resolves by believing
+whichever they read first. When both failed, the create-path warning governs and carries the
+lookup as its own second sentence.
+
+**The body was incomplete** — printed alongside whichever of the three applies, when
+`BODY_INCOMPLETE` is set:
+
+> ⚠️ **The sign-off record does not carry the run report** — the report file could not be read
+> while the body was assembled, so whatever was written carries its closing sentence and little
+> else. Read the pull request on its own terms; the record cannot tell you what the loop did.
 
 Five things about this step are deliberate:
 

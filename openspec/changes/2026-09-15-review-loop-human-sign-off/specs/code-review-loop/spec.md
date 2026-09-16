@@ -49,6 +49,18 @@ request changes, approve, or merge in order to make it blocking.
   sign-off given for the branch that person read, and work finished after it has not been
   signed off
 
+#### Scenario: The record is closed while the loop is writing
+
+- **WHEN** the loop has found an open record and is about to append to it
+- **THEN** it SHALL re-read that record's state immediately before appending, and SHALL treat
+  anything other than a confirmed open state — including an unreachable or ambiguous answer —
+  as no record, taking the create path
+- **AND** the obligation SHALL be read as best-effort: the two calls are not atomic, so a close
+  landing between them still appends, and the loop SHALL document that residual window rather
+  than claim to have closed it. Narrowing it to those two calls is the most a non-atomic pair
+  can offer, and it fails toward a duplicate rather than toward a report filed under a
+  signature already given
+
 ### Requirement: An existing record is identified by its exact title
 
 The loop SHALL locate an existing sign-off record by comparing the whole canonical title
@@ -96,10 +108,30 @@ The loop SHALL check the outcome of creating or updating the record, retry once 
 and on a second failure SHALL state that the run is ungated and that a record must be opened by
 hand before merging. It SHALL NOT report the run as complete as though the record existed.
 
+Each warning the loop prints SHALL be conditional on the outcome it describes: where the write
+failed, the loop SHALL NOT print a line asserting a record was opened, and where it succeeded,
+SHALL NOT print one asserting none was. The outcome of the write SHALL be carried to whatever
+step prints the warning, and SHALL NOT be left in state that step cannot read.
+
 #### Scenario: Issues are disabled on the repository
 
 - **WHEN** creating the record fails twice
 - **THEN** the loop SHALL print an explicit ungated warning alongside the report
+
+#### Scenario: The lookup failed and so did the create
+
+- **WHEN** the lookup did not complete and both write attempts then failed
+- **THEN** the report SHALL state that nothing was created and that a record may already exist
+  unseen
+- **AND** SHALL NOT also state that a record was opened anyway
+
+#### Scenario: The report file cannot be read while the body is assembled
+
+- **WHEN** the report file is missing or unreadable at body-assembly time
+- **THEN** the record SHALL still be opened, and SHALL say in its own body that it does not
+  carry the report
+- **AND** the loop SHALL NOT publish a record consisting only of its fixed closing sentence as
+  though it carried the run
 
 ### Requirement: Fixes are applied in the reviewer's order of severity
 
@@ -107,6 +139,12 @@ Where review comments carry severity tags, the fixer SHALL apply fixes from high
 downwards, so that an interrupted run leaves the least serious work undone. Where comments
 carry no severity, the fixer SHALL preserve the order in which they arrived and SHALL NOT
 invent a ranking.
+
+The scale SHALL be the one the repository's review policy defines, and `blocker` > `should` >
+`nit` where it defines none. The sort SHALL be stable: comments of equal severity keep their
+arrival order. A tag the scale does not define SHALL be treated as untagged rather than mapped
+into the scale, and in a batch where only some comments carry severity, the untagged ones SHALL
+follow every tagged one, among themselves in arrival order.
 
 #### Scenario: Severity and arrival order disagree
 
@@ -117,3 +155,11 @@ invent a ranking.
 
 - **WHEN** no comment carries a severity tag
 - **THEN** the fixer SHALL work in arrival order
+
+#### Scenario: Only some comments carry a severity tag
+
+- **WHEN** a batch mixes tagged and untagged comments, and one tag is a word the scale does not
+  define
+- **THEN** the tagged comments SHALL be fixed first, in rank order
+- **AND** the untagged ones and the one carrying the unrecognised tag SHALL follow, in the
+  order they arrived

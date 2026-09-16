@@ -26,8 +26,11 @@ nobody looks for a replacement.
 
 ## What changes
 
-- The loop's terminal step opens **one issue per pull request**, whose closing **is** the human
-  sign-off, and which no automation may close.
+- The loop's terminal step leaves the pull request carrying an **open issue** whose closing
+  **is** the human sign-off, and which no automation may close. One open record per pull
+  request is the normal outcome, not an invariant: two runs finishing at once, or a lookup that
+  cannot complete, produce a duplicate — which this change prefers to a missing record, and
+  says so rather than trading it away for a check-then-skip that loses records under a race.
 - The fixer applies fixes **highest severity first**, so an interrupted run leaves the smallest
   work undone rather than whatever arrived last.
 - Behavioural evals cover both, including the paths that can fail quietly: an unrelated issue
