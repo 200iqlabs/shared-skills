@@ -139,8 +139,9 @@ field_categories:
 uncertain: []
 ```
 
-Any other shape (`categories:`, a category named by `name:`) loads zero fields, and the
-validator then refuses to run rather than reporting 100% coverage of nothing. Result JSON is
+Any other shape (`categories:`, a category named by `name:`, a field without `name`) makes the
+validator exit with an error naming where the shape breaks, and an empty field set is refused
+too, rather than reported as 100% coverage of nothing. Result JSON is
 **flat**: field names are top-level keys, not nested under category names.
 
 ### Step 5: Output and Confirm

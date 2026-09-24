@@ -21,19 +21,34 @@ CATEGORY_MAPPING = {
 
 _SKIP_KEYS = {"_source_file", "uncertain"}
 
+_SCHEMA_HINT = (
+    "Expected a top-level `field_categories` list whose entries have `category` and "
+    "`fields: [{name: ...}]` (see the research skill, Step 4)."
+)
+
 
 def load_fields_yaml(fields_path):
     with fields_path.open(encoding="utf-8") as f:
         data = yaml.safe_load(f)
-    items = [
-        (field["name"], category["category"], field.get("required", False))
-        for category in data.get("field_categories", [])
-        for field in category.get("fields", [])
-    ]
+    categories = data.get("field_categories") if isinstance(data, dict) else None
+    if not isinstance(categories, list):
+        raise ValueError(f"{fields_path}: no `field_categories` list. {_SCHEMA_HINT}")
+    items = []
+    for i, category in enumerate(categories):
+        if not isinstance(category, dict) or "category" not in category:
+            raise ValueError(f"{fields_path}: field_categories[{i}] has no `category`. {_SCHEMA_HINT}")
+        fields = category.get("fields") or []
+        if not isinstance(fields, list):
+            raise ValueError(f"{fields_path}: field_categories[{i}].fields is not a list. {_SCHEMA_HINT}")
+        for j, field in enumerate(fields):
+            if not isinstance(field, dict) or "name" not in field:
+                raise ValueError(
+                    f"{fields_path}: field_categories[{i}].fields[{j}] has no `name`. {_SCHEMA_HINT}"
+                )
+            items.append((field["name"], category["category"], field.get("required", False)))
     if not items:
         raise ValueError(
-            f"{fields_path}: no fields loaded. Expected a top-level `field_categories` list whose "
-            "entries have `category` and `fields: [{name: ...}]` (see the research skill, Step 4). "
+            f"{fields_path}: no fields loaded. {_SCHEMA_HINT} "
             "Refusing to validate against an empty field set, which would pass every file."
         )
     all_fields = {name for name, _, _ in items}
@@ -53,9 +68,8 @@ def extract_json_fields(data, category_mapping=None):
             for k, v in obj.items():
                 if k in _SKIP_KEYS:
                     continue
-                if is_category_level and k in nested_keys:
-                    if isinstance(v, dict):
-                        stack.append((v, True))
+                if is_category_level and k in nested_keys and isinstance(v, dict):
+                    stack.append((v, True))
                     continue
                 fields.add(k)
         elif isinstance(obj, list):
@@ -137,7 +151,7 @@ def main():
     print(f"Field definition file: {fields_path}")
     try:
         all_fields, required_fields, field_categories = load_fields_yaml(fields_path)
-    except ValueError as exc:
+    except (ValueError, yaml.YAMLError) as exc:
         print(f"[ERROR] {exc}")
         sys.exit(1)
     print(f"Total fields: {len(all_fields)} (required: {len(required_fields)}, optional: {len(all_fields) - len(required_fields)})")
