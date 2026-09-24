@@ -127,6 +127,23 @@ Merge {step1_output}, {step2_output} and user's existing fields, generate two fi
 - detail_level hierarchy: brief -> moderate -> detailed
 - uncertain: Uncertain fields list (reserved field, auto-filled in deep phase)
 
+The shape is fixed, because `validate_json.py` reads it — the top-level key is
+`field_categories`, each category is named by `category`, and fields are a list with `name`:
+
+```yaml
+field_categories:
+  - category: Basic Info
+    fields:
+      - {name: release_date, description: "...", detail_level: brief}
+      - {name: license, description: "...", detail_level: moderate, required: true}
+uncertain: []
+```
+
+Any other shape (`categories:`, a category named by `name:`, a field without `name`) makes the
+validator exit with an error naming where the shape breaks, and an empty field set is refused
+too, rather than reported as 100% coverage of nothing. Result JSON is
+**flat**: field names are top-level keys, not nested under category names.
+
 ### Step 5: Output and Confirm
 - Create directory: `./{topic_slug}/`
 - Save: `outline.yaml` and `fields.yaml`
