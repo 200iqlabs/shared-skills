@@ -30,6 +30,12 @@ def load_fields_yaml(fields_path):
         for category in data.get("field_categories", [])
         for field in category.get("fields", [])
     ]
+    if not items:
+        raise ValueError(
+            f"{fields_path}: no fields loaded. Expected a top-level `field_categories` list whose "
+            "entries have `category` and `fields: [{name: ...}]` (see the research skill, Step 4). "
+            "Refusing to validate against an empty field set, which would pass every file."
+        )
     all_fields = {name for name, _, _ in items}
     required_fields = {name for name, _, required in items if required}
     field_categories = {name: category for name, category, _ in items}
@@ -60,7 +66,10 @@ def extract_json_fields(data, category_mapping=None):
 def validate_json(json_path, all_fields, required_fields, field_categories):
     with json_path.open(encoding="utf-8") as f:
         data = json.load(f)
-    json_fields = extract_json_fields(data)
+    mapping = dict(CATEGORY_MAPPING)
+    for category in set(field_categories.values()):
+        mapping.setdefault(category, [category])
+    json_fields = extract_json_fields(data, mapping)
     covered = all_fields & json_fields
     missing = all_fields - json_fields
     extra = json_fields - all_fields
@@ -126,7 +135,11 @@ def main():
         print(f"[ERROR] fields.yaml not found: {fields_path}")
         sys.exit(1)
     print(f"Field definition file: {fields_path}")
-    all_fields, required_fields, field_categories = load_fields_yaml(fields_path)
+    try:
+        all_fields, required_fields, field_categories = load_fields_yaml(fields_path)
+    except ValueError as exc:
+        print(f"[ERROR] {exc}")
+        sys.exit(1)
     print(f"Total fields: {len(all_fields)} (required: {len(required_fields)}, optional: {len(all_fields) - len(required_fields)})")
     json_files = (
         [Path(p) for p in args.json]

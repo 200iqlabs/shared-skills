@@ -31,6 +31,7 @@ Find `*/outline.yaml` file in current working directory, read items list, execut
 - `{output_dir}`: execution.output_dir from outline.yaml (default: ./results)
 - `{fields_path}`: absolute path to {topic}/fields.yaml
 - `{output_path}`: absolute path to {output_dir}/{item_name_slug}.json (slugify item_name: replace spaces with _, remove special chars)
+- `{validator_path}`: absolute path to `validate_json.py` in the sibling `research` skill — `<this skill's base directory>/../research/validate_json.py`. The skill ships inside the plugin cache, so no fixed path under `~/.claude/skills/` exists; resolve it from the base directory announced when this skill loads, and check the file exists before launching agents.
 
 **Hard Constraint**: The following prompt must be strictly reproduced, only replacing variables in {xxx}, do not modify structure or wording.
 
@@ -53,7 +54,7 @@ Read {fields_path} to get all field definitions
 
 ## Validation
 After completing JSON output, run validation script to ensure complete field coverage:
-python ~/.claude/skills/research/validate_json.py -f {fields_path} -j {output_path}
+python {validator_path} -f {fields_path} -j {output_path}
 Task is complete only after validation passes.
 """
 ```
@@ -79,7 +80,7 @@ Read {project_dir}/fields.yaml to get all field definitions
 
 ## Validation
 After completing JSON output, run validation script to ensure complete field coverage:
-python ~/.claude/skills/research/validate_json.py -f {project_dir}/fields.yaml -j {project_dir}/results/GitHub_Copilot.json
+python {validator_path} -f {project_dir}/fields.yaml -j {project_dir}/results/GitHub_Copilot.json
 Task is complete only after validation passes.
 ```
 
