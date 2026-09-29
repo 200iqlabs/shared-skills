@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Removed
+- **`ss:ingest`** — the skill that turns inbox files and pasted text into an entity's knowledge moved
+  to the 200IQ LABS agentic-system foundation as `sa-ingest`, where it finds entities through the
+  foundation's entity layout module instead of a `## Context Paths` section. The plugin no longer
+  ships it, so a repository never sees the same skill twice (`ingest` from the foundation and
+  `ss:ingest` from here). Repositories that relied on `/ss:ingest` without the foundation keep the
+  last published copy in git history (`git show f220bae:skills/ingest/SKILL.md`).
+
 ### Added
 - **Agent working mode** (`/ss:working-mode`) — a session-scoped switch that puts replies under one
   contract: Polish, business meaning before technical detail, things named by what they do rather
