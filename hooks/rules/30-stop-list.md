@@ -12,8 +12,8 @@ Keep working. Hand control back to the user only when at least one of these hold
    deliverables.
 5. You have a task for the user, or a decision for the user. The handover is not a separate
    judgment you make — it is the `CO DALEJ` ending of the reply, and that ending does the
-   routing: a choice goes to `/ss:decisions`, an action goes to the `ss:task-delegation` skill,
-   one item at a time either way.
+   routing: a choice and an action both go to the foundation's task-help skill (`sa-task-help`)
+   when the session has it, and into the reply one item at a time when it does not.
 
 Outside these five, continue.
 

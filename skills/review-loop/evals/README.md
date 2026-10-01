@@ -73,5 +73,4 @@ an unattended loop, and the skill says so and points elsewhere.
 Parts of `evals.json` resist a single-turn eval. The pre-flight Copilot check and the timeout branch
 only reveal themselves in a repository where Copilot is absent or silent, which is a property of the
 environment rather than of the prompt. Expect those two to need a fixture or a manual run — the same
-limitation `task-delegation` recorded, where the moment the skill matters arrives several turns after
-the prompt.
+limitation as any skill whose moment arrives several turns after the prompt.

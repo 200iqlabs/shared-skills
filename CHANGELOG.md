@@ -3,6 +3,17 @@
 ## [Unreleased]
 
 ### Removed
+- **`/ss:decisions`, `/ss:explain-design`, `/ss:explain-diff`, `/ss:orientation` and the
+  `ss:task-delegation` skill** — all five moved to the 200IQ LABS agentic-system foundation: the
+  decision sweep and the two walk-throughs are the decisions and understanding modes of its
+  task-help skill (`sa-task-help`), delegation is that skill's operator-actions part, and
+  orientation is the skill `sa-orientation`. The plugin no longer ships them, so a repository with
+  the foundation reaches each piece of work one way only. **The working mode now routes to the
+  foundation when it is there**: a decision and a user action go to `sa-task-help` when the session
+  has it, and without it the reply raises decisions one at a time, recommendation first, and hands
+  over one task at a time with how its completion will be recognised. Repositories that relied on
+  the removed items without the foundation keep the last published copies in git history
+  (`git show 5e512d0:commands/decisions.md`, and the same for the other paths).
 - **`ss:ingest`** — the skill that turns inbox files and pasted text into an entity's knowledge moved
   to the 200IQ LABS agentic-system foundation as `sa-ingest`, where it finds entities through the
   foundation's entity layout module instead of a `## Context Paths` section. The plugin no longer

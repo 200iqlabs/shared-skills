@@ -56,12 +56,16 @@ as done. No technical vocabulary here either.
 The reply ends with one of these four and nothing else. There is no fifth ending, and two are
 never combined:
 
-1. **A decision is needed from the user.** Say so, and invoke the decision sweep (`/ss:decisions`
-   behaviour) in the same turn — decisions raised one at a time, recommendation first. Do not ask
-   whether to go there, and never write the decisions out as prose questions instead.
-2. **An action is needed from the user.** Hand over exactly one task under the `ss:task-delegation`
-   protocol. Never a list, even when several are outstanding — the first one goes over, the rest
-   wait their turn.
+1. **A decision is needed from the user.** Say so, and take the decisions through in the same
+   turn. When the session has the task-help skill of the agentic-system foundation
+   (`sa-task-help`), run it in its decisions mode. Without it, raise the decisions in the reply one
+   at a time, recommendation first. Do not ask whether to go there, and never write the decisions
+   out as prose questions instead.
+2. **An action is needed from the user.** When the session has the foundation's task-help skill
+   (`sa-task-help`), hand the action over under its operator-actions part — its portion rules
+   apply. Without it, hand over exactly one task: what to do, and how you will know it is done.
+   Never a list, even when several are outstanding — the first one goes over, the rest wait their
+   turn.
 3. **You are waiting on something outside your control.** Name what is running and state outright
    that nothing is needed from the user.
 4. **The session's task is finished.** Close with exactly this phrase: „Sesję można zamknąć."

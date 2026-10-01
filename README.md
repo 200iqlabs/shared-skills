@@ -31,7 +31,6 @@ Coding-agent skills for PR review, review loops, and OpenSpec `/goal` prep.
 | `ss:review-fix` | Fetch PR review comments, fix valid issues, commit, push, reply on GitHub (`/ss:review-fix [PR]`) | ✅ Active |
 | `ss:review-loop` | Automated Claude↔Copilot review cycle on a PR until stable (`/ss:review-loop <PR> <change>`) | ✅ Active |
 | `ss:prepare-openspec-goal` | Formulate a transcript-checkable completion condition for `/goal` implementing an OpenSpec change | ✅ Active |
-| `ss:task-delegation` | Hand work to the user one task at a time — only what the agent cannot do itself, confirm before the next | ✅ Active |
 
 ## Commands
 
@@ -40,10 +39,6 @@ Slash commands bundled with the plugin (`commands/`).
 | Command | Description |
 |---------|-------------|
 | `/ss:working-mode` | Switch the session working mode on or off — Polish replies, a fixed `KONTEKST` / `WYNIK` / `CO DALEJ` skeleton, closed stop list, work shipped through a pull request by default. Off by default |
-| `/ss:orientation` | Restate what the session is working on, what for, where it got to, and what is wanted from you (PL) |
-| `/ss:decisions` | Surface open decisions one at a time, each with a recommendation, and wait for the answer (PL) |
-| `/ss:explain-diff` | Walk through code changes (PR / branch vs main) one file at a time, in plain Polish |
-| `/ss:explain-design` | Walk through an OpenSpec `design.md` topic by topic, one heading at a time (PL) |
 | `/ss:slides:init` | Bootstrap the `slides/` workspace — structure, theme CSS, `config.yaml`, `project.md`. Idempotent |
 | `/ss:slides:explore` | Brainstorm a deck concept before committing to a workspace; ideas persist across sessions |
 | `/ss:slides:new` | Create an active workspace at `slides/workspace/<slug>/` — `brief.md`, empty `draft.md`, `sources/` |
