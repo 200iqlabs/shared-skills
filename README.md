@@ -39,6 +39,7 @@ Slash commands bundled with the plugin (`commands/`).
 | Command | Description |
 |---------|-------------|
 | `/ss:working-mode` | Switch the session working mode on or off — Polish replies, a fixed `KONTEKST` / `WYNIK` / `CO DALEJ` skeleton, closed stop list, work shipped through a pull request by default. Off by default |
+| `/ss:decisions` | Surface open decisions one at a time, each with a recommendation, and wait for the answer (PL) |
 | `/ss:slides:init` | Bootstrap the `slides/` workspace — structure, theme CSS, `config.yaml`, `project.md`. Idempotent |
 | `/ss:slides:explore` | Brainstorm a deck concept before committing to a workspace; ideas persist across sessions |
 | `/ss:slides:new` | Create an active workspace at `slides/workspace/<slug>/` — `brief.md`, empty `draft.md`, `sources/` |

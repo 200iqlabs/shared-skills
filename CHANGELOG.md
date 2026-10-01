@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+- **`/ss:decisions` is back**, restored unchanged at the plugin owner's request on 2026-10-01 — the
+  decision sweep stays in the plugin next to the decisions mode of the foundation's `sa-task-help`.
+  The working mode's routing is unchanged: with the foundation in the session it still sends a
+  decision to `sa-task-help`.
+
 ### Removed
 - **`/ss:decisions`, `/ss:explain-design`, `/ss:explain-diff`, `/ss:orientation` and the
   `ss:task-delegation` skill** — all five moved to the 200IQ LABS agentic-system foundation: the
