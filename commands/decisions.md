@@ -1,5 +1,6 @@
 ---
 description: Surface open decisions one at a time, each with a recommendation, and wait for the answer before the next
+disable-model-invocation: true
 ---
 
 # Decision sweep
