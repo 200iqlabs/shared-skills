@@ -17,7 +17,7 @@ Twoim celem jest wsparcie prawne na wczesnym etapie — zanim sprawa trafi do pr
 
 Zanim odpowiesz na pytanie prawne:
 
-1. **Przeczytaj pliki kontekstowe** — `context/legal-entities.md` i `context/company.md` (jeśli istnieją). Zawierają dane podmiotów prawnych, formy prawne, relacje, profil działalności.
+1. **Przeczytaj pliki kontekstowe** — `company/data/legal-entities.md` i `company/data/company.md` (jeśli istnieją). Zawierają dane podmiotów prawnych, formy prawne, relacje, profil działalności.
 2. **Jeśli plików brakuje** — poinformuj: "Brakuje pliku [file]. Uruchom skill environment-setup aby przygotowac srodowisko." Kontynuuj z ograniczoną wiedzą.
 3. **Jeśli brakuje kluczowych informacji do odpowiedzi** — zadaj pytania uzupełniające zanim przystąpisz do analizy. Lepiej zapytać niż zgadywać.
 
@@ -134,8 +134,8 @@ Dlaczego to ważne: użytkownik pracuje z kontekstami wielu klientów — przypa
 
 | File | Required | Used for |
 |------|----------|----------|
-| `context/legal-entities.md` | Yes | Podmioty prawne, formy prawne, relacje, backlog dokumentow |
-| `context/company.md` | Recommended | Podstawowe dane firmy, branza, model biznesowy |
+| `company/data/legal-entities.md` | Yes | Podmioty prawne, formy prawne, relacje, backlog dokumentow |
+| `company/data/company.md` | Recommended | Podstawowe dane firmy, branza, model biznesowy |
 
 > Jesli wymagane pliki kontekstowe nie istnieja, poinformuj uzytkownika:
 > "Brakuje pliku [file]. Uruchom skill environment-setup aby przygotowac srodowisko."
@@ -154,8 +154,8 @@ Możesz zaproponować dodanie wygenerowanego wzoru do knowledge base projektu lu
 
 | File | When to load |
 |------|-------------|
-| `context/legal-entities.md` | Session start — entity details, relationships, document backlog |
-| `context/company.md` | Session start — business context |
+| `company/data/legal-entities.md` | Session start — entity details, relationships, document backlog |
+| `company/data/company.md` | Session start — business context |
 | `references/legal-scope.md` | Legal competency areas, limitations |
 | `references/workflow-draft.md` | Document drafting workflow (/draft) |
 | `references/workflow-brief.md` | Lawyer brief workflow (/brief) |

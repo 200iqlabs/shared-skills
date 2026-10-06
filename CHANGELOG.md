@@ -9,6 +9,13 @@
   understanding modes of the foundation's `sa-task-help` stay the one route the model picks itself,
   and the working mode's routing is unchanged.
 
+### Changed
+- **Company data is read from `company/`, not `context/`** (breaking) — `legal`, `tax-advisor`,
+  `cfo` and `environment-setup` read `company/data/company.md` and `company/data/legal-entities.md`;
+  `linkedin-content` reads `company/brand/writing-style.md` and `/ss:slides:init` reads
+  `company/brand/brand-design.md` and `company/brand/tone-of-voice.md`. There is no fallback to the
+  old paths: a repository that keeps these files under `context/` has to move them.
+
 ### Removed
 - **`/ss:decisions`, `/ss:explain-design`, `/ss:explain-diff`, `/ss:orientation` and the
   `ss:task-delegation` skill** — all five moved to the 200IQ LABS agentic-system foundation: the

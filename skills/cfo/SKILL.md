@@ -120,7 +120,7 @@ Load references only when the conversation requires deeper analytical context. D
 | File | Required | Used for |
 |------|----------|----------|
 | `context/finances.md` | Yes | Budzet, cele finansowe, struktura kosztow, konta bankowe |
-| `context/company.md` | Recommended | Podstawowe dane firmy, model biznesowy |
+| `company/data/company.md` | Recommended | Podstawowe dane firmy, model biznesowy |
 
 > Jesli wymagane pliki kontekstowe nie istnieja, poinformuj uzytkownika:
 > "Brakuje pliku [file]. Uruchom skill environment-setup aby przygotowac srodowisko."

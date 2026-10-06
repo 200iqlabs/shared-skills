@@ -27,12 +27,12 @@ Skill prowadzacy przez konfiguracje plikow kontekstowych wymaganych przez pozost
 Na poczatku sprawdz, ktore pliki kontekstowe juz istnieja:
 
 ```
-context/company.md
+company/data/company.md
 context/consultant-profile.md
 context/projects-portfolio.md
 context/author-profile.md
 context/finances.md
-context/legal-entities.md
+company/data/legal-entities.md
 context/process-mapping.md
 ```
 
@@ -44,12 +44,12 @@ Przedstaw wynik audytu w tabeli:
 
 | Plik | Status | Uzywany przez |
 |------|--------|---------------|
-| `context/company.md` | [status] | legal, tax-advisor, cfo |
+| `company/data/company.md` | [status] | legal, tax-advisor, cfo |
 | `context/consultant-profile.md` | [status] | business-consultant |
 | `context/projects-portfolio.md` | [status] | business-consultant |
 | `context/author-profile.md` | [status] | linkedin-content |
 | `context/finances.md` | [status] | cfo |
-| `context/legal-entities.md` | [status] | legal, tax-advisor |
+| `company/data/legal-entities.md` | [status] | legal, tax-advisor |
 | `context/process-mapping.md` | [status] | process-mapping |
 
 #### 2. Guided creation — tworzenie brakujacych plikow
@@ -63,8 +63,8 @@ Dla kazdego brakujacego pliku:
 5. Potwierdz utworzenie
 
 **Kolejnosc tworzenia** (od najczesciej uzywanych):
-1. `company.md` — podstawowe dane firmy
-2. `legal-entities.md` — podmioty prawne (legal, tax-advisor)
+1. `company/data/company.md` — podstawowe dane firmy
+2. `company/data/legal-entities.md` — podmioty prawne (legal, tax-advisor)
 3. `finances.md` — dane finansowe (cfo)
 4. `consultant-profile.md` — profil konsultanta (business-consultant)
 5. `projects-portfolio.md` — portfolio projektow (business-consultant)

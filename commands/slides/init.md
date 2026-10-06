@@ -7,7 +7,7 @@ tags: [slides, marp, setup]
 
 Bootstrap or repair the `slides/` workspace at repo root for the `slides` skill.
 
-**Input:** Optional flag `--regenerate-theme` to overwrite only `slides/themes/plsoft-dark.css` using current `context/brand/brand-design.md` values.
+**Input:** Optional flag `--regenerate-theme` to overwrite only `slides/themes/plsoft-dark.css` using current `company/brand/brand-design.md` values.
 
 **Steps**
 
@@ -16,10 +16,10 @@ Bootstrap or repair the `slides/` workspace at repo root for the `slides` skill.
 2. **Follow the init mode steps from SKILL.md:**
    - Verify Node 18+
    - Create `slides/{workspace,output,archive,themes,_explore}` with `.gitkeep` where empty
-   - Parse `context/brand/brand-design.md` (if present) for color and typography tokens
+   - Parse `company/brand/brand-design.md` (if present) for color and typography tokens
    - Generate `slides/themes/plsoft-dark.css` from the skill's template, substituting placeholders
    - Write `slides/config.yaml` from template, filling author/footer from detected identity
-   - Write `slides/project.md` from template; pull key points from `context/brand/tone-of-voice.md` if present
+   - Write `slides/project.md` from template; pull key points from `company/brand/tone-of-voice.md` if present
    - Pre-warm `npx @marp-team/marp-cli` and render a throwaway dummy deck to confirm Chromium cache
    - Report what was created vs skipped
 
@@ -38,5 +38,5 @@ Summary report:
 
 - Do NOT overwrite existing files unless `--regenerate-theme` is passed (and then only the theme CSS)
 - If Node < 18, halt with a clear error before creating anything
-- If `context/brand/brand-design.md` is absent, fall back to the skill's neutral defaults (document this in the report)
+- If `company/brand/brand-design.md` is absent, fall back to the skill's neutral defaults (document this in the report)
 - If Marp pre-warm fails (network, Chromium download), report the error but keep the created files — user can retry

@@ -5,7 +5,7 @@ Użytkownik potrzebuje przygotować strukturalny brief do przekazania prawnikowi
 
 ## Zbieranie danych przed briefem
 Przed wygenerowaniem briefa zbierz niezbędne informacje:
-1. Przeczytaj `context/legal-entities.md` i `context/company.md`
+1. Przeczytaj `company/data/legal-entities.md` i `company/data/company.md`
 2. Jeśli brakuje kluczowych danych (forma prawna, strony sporu, dokumenty) — zapytaj użytkownika
 3. Dopiero gdy masz wystarczający kontekst — generuj brief
 

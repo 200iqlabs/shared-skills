@@ -95,7 +95,7 @@ Run the `environment-setup` skill to create your context files:
 "Set up my environment" → triggers environment-setup skill
 ```
 
-This guides you through creating context files (`context/company.md`, `context/finances.md`, etc.) that personalize skills for your organization. See `context/README.md` for details.
+This guides you through creating context files (`company/data/company.md`, `context/finances.md`, etc.) that personalize skills for your organization. See `context/README.md` for details.
 
 ### 3. Ready to use
 

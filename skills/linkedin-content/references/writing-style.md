@@ -1,6 +1,6 @@
 # Styl pisania
 
-Zasady stylu dla treści generowanych po polsku. Jeśli repozytorium zawiera `context/brand/writing-style.md`, tamten plik jest nadrzędny, a poniższe zasady to generyczny fallback.
+Zasady stylu dla treści generowanych po polsku. Jeśli repozytorium zawiera `company/brand/writing-style.md`, tamten plik jest nadrzędny, a poniższe zasady to generyczny fallback.
 
 ## Stosuj
 

@@ -119,7 +119,7 @@ Jesli audiencja nie jest zdefiniowana w kontekscie, zapytaj uzytkownika kto jest
 - Hashtagi na koncu (3-5 max). Zasada z writing-style.md dotyczy hashtagow w tresci posta; hashtagi na samym koncu to standard LinkedIn i sa OK.
 
 Load writing style rules before generating content:
-1. If `context/brand/writing-style.md` exists in the repo — load it as the authoritative style source (anglicism whitelist, replacement table, epithet test, banned words).
+1. If `company/brand/writing-style.md` exists in the repo — load it as the authoritative style source (anglicism whitelist, replacement table, epithet test, banned words).
 2. Otherwise fall back to `references/writing-style.md` (generic human-like writing rules).
 
 ### Hashtagi
@@ -133,10 +133,10 @@ Jesli kontekst nie zawiera hashtagow, zapytaj uzytkownika o jego preferowane has
 | File | When to load |
 |------|-------------|
 | `context/author-profile.md` | Session start — author identity, audience, example posts |
-| `context/brand/writing-style.md` | When writing any post — authoritative style source (if it exists) |
+| `company/brand/writing-style.md` | When writing any post — authoritative style source (if it exists) |
 | `references/writing-style.md` | When writing any post — generic fallback when the context file is missing |
 
-Load `context/author-profile.md` at session start for author identity and example posts. When generating content, load `context/brand/writing-style.md` if present, otherwise `references/writing-style.md`.
+Load `context/author-profile.md` at session start for author identity and example posts. When generating content, load `company/brand/writing-style.md` if present, otherwise `references/writing-style.md`.
 
 ### Uczenie sie ze wzorcowych postow
 
@@ -181,7 +181,7 @@ Styl odpowiedzi:
 | File | Required | Used for |
 |------|----------|----------|
 | `context/author-profile.md` | Yes | Profil autora, audiencja, hashtagi, przyklady dobrych postow |
-| `context/brand/writing-style.md` | No (recommended) | Autorytatywne zasady stylu (anglicyzmy, epitety, banlista). Brak pliku = fallback na `references/writing-style.md`, skill dziala dalej |
+| `company/brand/writing-style.md` | No (recommended) | Autorytatywne zasady stylu (anglicyzmy, epitety, banlista). Brak pliku = fallback na `references/writing-style.md`, skill dziala dalej |
 
 ### Gdy brakuje kontekstu
 
