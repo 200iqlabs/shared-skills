@@ -22,12 +22,16 @@ The environment-setup skill SHALL check which context files already exist and wh
 - **WHEN** running the setup skill with some context files already present
 - **THEN** it reports which files exist (with status) and which are missing, and offers to create only the missing ones
 
+#### Scenario: Company data is audited in company/data
+- **WHEN** the skill audits the context files
+- **THEN** it checks `company/data/company.md` and `company/data/legal-entities.md` for the company data and `context/` for the remaining files, and does not count the former `context/company.md` or `context/legal-entities.md` as present
+
 ### Requirement: Setup skill creates context files from templates
 The environment-setup skill SHALL use templates from `context/templates/` as the starting structure and guide users through filling in each section.
 
 #### Scenario: Guided creation of a context file
 - **WHEN** the user agrees to create a missing context file
-- **THEN** the skill reads the corresponding template, asks targeted questions for each section, and writes the completed file to `context/`
+- **THEN** the skill reads the corresponding template from `context/templates/`, asks targeted questions for each section, and writes the completed file to its destination — `company/data/` for `company.md` and `legal-entities.md`, `context/` for the other files — creating the directory when it does not exist
 
 #### Scenario: User can skip optional context files
 - **WHEN** the skill presents a recommended (not required) context file

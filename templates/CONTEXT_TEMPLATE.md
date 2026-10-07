@@ -17,6 +17,6 @@
 Aby utworzyc nowy plik kontekstowy:
 1. Skopiuj odpowiedni szablon z `context/templates/`
 2. Uzupelnij sekcje oznaczone `[DO UZUPELNIENIA]`
-3. Zapisz w katalogu `context/` (np. `context/company.md`)
+3. Zapisz uzupelniony plik: dane firmy (`company`, `legal-entities`) w `company/data/` (np. `company/data/company.md`), pozostale w katalogu `context/` (np. `context/finances.md`)
 
 Dostepne szablony: `company`, `consultant-profile`, `projects-portfolio`, `author-profile`, `finances`, `legal-entities`

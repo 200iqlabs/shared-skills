@@ -32,7 +32,7 @@ The legal SKILL.md SHALL reference context files instead of containing hardcoded
 
 #### Scenario: No hardcoded entity names in SKILL.md
 - **WHEN** reading legal SKILL.md
-- **THEN** it references `context/legal-entities.md` instead of mentioning PLSoft or 200IQ Labs by name
+- **THEN** it references `company/data/legal-entities.md` instead of mentioning PLSoft or 200IQ Labs by name
 
 #### Scenario: Entity context moved to context template
 - **WHEN** checking legal references/
@@ -62,11 +62,11 @@ The linkedin-content SKILL.md SHALL reference context files instead of containin
 - **THEN** writing-style.md remains unchanged as domain knowledge
 
 ### Requirement: Tax-advisor skill standardizes context references
-The tax-advisor SKILL.md SHALL use standardized context/ paths and remove hardcoded business form assumptions.
+The tax-advisor SKILL.md SHALL use the standardized company data paths under `company/data/` and remove hardcoded business form assumptions.
 
 #### Scenario: Business form context externalized
 - **WHEN** reading tax-advisor SKILL.md
-- **THEN** it references `context/legal-entities.md` for entity details instead of hardcoding JDG/PSA specifics
+- **THEN** it references `company/data/legal-entities.md` for entity details instead of hardcoding JDG/PSA specifics
 
 #### Scenario: All references remain as domain knowledge
 - **WHEN** checking tax-advisor references/
@@ -79,6 +79,17 @@ The cfo SKILL.md SHALL use the standardized `context/finances.md` path consisten
 - **WHEN** reading cfo SKILL.md
 - **THEN** it references `context/finances.md` with the standard Context Dependencies section format
 
+### Requirement: Skills read company data from company/
+The legal, tax-advisor, cfo and environment-setup skills SHALL read company data from `company/data/company.md` and `company/data/legal-entities.md`. The linkedin-content skill SHALL read the optional `company/brand/writing-style.md` as the authoritative style source, and the `/ss:slides:init` command SHALL read the optional `company/brand/brand-design.md` and `company/brand/tone-of-voice.md`. None of them SHALL fall back to the former `context/` locations of these files.
+
+#### Scenario: Company data paths in skills
+- **WHEN** reading the SKILL.md of legal, tax-advisor, cfo or environment-setup
+- **THEN** company data is referenced as `company/data/company.md` and `company/data/legal-entities.md`, and no `context/company.md` or `context/legal-entities.md` appears
+
+#### Scenario: Brand files are optional
+- **WHEN** `company/brand/writing-style.md` does not exist
+- **THEN** linkedin-content falls back to `references/writing-style.md` and keeps working, and `/ss:slides:init` falls back to the neutral defaults of the slides skill when `company/brand/brand-design.md` is absent
+
 ### Requirement: Documentation reflects context layer architecture
 README.md, CLAUDE.md, and skill templates SHALL document the context layer architecture and setup workflow.
 
@@ -88,7 +99,7 @@ README.md, CLAUDE.md, and skill templates SHALL document the context layer archi
 
 #### Scenario: CLAUDE.md documents context layer
 - **WHEN** reading CLAUDE.md
-- **THEN** it includes a section on context layer architecture explaining the separation of domain knowledge (references/) and user context (context/)
+- **THEN** it includes a section on context layer architecture explaining the separation of domain knowledge (references/) and user context (`company/` for company data, `context/` for the other context files)
 
 #### Scenario: SKILL_TEMPLATE includes context dependencies
 - **WHEN** reading templates/SKILL_TEMPLATE.md

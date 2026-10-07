@@ -39,24 +39,29 @@ Lightweight CLI scripts (bash/python) for external API integrations (ClickUp, Re
 ### OpenSpec (`openspec/`)
 Project specification used with the OpenSpec workflow skills (opsx:*) for structured change management.
 
-### Context Layer (`context/`)
+### Context Layer (`company/` and `context/`)
 
-User-specific data lives in `context/`, separate from domain knowledge in skill `references/`. This enables clean distribution: fork/install → run environment-setup skill → ready to use.
+User-specific data lives outside the skills — company data in `company/`, the other context files in `context/` — separate from domain knowledge in skill `references/`. This enables clean distribution: fork/install → run environment-setup skill → ready to use. Company data used to live in `context/` and moved to `company/`; the skills read only the new paths, with no fallback to the old ones (see `CHANGELOG.md`).
 
 **Architecture:**
-- `context/templates/` — tracked in git, distributed with repo. Template files with `[DO UZUPELNIENIA]` placeholders
+- `context/templates/` — tracked in git, distributed with repo. Template files with `[DO UZUPELNIENIA]` placeholders, for every context file including the company data (only the place a finished file is saved differs)
+- `company/data/*.md` — company data (`company.md`, `legal-entities.md`). Created by users (manually or via environment-setup skill). Gitignored in this repository (the fork flow); when the plugin is used inside your own repository, you decide whether `company/` is tracked there
+- `company/brand/` — optional brand files (`writing-style.md`, `brand-design.md`, `tone-of-voice.md`) with no templates, gitignored in this repository. Read by linkedin-content and `/ss:slides:init` when they exist
 - `context/*.md` — gitignored. Created by users (manually or via environment-setup skill)
 - `references/` — domain knowledge only (methodologies, frameworks, checklists). Stays in each skill
 
 **Context types:**
 | File | Used by | Content |
 |------|---------|---------|
-| `company.md` | legal, tax-advisor, cfo | Entity details, legal structure, team |
-| `consultant-profile.md` | business-consultant | Consulting philosophy, experience, approach |
-| `projects-portfolio.md` | business-consultant | Past projects, case studies, architecture patterns |
-| `author-profile.md` | linkedin-content | Author persona, audience, example posts |
-| `finances.md` | cfo | Budget, goals, financial structure |
-| `legal-entities.md` | legal, tax-advisor | Entity details, relationships, document backlog |
+| `company/data/company.md` | legal, tax-advisor, cfo | Entity details, legal structure, team |
+| `company/data/legal-entities.md` | legal, tax-advisor | Entity details, relationships, document backlog |
+| `context/consultant-profile.md` | business-consultant | Consulting philosophy, experience, approach |
+| `context/projects-portfolio.md` | business-consultant | Past projects, case studies, architecture patterns |
+| `context/author-profile.md` | linkedin-content | Author persona, audience, example posts |
+| `context/finances.md` | cfo | Budget, goals, financial structure |
+| `context/process-mapping.md` | process-mapping | Process mapping configuration |
+| `company/brand/writing-style.md` (optional) | linkedin-content | Authoritative style rules; without it the skill falls back to `references/writing-style.md` |
+| `company/brand/brand-design.md`, `company/brand/tone-of-voice.md` (optional) | `/ss:slides:init` | Colour and typography tokens, tone of voice for the slides workspace |
 
 **Skill convention:** Each skill that uses context files MUST have a `## Context Dependencies` section listing required/recommended files and a warning message for missing files.
 

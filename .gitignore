@@ -38,6 +38,10 @@ skills/*-workspace/
 context/*.md
 !context/README.md
 
+# Company data (user-specific, not tracked) — read by legal, tax-advisor, cfo, linkedin-content and /ss:slides:init
+company/data/*.md
+company/brand/
+
 # Sensitive data
 *.key
 *.pem

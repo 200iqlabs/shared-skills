@@ -14,7 +14,13 @@
   `cfo` and `environment-setup` read `company/data/company.md` and `company/data/legal-entities.md`;
   `linkedin-content` reads `company/brand/writing-style.md` and `/ss:slides:init` reads
   `company/brand/brand-design.md` and `company/brand/tone-of-voice.md`. There is no fallback to the
-  old paths: a repository that keeps these files under `context/` has to move them.
+  old paths: a repository that keeps these files under `context/` has to move them. The
+  `environment-setup` wizard, the OpenSpec specs, `CLAUDE.md`, `context/README.md` and the context
+  template follow the same layout: the wizard saves company data under `company/data/`, the other
+  context files stay in `context/`, the templates stay in `context/templates/`, and this
+  repository's `.gitignore` now also covers `company/data/*.md` and `company/brand/`. To keep using
+  the skills, move `context/company.md` and `context/legal-entities.md` to `company/data/` and any
+  `context/brand/` files to `company/brand/`.
 
 ### Removed
 - **`/ss:decisions`, `/ss:explain-design`, `/ss:explain-diff`, `/ss:orientation` and the
