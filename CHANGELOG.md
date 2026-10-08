@@ -33,6 +33,16 @@
   `context/brand/` files to `company/brand/`.
 
 ### Fixed
+- **`tax-advisor` has one rule about amounts and identifiers** — the context-gathering steps told
+  the model to ask for income and revenue before answering, while the "data security" section,
+  marked inviolable, forbade asking for them and required every revenue or income amount to be
+  marked `[DO UZUPEŁNIENIA]`; one rule always broke the other. A single section now settles it:
+  the skill asks for an approximate annual revenue range and the cost level, never exact amounts
+  or identifiers, and computes on that range; an amount the user gives to be converted (an invoice
+  to net out) is an input it computes on directly; `[DO UZUPEŁNIENIA]` stays for exact amounts and
+  identifiers in output documents (the brief, document templates), never in the analysis. The
+  "missing context file" message now appears once, in `## Context Dependencies`, instead of three
+  times. Skill version 1.0 → 1.1.
 - **`review-loop` loads its metadata again** — the frontmatter `description` carried an unquoted
   `: `, so the YAML failed to parse and the skill loaded with empty metadata, its description
   silently dropped. It is quoted now, the text unchanged; `claude plugin validate` passes.
