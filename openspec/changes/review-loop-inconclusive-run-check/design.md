@@ -22,7 +22,8 @@ a person to look.
 
 | What the step established | Answer |
 |---|---|
-| a run identified for this request, and its state | wait, or `run-unfinished` / `run-failed` / `run-completed-no-review` |
+| a review run on the sha unfinished, or finished inside the grace period — this request's own or not | wait; at the extension cap an unfinished run ends as `run-unfinished` |
+| everything on the sha finished past the grace period, and a run identified as this request's | `run-failed` / `run-completed-no-review`, from the newest identified run |
 | the listing succeeded and holds no run at all | `no-run` |
 | anything else | inconclusive → wait while extensions remain → `unknown` |
 

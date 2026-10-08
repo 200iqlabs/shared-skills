@@ -63,7 +63,7 @@ reviewer is not enabled.
 - **THEN** both extensions SHALL count against one budget, and at the cap the outcome SHALL be the
   one the last check established
 
-### Requirement: Whether a review is still running is decided over every matching run
+### Requirement: Whether a review is still running is decided over every review run on the sha
 
 The loop SHALL keep waiting, within the extension budget, while any review run against the sha
 the wait is about is unfinished — regardless of which run is newest, and including a run created

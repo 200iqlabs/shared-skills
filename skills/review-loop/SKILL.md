@@ -417,16 +417,17 @@ because that is how a run is *identified*, but an empty result no longer conclud
 filter that misfires now costs patience, never a false answer: the worst it can produce is
 `unknown`, which sends somebody to look.
 
-Three kinds of answer, in order of how much each one claims:
+What the step can conclude, and where each answer sends the loop:
 
 | What this step established | Where the loop goes |
 |---|---|
-| a run identified for this review request, and its state | back to waiting, or `run-unfinished` / `run-failed` / `run-completed-no-review` |
+| a review run on the sha is unfinished, or finished less than 90s ago — whether or not it is this request's own | back to waiting: the unfinished run on the extension budget, ending as `run-unfinished` at the cap; the fresh completion for its grace period |
+| everything on the sha finished 90s or more ago, and a run is identified as this request's | `run-failed` or `run-completed-no-review`, read from the newest identified run |
 | the listing succeeded and holds no run at all | `no-run` |
 | anything else the listing shows, or a `Copilot` workflow that does not resolve | inconclusive — back to waiting while extensions remain, then `unknown` |
 | the listing command failed for any other reason | retry once, then `error` |
 
-**Do not add a filter to turn the third row into one of the first two.** That is the road that
+**Do not add a filter to turn the inconclusive row into one of the rows above it.** That is the road that
 does not converge: each new condition is one more place where the right run can be dropped in
 silence, and the surface grows with every fix. An inconclusive state is resolved by waiting or by
 a person, not by narrowing harder.
