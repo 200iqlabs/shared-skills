@@ -1,6 +1,6 @@
 ---
 name: review-loop
-description: 'Run the whole Claude-Copilot review cycle on a pull request unattended — fix the comments, push, wait for the next review, repeat until the reviewer has nothing new. Use this whenever someone wants the back-and-forth to run by itself across several rounds: "az przestanie zglaszac uwagi", "zapetl poprawki i review", "nie chce tego pilnowac", "iterate automatically until it settles", "keep cycling until copilot is quiet" — even when they never type /review-loop. Takes a PR number and an OpenSpec change name, which give the fixer the intent to judge comments against. Do NOT use for a single pass over the comments already on a PR — that is review-fix — nor for producing a review, waiting on CI, or polling a deployment.'
+description: Run the whole Claude-Copilot review cycle on a pull request unattended — fix the comments, push, wait for the next review, repeat until the reviewer has nothing new. Use this whenever someone wants the back-and-forth to run by itself across several rounds: "az przestanie zglaszac uwagi", "zapetl poprawki i review", "nie chce tego pilnowac", "iterate automatically until it settles", "keep cycling until copilot is quiet" — even when they never type /review-loop. Takes a PR number and an OpenSpec change name, which give the fixer the intent to judge comments against. Do NOT use for a single pass over the comments already on a PR — that is review-fix — nor for producing a review, waiting on CI, or polling a deployment.
 ---
 
 # Review Loop
