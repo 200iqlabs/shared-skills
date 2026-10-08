@@ -160,7 +160,7 @@ Sekcja "Warunki wstępne" jest kluczowa — pozwala użytkownikowi ocenić, czy 
 | `company/data/company.md` | Recommended | Podstawowe dane firmy, branza |
 
 > Jesli wymagane pliki kontekstowe nie istnieja, poinformuj uzytkownika:
-> "Brakuje pliku [file]. Uruchom skill environment-setup aby przygotowac srodowisko."
+> "Brakuje pliku [nazwa]. Uruchom skill environment-setup aby przygotować środowisko."
 
 ## Granice kompetencji
 
