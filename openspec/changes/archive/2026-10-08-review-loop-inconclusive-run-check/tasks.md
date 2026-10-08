@@ -48,8 +48,9 @@
 
 ## 4. Open in review
 
-- [ ] 4.1 Review by the plugin owner on the pull request, then merge, `claude plugin update
-      ss@shared-skills` and a session restart.
-- [ ] 4.2 After merging, archive this change and fold its requirements into
+- [x] 4.1 Review by the plugin owner on the pull request, then merge — merged on 2026-10-08 as
+      `1e5842f` after three Copilot rounds, the last with no findings. `claude plugin update
+      ss@shared-skills` and a session restart are each user's own step.
+- [x] 4.2 After merging, archive this change and fold its requirements into
       `openspec/specs/code-review-loop/spec.md`; widen that spec's Purpose, which today speaks only
       of how the loop ends.
