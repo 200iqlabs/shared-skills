@@ -87,8 +87,9 @@ NOT be satisfied by an empty set.
 - **THEN** the loop SHALL extend the wait while extensions remain
 - **AND** SHALL NOT report that the run completed without a review
 
-#### Scenario: All identified runs have completed
+#### Scenario: Every run on the sha has completed
 
-- **WHEN** every identified run completed more than the grace period ago and the newest has a
+- **WHEN** every review run on the sha the wait is about — identified as the current request's
+  or not — completed at least the grace period ago, and the newest identified run has a
   conclusion other than success
 - **THEN** the loop SHALL report a failed run, naming the newest run and its conclusion

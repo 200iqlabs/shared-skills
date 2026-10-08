@@ -61,11 +61,14 @@ are faults in the loop's own access and `error` carries their text into the sign
 ## Decision: "still running" is a question over the whole set
 
 The fourth defect was selection: the step read the newest matching run, and before that fix it
-read an older one. Choosing better does not remove the choice. Whether the review may still be
-coming is now asked over **every** matching run — any unfinished one keeps the wait open — and a
-single run, the newest, names the ending only once all have completed. The cases that read
-`every matching run` require at least one; over an empty set that clause is vacuously true, which
-would be a certain answer built from nothing.
+read an older one. Choosing better does not remove the choice. Step 5.3 now works with two sets:
+`on_sha`, every review run against the sha the wait is about, and `matching`, the subset the
+created-at bound identifies as this request's own runs (the next section says why they differ).
+Whether the review may still be coming is asked over **all of `on_sha`** — any unfinished run in
+it keeps the wait open, and so does one that completed inside the grace period — and a single run,
+the newest of `matching`, names the ending only once nothing in `on_sha` is unfinished or freshly
+completed. Every clause over a set requires at least one member; over an empty set *every run has
+completed* is vacuously true, which would be a certain answer built from nothing.
 
 ## Decision: the created-at bound picks the ending, not the wait
 
