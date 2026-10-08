@@ -126,7 +126,7 @@ default_size: 1080x1080          # overridden by format when known
 author: ""                       # used in footer template
 footer: ""                       # free-form footer text; empty = no footer
 themes_dir: slides/themes        # where custom CSS themes live, passed to Marp as --theme-set
-marp_cli_version: "^3"           # semver range for npx call
+marp_cli_version: "^4"           # semver range for npx call
 
 # Optional — triggers custom theme generation on /slides:init
 brand_reference: ""              # path to a brand-design document (markdown with color/typography tables). If set and the file exists, init generates a branded theme CSS from the template.
@@ -257,7 +257,7 @@ npx --yes @marp-team/marp-cli@<pinned-version> \
 
 Add `--html slides/output/<slug>.html` when user passes `--html`.
 
-`<pinned-version>` comes from `slides/config.yaml` field `marp_cli_version` (default `^3`).
+`<pinned-version>` comes from `slides/config.yaml` field `marp_cli_version` (default `^4`; `^3` fails under Node 26).
 
 **Error handling:** if Marp exits non-zero, capture stdout+stderr and show to user. Common causes:
 - Missing Chromium → Marp downloads on first run (progress visible)

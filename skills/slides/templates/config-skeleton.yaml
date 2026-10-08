@@ -21,9 +21,10 @@ footer: "{{FOOTER}}"
 # Where custom CSS themes live. Passed to Marp as --theme-set.
 themes_dir: slides/themes
 
-# Marp CLI version pin. Use semver range; "^3" tracks 3.x.
+# Marp CLI version pin. Use semver range; "^4" tracks 4.x.
 # The skill calls `npx --yes @marp-team/marp-cli@<this-value>`.
-marp_cli_version: "^3"
+# "^3" fails under Node 26 (`require is not defined in ES module scope` in yargs, pulled in by @puppeteer/browsers); "^4" renders with the same call.
+marp_cli_version: "^4"
 
 # --- OPTIONAL: brand theme generation ---
 # Fill in to have /slides:init generate a custom theme CSS from a brand reference doc.

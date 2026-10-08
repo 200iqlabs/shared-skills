@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- **`slides` pins Marp CLI `^4` by default** — `^3` fails under Node 26 with `require is not defined in ES module scope` (yargs, pulled in by `@puppeteer/browsers`; measured 2026-09-11 on macOS, Node v26.7.0), while `^4` renders with the same call. New `/ss:slides:init` configs get `^4`; an existing `slides/config.yaml` keeps its own `marp_cli_version` — change it there.
+
 ### Added
 - **`/ss:decisions`, `/ss:explain-design` and `/ss:explain-diff` are back, invoked by the user
   only** — restored at the plugin owner's request on 2026-10-01 with `disable-model-invocation: true`,
