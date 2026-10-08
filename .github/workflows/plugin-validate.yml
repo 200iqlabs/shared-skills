@@ -1,0 +1,41 @@
+# Runs `claude plugin validate .` on every pull request to master.
+#
+# Why: a SKILL.md whose frontmatter does not parse loads with empty metadata — no description,
+# so the model never picks the skill — and nothing reports it at runtime. The validator does.
+#
+# - Errors fail the job (the CLI exits 1); warnings are printed and pass (exit 0).
+# - No API key and no login: `plugin validate` reads files only.
+# - The CLI comes from npm at the version in CLAUDE_CODE_VERSION. `latest` checks the plugin the
+#   way users' auto-updated Claude Code will load it; pin a version here if a CLI release ever
+#   breaks the job for a reason unrelated to the plugin.
+name: plugin-validate
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLAUDE_CODE_VERSION: latest
+      DISABLE_AUTOUPDATER: "1"
+      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Claude Code CLI
+        run: |
+          npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+          claude --version
+
+      - name: claude plugin validate
+        run: claude plugin validate .
