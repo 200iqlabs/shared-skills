@@ -43,8 +43,9 @@
   identifiers in output documents (the brief, document templates), never in the analysis. The
   "missing context file" message now appears once, in `## Context Dependencies`, instead of three
   times, worded exactly as the `tax-advisor-agent` spec requires (`Brakuje pliku [nazwa]. Uruchom
-  skill environment-setup aby przygotować środowisko.`, with Polish diacritics). Skill version
-  1.0 → 1.1.
+  skill environment-setup aby przygotować środowisko.`, with Polish diacritics). The rule that
+  `/brief` skips risk signalling is likewise stated once, in the `/brief` mode, instead of twice.
+  Skill version 1.0 → 1.1.
 - **`review-loop` loads its metadata again** — the frontmatter `description` carried an unquoted
   `: `, so the YAML failed to parse and the skill loaded with empty metadata, its description
   silently dropped. It is quoted now, the text unchanged; `claude plugin validate` passes.

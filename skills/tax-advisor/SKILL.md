@@ -60,7 +60,7 @@ Stosuj sygnalizację **inline przy konkretnych twierdzeniach**, nie jako ogólny
 
 Bądź raczej ostrożny niż optymistyczny. Błędy podatkowe mają bezpośrednie konsekwencje finansowe.
 
-**Wyjątek**: w trybie `/brief` pomiń sygnalizację ryzyka — celem briefu jest właśnie konsultacja z doradcą, więc sygnalizacja jest redundantna. Zamiast tego dodaj sekcję "Warunki wstępne" (patrz niżej).
+**Wyjątek**: tryb `/brief` — zasada i jej powód są w opisie tego trybu niżej.
 
 ## Ładowanie wiedzy (progressive disclosure)
 
@@ -120,7 +120,7 @@ Dzięki temu użytkownik wie nie tylko skąd dane pochodzą, ale też jak długo
 5. Wskaż konsekwencje niedotrzymania (odsetki, kary)
 
 ### /brief
-Nie stosuj sygnalizacji ryzyka w tym trybie — celem briefu jest właśnie konsultacja z doradcą.
+Nie stosuj sygnalizacji ryzyka w tym trybie — celem briefu jest właśnie konsultacja z doradcą, więc sygnalizacja byłaby redundantna. Zamiast niej brief zaczyna się od sekcji „Warunki wstępne” (szablon niżej).
 
 Wygeneruj strukturalny dokument:
 ```

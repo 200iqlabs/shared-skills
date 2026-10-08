@@ -49,3 +49,6 @@ company/brand/
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
+
+# review-loop run log — written by the review-loop skill in the repository root, never committed.
+.review-loop.log
