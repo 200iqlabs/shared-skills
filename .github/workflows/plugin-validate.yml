@@ -5,6 +5,11 @@
 #
 # - Errors fail the job (the CLI exits 1); warnings are printed and pass (exit 0).
 # - No API key and no login: `plugin validate` reads files only.
+# - Two jobs, because line endings change the verdict. Git for Windows checks files out with CRLF
+#   (core.autocrlf=true by default), and the frontmatter parser is stricter on CRLF: the unquoted
+#   `review-loop` description that broke the skill until #14 fails with CRLF and passes with LF.
+#   The Linux job checks the file as users on Linux and macOS get it, the Windows job as users on
+#   Windows get it.
 # - The CLI comes from npm at the version in CLAUDE_CODE_VERSION. `latest` checks the plugin the
 #   way users' auto-updated Claude Code will load it; pin a version here if a CLI release ever
 #   breaks the job for a reason unrelated to the plugin.
@@ -19,13 +24,24 @@ permissions:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     env:
       CLAUDE_CODE_VERSION: latest
       DISABLE_AUTOUPDATER: "1"
       CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
+    defaults:
+      run:
+        shell: bash
     steps:
+      - name: Check out with CRLF, as Git for Windows does
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf true
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
