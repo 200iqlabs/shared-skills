@@ -37,9 +37,14 @@
       command is not an empty listing), 22 (the push-started run, older than the created-at bound,
       still in progress).
 - [x] 3.2 `skills/review-loop/evals/README.md`: the new group and how to run the behavioural evals.
-- [ ] 3.3 Run evals 16–22 against this branch and against `origin/master` as the baseline. Open:
-      they cost model calls and are run by hand at review time; 16, 18, 19 and 20 are expected to
-      fail on the baseline, and 22 too.
+- [x] 3.3 Run evals 16–22 against this branch and against `origin/master` as the baseline — run
+      on 2026-10-08 against `57eb68d`: **7/7 pass on the branch**; on the baseline 16, 18, 19, 20 and
+      22 fail and 17 and 21 pass, the split `evals/README.md` predicts. 14 isolated runs, each given
+      only a copy of one version's `SKILL.md` under a neutral name and the case prompt; graded twice,
+      once by a grader blind to the version, with all 14 grades agreeing.
+- [x] 3.4 The `run-unfinished` report line names a run on `<sha>`, not "for this review request": at
+      the cap the run comes from every review run on the sha, which may be the push-started one
+      outside `matching` (found by the eval run, case 22).
 
 ## 4. Open in review
 
