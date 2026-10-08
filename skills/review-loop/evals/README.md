@@ -1,7 +1,7 @@
 # Evals for `review-loop`
 
-- `evals.json` — 15 behavioural prompts covering the states this loop handles badly when it
-  handles them badly, in four groups.
+- `evals.json` — 22 behavioural prompts covering the states this loop handles badly when it
+  handles them badly, in five groups.
 
   **The loop itself (1–5):** a repository where Copilot has never reviewed, a first-ever pull
   request where the availability check has nothing to read, a timeout that must not assert which
@@ -26,6 +26,17 @@
   record is opened anyway and says so rather than passing for a gate that carried the run; and an
   aborted run whose error text and run log never arrived, where the body must not promise them
   below a line that carries nothing.
+
+  **Whether a review is still coming (16–22):** the run check in step 5.3 concludes that no review
+  run exists only from a listing that succeeded and holds nothing (17); a listing holding runs
+  none of which matches the pushed sha (16), a listing that may be cut at `--limit` (19) and a
+  `Copilot` workflow that does not resolve (18) are inconclusive — they wait, and at the cap end as
+  `unknown` with "check manually", never as `no-run`. One unfinished run among several keeps the
+  wait open whichever is newest (20) — the run the push started included, though it predates the
+  created-at bound that picks out this request's own run (22) — and a failed command is not read as the empty listing that
+  would prove absence (21). The first three are each one of the mechanisms that produced a false
+  `no-run` in the review rounds this rule came out of; 17 is what keeps them honest — without it,
+  a regression that never concludes `no-run` passes the group.
 - `trigger-eval.json` — 20 triggering queries, 10 positive and 10 negative.
 
 ## Measured triggering: 95%, and it does not move either
@@ -67,6 +78,15 @@ See `../../review-fix/evals/README.md` for the conclusion drawn from it: describ
 for works, describing what it is not for does not. The boundary is enforced in step 1.3b of this
 skill instead — if nothing in the request implies repetition, the user wants an opinion rather than
 an unattended loop, and the skill says so and points elsewhere.
+
+## Running the behavioural evals
+
+They are not run in CI and cost model calls, so they run by hand. In a session in this repository,
+run `/skill-creator` on `skills/review-loop` and have it evaluate `evals/evals.json` — the whole set,
+or the ids a change touched — with the skill on the branch under test against the previous version
+as the baseline (`git show origin/master:skills/review-loop/SKILL.md` into a scratch copy). A case
+that passes with both versions does not show the change did anything; for 16, 18, 19, 20 and 22
+the baseline is expected to fail.
 
 ## What is hard to evaluate here
 

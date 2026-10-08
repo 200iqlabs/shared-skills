@@ -10,6 +10,16 @@
   and the working mode's routing is unchanged.
 
 ### Changed
+- **`review-loop` concludes "no review run" only from positive evidence** — when the wait for a
+  Copilot review expires, step 5.3 starts from the new timeout outcome `unknown` instead of `no-run`.
+  `no-run` now needs a run listing that succeeded and holds no run at all; a listing whose runs
+  none match the pushed sha, one that may be cut at `--limit`, and a `Copilot` workflow that does
+  not resolve are inconclusive — they wait on the same extension budget as an unfinished run and,
+  at the cap, end as `unknown` with a report line that says to check manually. Any review run on
+  the sha still unfinished keeps the wait open, whichever is newest — the one the push started
+  included, though it predates the bound that picks out the request's own run. A loop that used
+  to stop with `no-run` on a branch where Copilot had already run may now wait up to three more
+  extensions before ending `unknown`.
 - **Company data is read from `company/`, not `context/`** (breaking) — `legal`, `tax-advisor`,
   `cfo` and `environment-setup` read `company/data/company.md` and `company/data/legal-entities.md`;
   `linkedin-content` reads `company/brand/writing-style.md` and `/ss:slides:init` reads
@@ -21,6 +31,11 @@
   repository's `.gitignore` now also covers `company/data/*.md` and `company/brand/`. To keep using
   the skills, move `context/company.md` and `context/legal-entities.md` to `company/data/` and any
   `context/brand/` files to `company/brand/`.
+
+### Fixed
+- **`review-loop` loads its metadata again** — the frontmatter `description` carried an unquoted
+  `: `, so the YAML failed to parse and the skill loaded with empty metadata, its description
+  silently dropped. It is quoted now, the text unchanged; `claude plugin validate` passes.
 
 ### Removed
 - **`/ss:decisions`, `/ss:explain-design`, `/ss:explain-diff`, `/ss:orientation` and the

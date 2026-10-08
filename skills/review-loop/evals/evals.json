@@ -105,6 +105,55 @@
       "prompt": "Pętla skończyła na PR 3 z powodem error. Dziennika przebiegu nie ma na dysku, a tekst błędu nie dotarł do pliku, z którego składana jest treść zgłoszenia. Dokończ krok 6.",
       "expected_output": "The record is opened and states that it carries neither the error text nor the iteration history that the follow-up line promises directly below itself — the promise and the contents do not diverge in silence. The missing run log is reported in the place the log would have occupied rather than passed over as an empty one, since a failed read leaves an empty file behind either way. The obligation follows from the termination reason: on a clean run the same absent file would pass without a warning.",
       "files": []
+    },
+    {
+      "id": 16,
+      "name": "no-run-requires-an-empty-listing-not-an-empty-filter",
+      "prompt": "Iteracja 3 pętli na PR 7: poll_timeout minął bez nowej recenzji. `gh run list --branch feat/x --workflow Copilot` zwraca 4 przebiegi „Running Copilot Code Review”, wszystkie z iteracji 1 i 2 — żaden nie ma headSha równego ostatniemu pushowi. Co robi krok 5.3?",
+      "expected_output": "The step does not conclude `no-run`: the listing holds runs, so absence is not proven, and an empty result of the sha and time tests is inconclusive rather than evidence. It extends the deadline by 300s from the shared budget and polls again, logging the extension with the inconclusive reason `no-match`. If the cap is reached in that state, it ends with `timeout_outcome = unknown`, reason `no-match`, and a report line that says to check manually — it does not claim the review is missing and does not suggest Copilot is disabled here, since Copilot demonstrably ran on this branch.",
+      "files": []
+    },
+    {
+      "id": 17,
+      "name": "empty-listing-is-the-one-proof-of-absence",
+      "prompt": "PR 4, przypadek przed pierwszą recenzją: poll_timeout minął. `gh run list --branch feat/y --workflow Copilot --limit 100 --json ...` kończy się kodem 0 i zwraca `[]`. Dokończ krok 5.3 i podaj linię raportu.",
+      "expected_output": "An empty listing from a command that exited 0 and parsed as a JSON array is the positive proof of absence, so the step sets `timeout_outcome = no-run` at once, without spending extensions, and terminates with reason `timeout`. The report line says no Copilot review run exists on the branch at all, and still does not assert whether Copilot is slow or not enabled — it points at the reviewers sidebar to settle that.",
+      "files": []
+    },
+    {
+      "id": 18,
+      "name": "workflow-not-found-is-inconclusive-not-no-run",
+      "prompt": "Krok 5.3 na PR 2: `gh run list --branch fix/z --workflow Copilot ...` kończy się błędem `could not find any workflows named Copilot`. Przedłużenia na tym oczekiwaniu się już wyczerpały. Jak kończy się pętla i co mówi raport?",
+      "expected_output": "The not-found failure is neither an error to retry nor proof that no run exists: it is inconclusive with reason `workflow-not-found`. With the extensions spent, the loop terminates with `timeout_outcome = unknown` (not `no-run`, not `error`), and the report says to check manually: `gh workflow list --all` shows whether the workflow exists under another name, and if none exists, the reviewers sidebar shows whether Copilot is offered at all.",
+      "files": []
+    },
+    {
+      "id": 19,
+      "name": "truncated-listing-without-a-match-is-inconclusive",
+      "prompt": "PR 11, krok 5.3: lista `gh run list --workflow Copilot --limit 100` zwróciła dokładnie 100 przebiegów i żaden nie ma headSha ostatniego pushu. Przedłużeń zostało jeszcze 2. Co dalej?",
+      "expected_output": "A listing that returned as many runs as `--limit` asked for may be cut, so the missing match is inconclusive with reason `listing-truncated`, not `no-run`. The step extends the deadline by 300s, counts the extension against the same budget an unfinished run would use, and goes back to polling the reviews endpoint. It does not add a filter or a different query to force a verdict.",
+      "files": []
+    },
+    {
+      "id": 20,
+      "name": "any-unfinished-matching-run-keeps-the-wait-open",
+      "prompt": "PR 9, krok 5.3, oczekiwanie po retriggerze: dwa przebiegi pasują do ostatniego pushu i mieszczą się w progu czasu. Nowszy jest `completed` / `success` od 4 minut, bez recenzji w pulls/9/reviews; starszy jest wciąż `in_progress`. Rozstrzygnij.",
+      "expected_output": "Because one matching run is still unfinished, the review may still be coming, whichever run is newest, so the step neither reports `run-completed-no-review` nor ends the wait: it extends the deadline (while extensions remain) and polls again. A terminal diagnosis is made only once every matching run has completed, and then it is read from the newest one.",
+      "files": []
+    },
+    {
+      "id": 21,
+      "name": "failed-listing-is-not-an-empty-listing",
+      "prompt": "Krok 5.3 na PR 6: `gh run list --branch feat/w --workflow Copilot ...` kończy się kodem 1 z `HTTP 401: Bad credentials` i pustym stdout. Po 30 s ponowna próba daje to samo.",
+      "expected_output": "A failed command is not an empty listing: the empty stdout is not read as `[]`, so it cannot become the proof of absence and the step does not report `no-run`. After the one retry also fails, the loop logs `run-check-failed`, sets `termination_reason = error`, and goes to Step 6, where the error text reaches the report and the sign-off record.",
+      "files": []
+    },
+    {
+      "id": 22,
+      "name": "push-started-run-outside-the-bound-still-holds-the-wait",
+      "prompt": "PR 5, krok 5.3 po retriggerze. Na sha ostatniego pushu są dwa przebiegi „Running Copilot Code Review”: jeden uruchomiony przez sam push, utworzony 6 minut przed wait_started_at i wciąż `in_progress`; drugi uruchomiony przez ponowne żądanie recenzji, `completed` / `success` od 3 minut, a w pulls/5/reviews nie ma recenzji na ten sha. Przedłużeń zostały 2. Rozstrzygnij.",
+      "expected_output": "The push-started run falls outside the created-at bound, so it is not the run this request started — but it is a review run on the same sha, and step 5.2 accepts any review written against that sha, so while it is unfinished the review may still be coming. The step extends the wait instead of reporting `run-completed-no-review` from the request's own run. The created-at bound decides only which run names the ending, once nothing on the sha is unfinished.",
+      "files": []
     }
   ]
 }
