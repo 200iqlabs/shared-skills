@@ -147,8 +147,9 @@ flipped between base and branch SHALL be listed.
 ### Requirement: Cases that cannot be automated are listed with a reason
 
 A behavioural expectation SHALL NOT be dropped silently. Each case that is not migrated SHALL
-appear in its skill's `evals/README.md`, in one of three groups: retired by a named change,
-waiting for the shell tier, or manual with a stated reason.
+appear in its skill's `evals/README.md`, in exactly one of four groups: retired by a named
+change, rewritten by a named change, waiting for the shell tier, or manual with a stated reason.
+Each of the first two names the change and its task.
 
 #### Scenario: Case retired by another change
 - **WHEN** a case covers behaviour that another change removes

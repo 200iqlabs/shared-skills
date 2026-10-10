@@ -39,7 +39,7 @@
 - [ ] 2.3 Document the tool in `tools/README.md` (input, both outputs, the lost/counted rule).
   Verify that the documented command runs as written.
 
-## 3. `prd`: four `tier-write` cases
+## 3. `prd`: five `tier-write` cases
 
 - [ ] 3.1 Write synthetic fixtures under each case directory: `mentormatch` (Track Tech),
   `klasa` (non-technical founder, Lovable, Track Builder), `thin` (two lines),

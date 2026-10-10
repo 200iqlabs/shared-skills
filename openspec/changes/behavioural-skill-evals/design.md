@@ -19,9 +19,10 @@ See `proposal.md` for the motivation. The state that shapes the approach:
   paths.
 - **`review-via-codex` (in flight, not merged) is BREAKING for both review skills.** Its task
   4.6 retires `review-loop` cases 1–3 and 16–22 (Copilot availability, timeout, run check) and
-  keeps 4–5 and 6–15. Its task 4.4 re-runs the sign-off cases 6–15 *unchanged*. Its tasks
-  3.3–3.6 remove comment fetching and in-thread replies from `review-fix`, which retires cases 1,
-  5 and 6. They also rewrite 3–4 as rejections and 7–9 for the `P0`–`P3` scale. Case 2 survives.
+  keeps 4–5 and 6–15, and it adds five new cases. Its task 4.4 re-runs the sign-off cases 6–15
+  *unchanged*. Its task 3.6 removes comment fetching and in-thread replies from `review-fix`, and
+  with them the reply-based expectations of cases 1 and 3–6. Its task 3.3 rewrites 7–9 for the
+  `P0`–`P3` scale and adds a case for a finding that repeats a rejection. Case 2 survives.
   Its pre-flight resolves the Codex runtime through `~/.claude/plugins/installed_plugins.json`.
 - **The tool, as observed on 2026-10-10 (CLI 2.1.292, Windows 11, `claude-opus-5-5`):**
   - A copy of this plugin under the scratchpad ran two cases from `evals.json`, rewritten as
@@ -439,7 +440,10 @@ with and $0.10 without. A `prd` case that writes the full document about $0.30 w
 output tokens than the measured thin case) and $0.20 without. A `tier-shell` case, phase 2, about
 $1.0–1.5 (10–20 turns over a context of about 70k, read from cache within the run).
 
-**Per suite run, phase 1 (24 cases × 3 runs):**
+**Per suite run, phase 1 (24 cases × 3 runs, the order in which this change merges first).** In
+the other order (D11), `review-loop` holds at least 17 cases (12 kept, 5 new). That adds about
+$5.40 per run with `--ablation none`, about $23 a month weekly, plus `review-via-codex`'s new
+`review-fix` cases at about $0.20 per run each with the plugin.
 
 | Selection | `--ablation none` | with no-plugin arm | routine (D7) |
 |---|---:|---:|---:|

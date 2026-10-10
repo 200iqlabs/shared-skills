@@ -64,8 +64,8 @@ separated the skill from the no-plugin arm (Δ +0.50 and +1.00).
   the baseline the `review-loop` README actually asks for: the previous skill, not the absence of
   one.
 - **CI: a `behaviour` job in `.github/workflows/skill-evals.yml`** (from `skill-evals-in-ci`).
-  It runs on manual dispatch and, after a trial period, on the weekly schedule, and never on
-  `pull_request`. It is not part of `skill-evals-gate` and is never a required check. It runs
+  It runs on manual dispatch, and weekly only if the owner enables it after a trial period. It
+  never runs on `pull_request`. It is not part of `skill-evals-gate` and is never a required check. It runs
   under a cost ceiling and publishes scores and costs only, never transcripts or judge evidence.
 - **The shell tier is designed and spiked, not built.** The fake `gh` and the fake Codex runtime
   wait for `review-via-codex` to settle what `review-fix` and `review-loop` call. This change runs
@@ -88,7 +88,8 @@ separated the skill from the no-plugin arm (Δ +0.50 and +1.00).
 
 ## Impact
 
-- **New:** `evals/cases/**` (24 cases with fixtures), `evals/README.md`,
+- **New:** `evals/cases/**` (24 cases with fixtures if this change merges before
+  `review-via-codex`, more in the other order), `evals/README.md`,
   `tools/plugin-eval-compare.py` and `tools/plugin-eval-summary.py` with tests, and a `behaviour`
   job in `skill-evals.yml`.
 - **Changed:** `.claude-plugin/plugin.json` (the `experimental.evals` key passes
@@ -106,7 +107,10 @@ separated the skill from the no-plugin arm (Δ +0.50 and +1.00).
   three runs cost three times one. A full phase-1 run is about **$22** with `--ablation none` and
   about **$30** with the no-plugin arm (24 cases × 3 runs). The routine mix, with the no-plugin
   arm for `prd` and `linkedin-content` only, is about $27 a run. Weekly, that is about
-  **$115 a month**. Design, *Cost*, has the table.
+  **$115 a month**. These figures assume this change merges before `review-via-codex`. In the
+  other order, `review-loop` has at least 17 cases instead of 12, which adds about $5.40 a run and
+  $23 a month on Opus 5.5, plus that change's new `review-fix` cases. Design, *Cost*, has the
+  table.
 - **Out of scope:** trigger accuracy, which stays with `tools/skill-trigger-eval.py`. Building the
   shell tier, which is a follow-up after `review-via-codex`. Cases for the 18 skills that have
   none.
