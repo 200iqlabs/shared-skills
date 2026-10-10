@@ -69,5 +69,6 @@ The fixer runs these after every round, and the review may cite them:
 
 ## Machine-read lines
 
+Scale: P0, P1, P2, P3
 Important: P0-P2
 Test paths: tests/**, hooks/selftest.mjs, skills/*/scripts/selftest.mjs, skills/*/scripts/fixtures/**, skills/*/evals/*.json, evals/cases/**

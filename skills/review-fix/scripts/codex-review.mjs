@@ -8,7 +8,8 @@
  *   review    [--repo DIR] (--base REF | --scope auto) --out FILE [--timeout-sec N] [--policy FILE]
  *   parse     FILE [--repo DIR] [--exit N] [--policy FILE]
  *   policy    [--repo DIR] [--policy FILE]
- *   guard     --since SHA [--repo DIR] [--policy FILE] [--record FILE --round N]
+ *   snapshot  [--repo DIR]
+ *   guard     --since SHA|TREE [--repo DIR] [--policy FILE] [--record FILE --round N]
  *
  * Exit codes: 0 done; 2 Codex is not usable (preflight); 3 the review is an error (review,
  * parse); 4 an existing test changed without a recorded reason (guard); 1 this script failed or
@@ -39,9 +40,10 @@ const ENTRY_LIKE = /^\s*-\s+\[[^\]]+\]/
 // Traces of a findings block in a format this parser does not know: a severity tag, or a line
 // ending in a location. Either one means "clean" cannot be concluded.
 const FINDING_TRACE = [/\[P\d\]/, /—\s*\S+:\d+(?:-\d+)?\s*$/]
-// `- [P1] <title> — <path>:<start>-<end>`. The tag is optional, so an untagged entry still parses
-// and is ordered as untagged instead of failing the round.
-const ENTRY = /^- (?:\[([^\]]+)\]\s+)?(.+) — (.+?)(?::(\d+)(?:-(\d+))?)?\s*$/
+// `- [P1] <title> — <path>:<start>-<end>`. The location is required, line range included: every
+// observed entry carried one, and an entry without it is a format this parser does not know. The
+// tag is optional, so an untagged entry still parses and is ordered as untagged.
+const ENTRY = /^- (?:\[([^\]]+)\]\s+)?(.+) — (.+?):(\d+)-(\d+)\s*$/
 // Under the 600 s cap of a foreground Bash call, so a review that outgrows it fails here, visibly.
 const DEFAULT_TIMEOUT_SEC = 540
 
@@ -155,21 +157,50 @@ export function preflight(repoRoot) {
 
 // ---------- policy ----------
 
+function rangeLine(tags) {
+  return tags.length > 1 ? `${tags[0]}-${tags[tags.length - 1]}` : tags[0]
+}
+
+// Three machine-read lines. `Scale:` lists the repository's severity tags, highest first (default
+// P0, P1, P2, P3); tags are compared case-insensitively and must not contain a hyphen. `Important:`
+// names one tag or a range of that scale; without it, every tag but the lowest is important, which
+// is P0-P2 on the default scale. `Test paths:` lists the globs the test guard protects.
 export function parsePolicy(text) {
-  const out = { important: [...DEFAULT_IMPORTANT], importantLine: 'P0-P2', testPaths: [...DEFAULT_TEST_PATHS], fromPolicy: [], warnings: [] }
+  const out = {
+    scale: [...DEFAULT_SCALE],
+    important: [...DEFAULT_IMPORTANT],
+    importantLine: 'P0-P2',
+    testPaths: [...DEFAULT_TEST_PATHS],
+    fromPolicy: [],
+    warnings: [],
+  }
   if (typeof text !== 'string') return out
+  const sc = text.match(/^Scale:[ \t]*(.*)$/im)
+  if (sc) {
+    const tags = sc[1]
+      .split(',')
+      .map((s) => s.trim().replace(/^`|`$/g, '').toUpperCase())
+      .filter(Boolean)
+    if (tags.length >= 2 && new Set(tags).size === tags.length && !tags.some((t) => /[-–\s]/.test(t))) {
+      out.scale = tags
+      out.important = tags.slice(0, -1)
+      out.importantLine = rangeLine(out.important)
+      out.fromPolicy.push('Scale')
+    } else {
+      out.warnings.push(`the Scale line "${sc[1].trim()}" is not two or more distinct tags without hyphens; using P0, P1, P2, P3`)
+    }
+  }
   const imp = text.match(/^Important:[ \t]*(.*)$/im)
   if (imp) {
-    const m = imp[1].trim().match(/^(P\d)(?:\s*[-–]\s*(P\d))?$/i)
-    const lo = m ? Number(m[1].slice(1)) : NaN
-    const hi = m ? Number((m[2] ?? m[1]).slice(1)) : NaN
-    if (m && lo <= hi) {
-      out.important = []
-      for (let i = lo; i <= hi; i++) out.important.push(`P${i}`)
-      out.importantLine = m[2] ? `P${lo}-P${hi}` : `P${lo}`
+    const m = imp[1].trim().match(/^([^\s\-–]+)(?:\s*[-–]\s*([^\s\-–]+))?$/)
+    const lo = m ? out.scale.indexOf(m[1].toUpperCase()) : -1
+    const hi = m ? out.scale.indexOf((m[2] ?? m[1]).toUpperCase()) : -1
+    if (m && lo !== -1 && hi !== -1 && lo <= hi) {
+      out.important = out.scale.slice(lo, hi + 1)
+      out.importantLine = rangeLine(out.important)
       out.fromPolicy.push('Important')
     } else {
-      out.warnings.push(`the Important line "${imp[1].trim()}" is not a tag or a range like P0-P2; using P0-P2`)
+      out.warnings.push(`the Important line "${imp[1].trim()}" is not a tag or a range of the scale (${out.scale.join(', ')}); using ${out.importantLine}`)
     }
   }
   const tp = text.match(/^Test paths:[ \t]*(.*)$/im)
@@ -186,6 +217,25 @@ export function parsePolicy(text) {
     }
   }
   return out
+}
+
+// The working tree as one tree object — untracked files included, ignored ones left out — written
+// through a throwaway index so the real one is untouched. A round that reviews uncommitted work
+// starts its test guard here, so the person's own edits to tests are not counted as the round's.
+export function snapshot(repoRoot) {
+  const tmp = path.join(os.tmpdir(), `ss-codex-review-index-${process.pid}-${Date.now()}`)
+  const run = (args) => spawnSync('git', args, { cwd: repoRoot, encoding: 'utf8', env: { ...process.env, GIT_INDEX_FILE: tmp } })
+  try {
+    for (const args of [['read-tree', 'HEAD'], ['add', '-A']]) {
+      const r = run(args)
+      if (r.status !== 0) return { ok: false, error: `git ${args.join(' ')} failed: ${clip(r.stderr)}` }
+    }
+    const w = run(['write-tree'])
+    if (w.status !== 0) return { ok: false, error: `git write-tree failed: ${clip(w.stderr)}` }
+    return { ok: true, tree: w.stdout.trim() }
+  } finally {
+    fs.rmSync(tmp, { force: true })
+  }
 }
 
 // The test guard reads the policy as it stood when the round started, so a round cannot narrow the
@@ -266,8 +316,8 @@ export function recognise({ exit, stdout, stderr, repoRoot, important = DEFAULT_
       tag: m[1] ? m[1].trim().toUpperCase() : null,
       title: m[2].trim(),
       path: where.path,
-      start: m[4] ? Number(m[4]) : null,
-      end: m[5] ? Number(m[5]) : m[4] ? Number(m[4]) : null,
+      start: Number(m[4]),
+      end: Number(m[5]),
       bodyLines: [],
     })
   }
@@ -402,6 +452,10 @@ function main(argv) {
     return print(res, res.ok ? 0 : 2)
   }
   if (cmd === 'policy') return print(readPolicy(repoRoot, o.policy))
+  if (cmd === 'snapshot') {
+    const res = snapshot(repoRoot)
+    return print(res, res.ok ? 0 : 1)
+  }
   if (cmd === 'parse') {
     if (!o._[0]) return print({ error: 'parse needs the payload file' }, 1)
     const saved = JSON.parse(fs.readFileSync(o._[0], 'utf8'))
@@ -411,8 +465,8 @@ function main(argv) {
       saved && 'exit' in saved && 'stdout' in saved
         ? saved
         : { exit: o.exit === undefined ? 0 : Number(o.exit), stdout: JSON.stringify(saved), stderr: '' }
-    const res = recognise({ ...raw, repoRoot, important: policy.important })
-    return print({ ...res, policy: { source: policy.source, important: policy.importantLine } }, res.verdict === 'error' ? 3 : 0)
+    const res = recognise({ ...raw, repoRoot, important: policy.important, scale: policy.scale })
+    return print({ ...res, policy: { source: policy.source, scale: policy.scale, important: policy.importantLine } }, res.verdict === 'error' ? 3 : 0)
   }
   if (cmd === 'review') {
     if (!o.out) return print({ error: 'review needs --out FILE' }, 1)
@@ -436,8 +490,8 @@ function main(argv) {
     const policy = readPolicy(repoRoot, o.policy)
     const res = timedOut
       ? { verdict: 'error', error: `the review did not finish within ${timeoutSec}s and was stopped`, findings: [] }
-      : recognise({ ...raw, repoRoot, important: policy.important })
-    const out = { ...res, seconds, payload: path.resolve(o.out), plugin: where.version, policy: { source: policy.source, important: policy.importantLine } }
+      : recognise({ ...raw, repoRoot, important: policy.important, scale: policy.scale })
+    const out = { ...res, seconds, payload: path.resolve(o.out), plugin: where.version, policy: { source: policy.source, scale: policy.scale, important: policy.importantLine } }
     return print(out, res.verdict === 'error' ? 3 : 0)
   }
   if (cmd === 'guard') {
@@ -454,7 +508,7 @@ function main(argv) {
     const res = guard({ repoRoot, since: String(o.since), patterns: policy.testPaths, recordText, round: Number(o.round || 0) })
     return print({ ...res, testPaths: policy.testPaths, policy: policy.source }, res.error ? 1 : res.ok ? 0 : 4)
   }
-  return print({ error: `unknown subcommand ${cmd ?? '(none)'}; use preflight, review, parse, policy or guard` }, 1)
+  return print({ error: `unknown subcommand ${cmd ?? '(none)'}; use preflight, review, parse, policy, snapshot or guard` }, 1)
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {

@@ -102,7 +102,9 @@ through the repository: `AGENTS.md` and the record committed in the diff (decisi
 The recognition is implemented once, in `skills/review-fix/scripts/codex-review.mjs`, which both
 skills call; the model does not parse the text by eye. A finding with no tag, or a tag outside the
 scale, is untagged for ordering (the spec's rule) and counts as important, because its severity
-cannot be shown to be minor.
+cannot be shown to be minor. The location, line range included, is required: an entry without one
+is a format the parser does not know, so the round is an `error` (raised by Codex on this change's
+own pull request, in the first run of task 5.4, and fixed by hand).
 
 ### 3. What the review is run against
 
@@ -110,6 +112,13 @@ cannot be shown to be minor.
   the review sees exactly the pull request's diff, whatever the repository's default branch.
 - `review-fix` without a pull request: the plugin's `auto` scope (the working tree when dirty,
   otherwise the branch against the default branch). It commits and does not push.
+  *When the dirty working tree is reviewed* (raised by Codex in the second run of task 5.4, fixed by
+  hand): the round always ends in a commit carrying the reviewed work, fixes or not, so a clean or
+  all-rejected round does not leave it uncommitted. The test guard measures from a snapshot of the
+  working tree — a tree object the helper writes through a throwaway index, untracked files
+  included — instead of `HEAD`, so the person's own uncommitted edits to tests are not counted as
+  the round's; the round stages everything before the guard, so an untracked file the fixer edited
+  is visible to it.
 - `review-loop` requires a clean working tree at pre-flight. Uncommitted work would be reviewed and
   then swept into the round's commit.
 
@@ -193,6 +202,13 @@ per review, and optionally the test paths for decision 8. Two lines in it are ma
 Important: P0-P2
 Test paths: tests/**, **/*.test.ts
 ```
+
+*A third line, added in implementation* (raised by Codex in the first run of task 5.4, fixed by
+hand): `Scale: P0, P1, P2, P3` — the repository's severity tags, highest first. The spec lets the
+policy's scale win over `P0`–`P3`, and without a machine-read line the helper could not apply it.
+`Important:` is read against that scale, and without it every tag but the lowest is important,
+which is `P0-P2` on the default scale. A custom scale only matters if `REVIEW.md` also tells Codex
+to tag findings with those words; a tag outside the scale is untagged.
 
 `AGENTS.md` carries the pointer: read `REVIEW.md` before reviewing, and read
 `openspec/changes/*/review.md` before raising a finding again. The plugin ships both as templates

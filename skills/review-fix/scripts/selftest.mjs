@@ -26,6 +26,7 @@ import {
   recognise,
   recordReasons,
   relativeToRepo,
+  snapshot,
 } from './codex-review.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -88,6 +89,10 @@ console.log('\nfailures are errors, never clean')
   check('a marker with no entry after it is an error', ok(payload('Verdict.\n\nReview comment:\n')).verdict === 'error')
   check('entries without a marker are an error', ok(payload(`Verdict.\n\n${entry('P2', 'A', 'a.py', '1-2')}`)).verdict === 'error')
   check('body text before any entry is an error', ok(payload('Verdict.\n\nReview comment:\n  stray body\n')).verdict === 'error')
+  const noLines = ok(payload(['V.', '', 'Review comment:', '', String.raw`- [P1] Lock leak — C:\repo\src\a.py`, '  body'].join('\n')))
+  check('an entry without a line range is an error, not a finding', noLines.verdict === 'error', JSON.stringify(noLines))
+  const oneLine = ok(payload(['V.', '', 'Review comment:', '', String.raw`- [P1] Lock leak — C:\repo\src\a.py:12`, '  body'].join('\n')))
+  check('a single line without a range is an error too', oneLine.verdict === 'error')
   check('a severity tag without a marker is not clean', ok(payload('One issue: [P1] the lock is never released.')).verdict === 'error')
   check('a location-shaped line without a marker is not clean', ok(payload('Findings\n\n1. Lock leak \u2014 src/a.py:4-9')).verdict === 'error')
   const outside = ok(payload(['V.', '', 'Review comment:', '', '- [P1] Edit the profile \u2014 C:\\Users\\me\\.bashrc:1-1', '  body'].join('\n')))
@@ -96,16 +101,21 @@ console.log('\nfailures are errors, never clean')
 
 console.log('\nseverity and order')
 {
-  const mixed = ok(payload(['Verdict.', '', 'Full review comments:', '', entry('P3', 'n1', 'a.py', '1'), '', entry('P3', 'n2', 'a.py', '2'), '', entry('P3', 'n3', 'a.py', '3'), '', entry('P0', 'leak', 'b.py', '9-12')].join('\n')))
+  const mixed = ok(payload(['Verdict.', '', 'Full review comments:', '', entry('P3', 'n1', 'a.py', '1-1'), '', entry('P3', 'n2', 'a.py', '2-2'), '', entry('P3', 'n3', 'a.py', '3-3'), '', entry('P0', 'leak', 'b.py', '9-12')].join('\n')))
   check('the highest rank goes first, equal ranks keep arrival order', JSON.stringify(mixed.fix_order) === '[4,1,2,3]', JSON.stringify(mixed.fix_order))
   check('P3 is minor by default', mixed.findings.filter((x) => x.tag === 'P3').every((x) => !x.important))
-  const odd = ok(payload(['Verdict.', '', 'Full review comments:', '', entry('P2', 'should', 'a.py', '1'), '', entry(null, 'untagged', 'a.py', '2'), '', entry('krytyczne', 'odd tag', 'a.py', '3'), '', entry('P0', 'blocker', 'a.py', '4')].join('\n')))
+  const odd = ok(payload(['Verdict.', '', 'Full review comments:', '', entry('P2', 'should', 'a.py', '1-1'), '', entry(null, 'untagged', 'a.py', '2-2'), '', entry('krytyczne', 'odd tag', 'a.py', '3-3'), '', entry('P0', 'blocker', 'a.py', '4-4')].join('\n')))
   check('untagged and unknown tags follow every tagged finding, in arrival order', JSON.stringify(odd.fix_order) === '[4,1,2,3]', JSON.stringify(odd.fix_order))
   check('an unknown tag is not mapped into the scale', odd.findings[2].in_scale === false && odd.findings[2].tag === 'KRYTYCZNE')
   check('a finding without a readable severity counts as important', odd.findings[1].important && odd.findings[2].important)
   check('no tag anywhere keeps arrival order', JSON.stringify(fixOrder([{ n: 1, tag: null }, { n: 2, tag: null }, { n: 3, tag: null }])) === '[1,2,3]')
-  const strict = ok(payload(['V.', '', 'Review comment:', '', entry('P2', 'p2', 'a.py', '1')].join('\n')), { important: ['P0', 'P1'] })
+  const strict = ok(payload(['V.', '', 'Review comment:', '', entry('P2', 'p2', 'a.py', '1-1')].join('\n')), { important: ['P0', 'P1'] })
   check('a policy line of P0-P1 makes a P2 minor', strict.findings[0].important === false)
+  const custom = parsePolicy('Scale: blocker, should, nit')
+  const own = ok(payload(['V.', '', 'Full review comments:', '', entry('nit', 'n', 'a.py', '1-1'), '', entry('blocker', 'b', 'a.py', '2-2'), '', entry('should', 's', 'a.py', '3-3'), '', entry('P1', 'p', 'a.py', '4-4')].join('\n')), { important: custom.important, scale: custom.scale })
+  check("the repository's own scale orders the fixes", JSON.stringify(own.fix_order) === '[2,3,1,4]', JSON.stringify(own.fix_order))
+  check('a P-tag outside that scale is untagged, and counts as important', own.findings[3].in_scale === false && own.findings[3].important === true)
+  check('the lowest tag of that scale is minor', own.findings[0].important === false && own.findings[2].important === true)
 }
 
 console.log('\npaths')
@@ -124,8 +134,9 @@ console.log('\npolicy lines')
   const template = parsePolicy(fs.readFileSync(path.join(ROOT, 'templates', 'REVIEW_TEMPLATE.md'), 'utf8'))
   check('the template sets P0-P2 through its own line', template.importantLine === 'P0-P2' && template.fromPolicy.includes('Important'))
   check('the template lists the default test paths', JSON.stringify(template.testPaths) === JSON.stringify(DEFAULT_TEST_PATHS) && template.fromPolicy.includes('Test paths'))
+  check('the template states the default scale', JSON.stringify(template.scale) === '["P0","P1","P2","P3"]' && template.fromPolicy.includes('Scale') && template.warnings.length === 0)
   const own = parsePolicy(fs.readFileSync(path.join(ROOT, 'REVIEW.md'), 'utf8'))
-  check("this repository's REVIEW.md parses without a warning", own.fromPolicy.length === 2 && own.warnings.length === 0, JSON.stringify(own.warnings))
+  check("this repository's REVIEW.md parses without a warning", own.fromPolicy.length === 3 && own.warnings.length === 0, JSON.stringify(own.warnings))
   const none = parsePolicy('# Review policy\n\nNo machine-read lines here.\n')
   check('a file without the lines falls back to the defaults', none.importantLine === 'P0-P2' && none.fromPolicy.length === 0 && none.testPaths.length === DEFAULT_TEST_PATHS.length)
   check('no file at all falls back to the defaults', parsePolicy(null).importantLine === 'P0-P2')
@@ -134,6 +145,15 @@ console.log('\npolicy lines')
   check('a single tag is accepted', JSON.stringify(parsePolicy('Important: P0').important) === '["P0"]')
   const bad = parsePolicy('Important: high and above')
   check('an unreadable line falls back and warns', bad.importantLine === 'P0-P2' && bad.warnings.length === 1)
+  const scaled = parsePolicy('Scale: blocker, should, nit')
+  check('a Scale line replaces the default scale', JSON.stringify(scaled.scale) === '["BLOCKER","SHOULD","NIT"]' && scaled.fromPolicy.includes('Scale'))
+  check('without an Important line, every tag but the lowest is important', scaled.importantLine === 'BLOCKER-SHOULD')
+  check('an Important line is read against that scale', JSON.stringify(parsePolicy('Scale: blocker, should, nit\nImportant: blocker').important) === '["BLOCKER"]')
+  const outside = parsePolicy('Scale: blocker, should, nit\nImportant: P0-P2')
+  check('an Important line naming tags outside the scale falls back and warns', outside.importantLine === 'BLOCKER-SHOULD' && outside.warnings.length === 1)
+  const oneTag = parsePolicy('Scale: only')
+  check('a Scale line of one tag falls back to P0-P3 and warns', oneTag.scale.length === 4 && oneTag.warnings.length === 1)
+  check('without a Scale line the default stays P0-P3', JSON.stringify(parsePolicy('Important: P0-P1').scale) === '["P0","P1","P2","P3"]')
   check('test paths are split on commas and unquoted', JSON.stringify(parsePolicy('Test paths: tests/**, `*.spec.ts`').testPaths) === '["tests/**","*.spec.ts"]')
 }
 
@@ -249,6 +269,40 @@ console.log('\nthe test guard against a real repository')
   check('narrowing REVIEW.md in the round does not unprotect a test', narrowed.unreasoned.includes('tests/test_a.py'), JSON.stringify(narrowed))
   check('a change to REVIEW.md itself is guarded like a test', narrowed.unreasoned.includes('REVIEW.md'))
   check('no REVIEW.md at the round start means the defaults', policyAt(repo, since).source === 'defaults')
+}
+
+console.log('\na round that reviews uncommitted work')
+{
+  const repo = path.join(SANDBOX, 'dirty')
+  fs.mkdirSync(path.join(repo, 'tests'), { recursive: true })
+  fs.mkdirSync(path.join(repo, 'src'))
+  const git = (...a) => spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...a], { cwd: repo, encoding: 'utf8' })
+  git('init', '-q')
+  fs.writeFileSync(path.join(repo, 'src', 'a.py'), 'def f():\n    return 1\n')
+  fs.writeFileSync(path.join(repo, 'tests', 'test_a.py'), 'def test_f():\n    assert f() == 1\n')
+  fs.writeFileSync(path.join(repo, 'REVIEW.md'), 'Test paths: tests/**\n')
+  git('add', '-A')
+  git('commit', '-qm', 'base')
+  // The person's own uncommitted work, which the round reviews: an edited test and an untracked one.
+  fs.writeFileSync(path.join(repo, 'tests', 'test_a.py'), 'def test_f():\n    assert f() == 2\n')
+  fs.writeFileSync(path.join(repo, 'tests', 'test_new.py'), 'def test_new():\n    pass\n')
+  fs.writeFileSync(path.join(repo, 'src', 'a.py'), 'def f():\n    return 2\n')
+  const indexBefore = git('diff', '--cached', '--name-only').stdout
+  const snap = snapshot(repo)
+  check('the snapshot is a tree of the working state', snap.ok && /^[0-9a-f]{40}$/.test(snap.tree), JSON.stringify(snap))
+  check('taking it leaves the real index untouched', git('diff', '--cached', '--name-only').stdout === indexBefore)
+  check('the policy reads from the snapshot tree as from a commit', JSON.stringify(policyAt(repo, snap.tree).testPaths) === '["tests/**"]')
+  // The fixer changes only source; the round stages everything it reviewed before the guard.
+  fs.writeFileSync(path.join(repo, 'src', 'a.py'), 'def f():\n    return 3\n')
+  git('add', '-A')
+  const own = guard({ repoRoot: repo, since: snap.tree, patterns: ['tests/**'], recordText: null, round: 1 })
+  check("the person's own test edits are not counted as the round's", own.ok && own.protected.length === 0, JSON.stringify(own))
+  // Now the fixer edits the person's untracked test as well.
+  fs.writeFileSync(path.join(repo, 'tests', 'test_new.py'), 'def test_new():\n    assert False\n')
+  git('add', '-A')
+  const theirs = guard({ repoRoot: repo, since: snap.tree, patterns: ['tests/**'], recordText: null, round: 1 })
+  check("a fixer edit to the person's untracked test is caught", theirs.unreasoned.includes('tests/test_new.py'), JSON.stringify(theirs))
+  check('measured from HEAD instead, the edited test would have stopped the round', !guard({ repoRoot: repo, since: 'HEAD', patterns: ['tests/**'], recordText: null, round: 1 }).ok)
 }
 
 console.log('\nlocating the plugin')

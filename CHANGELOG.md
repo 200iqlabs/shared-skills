@@ -7,7 +7,8 @@
 
 ### Added
 - **Review policy templates** — `templates/REVIEW_TEMPLATE.md` (three review passes, the `P0`–`P3`
-  scale, a cap of five minor findings, and the machine-read `Important:` and `Test paths:` lines)
+  scale, a cap of five minor findings, and the machine-read `Scale:`, `Important:` and `Test paths:`
+  lines)
   and `templates/AGENTS_REVIEW_POINTER.md` (the section that points Codex at `REVIEW.md` and at the
   review records). This repository now carries its own `REVIEW.md` and `AGENTS.md`.
 - **Behavioural eval cases for the review skills** in `evals/cases/`, run with
@@ -31,11 +32,14 @@
   judges each finding as fixed, rejected (with a one-sentence reason) or a repeat of an earlier
   rejection, verifies, commits and pushes. Every finding and its outcome are appended to
   `openspec/changes/<change>/review.md` and committed with the round, so the pull request carries
-  the record and a rejected finding is not judged again in a later round or run. Only a fixed
+  the record and a rejected finding is not judged again in a later round or run. Fixes follow the
+  repository's severity scale (`REVIEW.md`'s `Scale:` line, `P0`–`P3` by default). Only a fixed
   important finding starts another review — `P0`–`P2` by default, or the line `REVIEW.md` draws —
   and the loop ends as `clean`, `minor-only`, `no-fixes`, `max-iterations` or `error`. A review that
   failed, timed out or could not be read is always an `error`, never clean. A round that changes an
-  existing test without a reason in the record ends as an `error` with nothing committed. The final
+  existing test without a reason in the record ends as an `error` with nothing committed. Without a
+  pull request, a pass over a dirty working tree commits the reviewed work together with any fixes,
+  every round. The final
   report lists findings that read as repository conventions as candidate `CLAUDE.md` rules, without
   writing them. The sign-off issue is unchanged. To keep using the skills: install the Codex plugin,
   run `/codex:setup`, and add `REVIEW.md` and the `AGENTS.md` pointer from the templates below;

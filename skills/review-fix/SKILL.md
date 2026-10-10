@@ -80,19 +80,34 @@ gh pr view <PR> --json number,url,headRefName,baseRefName,state   # without <PR>
   The review target is `--base origin/<baseRefName>`, and the round ends with a push.
 - **There is no pull request** (`gh pr view` reports none for this branch): the target is
   `--scope auto` — the working tree when it is dirty, otherwise the branch against the default
-  branch. The round commits and does not push. When the working tree was the target, the commit
-  carries the reviewed work together with the fixes; say so in the summary. If `gh` failed for any
-  other reason — not signed in, no network — say so, because a pull request may exist that this
-  pass will then not push to.
+  branch. The round commits and does not push. If `gh` failed for any other reason — not signed in,
+  no network — say so, because a pull request may exist that this pass will then not push to.
 
-2.3. **The record.** With a change, the record is `openspec/changes/<change>/review.md`. Read all
-of it now: every earlier round, whoever ran it. The next round number is one more than the highest
-`## Round N` in it, or 1. Note the round's starting commit — the test guard in step 8 compares
-against it:
+  **When the dirty working tree is the target**, the reviewed work is part of the round: the round
+  always ends in a commit that carries it, together with any fixes, even when nothing was fixed
+  (step 9). Say so before the review, so nobody is surprised to find their uncommitted work
+  committed.
+
+2.3. **The record and the starting point.** With a change, the record is
+`openspec/changes/<change>/review.md`. Read all of it now: every earlier round, whoever ran it. The
+next round number is one more than the highest `## Round N` in it, or 1.
+
+Note the round's starting point; the test guard in step 8 compares against it. Normally that is the
+commit:
 
 ```bash
 git rev-parse HEAD
 ```
+
+When the dirty working tree is the target, it is a snapshot of that working tree instead — the
+helper writes it as a tree object, untracked files included, without touching the index:
+
+```bash
+node "$HELPER" snapshot          # → {"ok": true, "tree": "<sha>"}
+```
+
+Measured from `HEAD`, the person's own uncommitted edits to tests would count as the round's and
+stop it in step 8; measured from the snapshot, only what the fixer changed counts.
 
 ### 3. Review
 
@@ -112,7 +127,8 @@ The `verdict` decides everything after this:
   never a clean review**: "Codex found nothing" is a claim that needs a review that finished and
   was read.
 - **`clean`** — nothing to fix. With a change, the round is still recorded (step 7) and committed,
-  so the pull request shows that a review happened and what it said.
+  so the pull request shows that a review happened and what it said. When the working tree was the
+  target, the reviewed work is committed too (step 9).
 - **`findings`** — each one carries `tag`, `title`, `path` (repository-relative), `start`/`end`,
   `body`, and `important`; `fix_order` is the order to work in.
 
@@ -146,16 +162,17 @@ and does not reply to them.
 
 ### 5. Apply the fixes, highest severity first
 
-Work in `fix_order`. It ranks by `P0` > `P1` > `P2` > `P3` and keeps three rules, so the order says
-no more than the reviewer did:
+Work in `fix_order`. It ranks by the repository's scale — `REVIEW.md`'s `Scale:` line, or
+`P0` > `P1` > `P2` > `P3` without one — and keeps three rules, so the order says no more than the
+reviewer did:
 
 - equal severity keeps arrival order;
 - a tag the scale does not define is treated as untagged, not guessed into a neighbouring rank;
 - untagged findings follow every tagged one, among themselves in arrival order — and where nothing
   is tagged, the arrival order stands.
 
-If `REVIEW.md` defines a scale of its own, order by that scale under the same three rules. If the
-run is cut short, what is left undone should be the least serious work.
+The `review` output names the scale and the importance line it applied (`policy`). If the run is cut
+short, what is left undone should be the least serious work.
 
 Edit only files inside the repository, and only for findings judged **fix**.
 
@@ -203,10 +220,12 @@ Without a change, write nothing and say in the summary that no review record was
 ### 8. Guard the existing tests
 
 ```bash
-node "$HELPER" guard --since <round-start-sha> --record openspec/changes/<change>/review.md --round <N>
+node "$HELPER" guard --since <round start: the sha, or the snapshot tree> --record openspec/changes/<change>/review.md --round <N>
 ```
 
-(Without a change, leave out `--record` and `--round`.) The helper lists every file the round
+(Without a change, leave out `--record` and `--round`. When the working tree was the target, run
+`git add -A` first: the round commits everything it reviewed anyway, and an untracked file the
+fixer edited is only visible to the guard once it is staged.) The helper lists every file the round
 modified, deleted or renamed — in the index or the working tree — that existed at the round's start
 and matches the test paths: the `Test paths:` line of `REVIEW.md` **as it stood at the round's
 start**, or the defaults (`**/test/**`, `**/tests/**`, `*.test.*`, `*.spec.*`, `test_*.py`,
@@ -223,7 +242,8 @@ tests is never restricted.
 
 ### 9. Commit
 
-Stage only what the round changed. Two commits, so the record can name the fix:
+Stage only what the round changed — and, when the working tree was the target, everything that was
+reviewed — leaving the record out of the first commit. Two commits, so the record can name the fix:
 
 1. **The fixes**, when there are any:
 
@@ -235,6 +255,11 @@ Stage only what the round changed. Two commits, so the record can name the fix:
    Co-Authored-By: <the co-author line this session is configured to use>
    ```
 
+   When the working tree was the target, this commit is made **every round**, fixes or not, because
+   it also carries the work that was reviewed. Its subject then says so —
+   `chore: commit the work reviewed in Codex review round <N>`, with the fixes listed below it — and
+   the summary names the files it took in.
+
 2. **The record**, with each `fixed` row completed as `fixed in <short sha of commit 1>`:
 
    ```
@@ -243,8 +268,8 @@ Stage only what the round changed. Two commits, so the record can name the fix:
 
 A round that fixed nothing — everything rejected or repeated, or a clean review — still commits its
 record, alone. That commit is how the decision reaches the pull request, and how the next review
-and the next run find it. Without a change there is only the first commit, and only if something
-was fixed.
+and the next run find it. Without a change there is no record: there is only the first commit — when
+something was fixed, or when the working tree was the target.
 
 ### 10. Push
 

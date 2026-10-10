@@ -62,10 +62,20 @@ has changed since that decision; if it has, say what changed.
 
 ## Machine-read lines
 
-The review skills read the two lines below exactly as written: `Important:` takes one tag or a
-range (`P0-P1`, `P0-P2`); `Test paths:` takes comma-separated globs, where a glob without a `/`
-matches a file name anywhere. Existing files on those paths may change in a review round only with
-a reason recorded in `review.md`. Without these lines the skills use the values shown.
+The review skills read the three lines below exactly as written:
 
+- `Scale:` — the severity tags, highest first, comma-separated, without hyphens. Change it only if
+  this file also tells the reviewer to tag findings with those words; Codex uses `P0`–`P3` by
+  itself. Fixes are ordered by this scale, and a tag outside it is treated as untagged.
+- `Important:` — one tag or a range of that scale (`P0-P1`, `P0-P2`). Findings in it start another
+  review round; the rest are fixed in passing or recorded. Without the line, every tag but the
+  lowest is important.
+- `Test paths:` — comma-separated globs, where a glob without a `/` matches a file name anywhere.
+  Existing files on those paths, and this file itself, may change in a review round only with a
+  reason recorded in `review.md`.
+
+Without these lines the skills use the values shown.
+
+Scale: P0, P1, P2, P3
 Important: P0-P2
 Test paths: **/test/**, **/tests/**, **/__tests__/**, *.test.*, *.spec.*, test_*.py, *_test.py, *_test.go
