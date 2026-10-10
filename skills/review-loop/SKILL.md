@@ -330,7 +330,7 @@ to `cat`, and the gate is opened empty.
 `$SCRATCH/report.md`:
 
 - `clean`: *The latest Codex review found nothing on the branch — every finding of earlier rounds is fixed or recorded in `review.md`.*
-- `minor-only`: *The latest Codex review raised only findings below the importance line (`<Important line>`); they were fixed or recorded, and none of them justified another review.*
+- `minor-only`: *The latest Codex review raised only findings below the importance line (`REVIEW.md`'s `Important:` line, `P0-P2` without one); they were fixed or recorded, and none of them justified another review.*
 - `no-fixes`: *Every important finding of the latest review was rejected or repeated an earlier rejection — the reasons are in `review.md`. Read them: a rejection a person disagrees with is reopened by deleting its row and running the loop again.*
 - `max-iterations`: *Hit `--max <N>` iteration cap after a round that fixed an important finding, so the fix itself has not been reviewed. Review it manually or re-run with a higher `--max`.*
 - `error`: *Loop aborted due to an error. Manual intervention required — the error text and the tail of the run log follow directly below this line.*
