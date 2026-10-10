@@ -63,8 +63,16 @@ Measured 2026-10-10, Claude Code 2.1.292, `claude-opus-5-5`, judge `claude-haiku
 | 22 | `22-reasoned-test-change-commits` | 3.5 | 1.00 | 1.00 | a reasoned test change commits |
 | 23 | `23-new-test-commits-without-a-reason` | 3.5 | 1.00 | 1.00 | a new test needs no reason |
 | 24 | `24-opinion-only-goes-to-codex-review` | 3.6 | 1.00 | 0.33 | an opinion with no changes goes to `/codex:review` |
+| 25 | `25-reviewed-working-tree-is-committed-even-when-clean` | 5.4 | 1.00 | 0.25 | no PR, dirty tree, clean review: the reviewed work is still committed, not pushed |
+| 26 | `26-repository-scale-orders-the-fixes` | 5.4 | 1.00 | 1.00 | `Scale: blocker, should, nit` orders the fixes; a `[P1]` outside it goes last |
 
 **All 18 cases pass on the branch, 3 runs each (score 1.00 every time); 10 fail against the base.**
+Cases 25 and 26 came later, from the Codex findings of task 5.4 (fixed by hand at the owner's
+request, sign-off issue #23): both 1.00 in 3 runs; 25 fails against the base, 26 does not, because
+the old text already put the repository's own scale first. After those fixes the whole suite was
+run once more as a regression check: every case at 1.00 except 12, whose answer was right but
+speculated, from the eval sandbox's own git state, that the branch check would stop the pass. Its
+prompt now says the run is on the pull request's branch; 1.00 in 3 runs since.
 The eight that also pass against the base (8, 13, 14, 17, 18, 21–23) state a failure, a guard
 result or a design reason so plainly in the prompt that a careful agent reaches the decision
 without the new text. They stay as guards against regression, not as evidence of the change.

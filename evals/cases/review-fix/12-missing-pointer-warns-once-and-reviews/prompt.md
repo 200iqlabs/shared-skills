@@ -6,7 +6,7 @@ expected_outcome: 'One warning naming REVIEW_TEMPLATE.md / AGENTS_REVIEW_POINTER
 max_turns: 8
 allowed_tools: [Skill, Read, Glob, Grep]
 ---
-Korzystam ze skilla ss:review-fix na PR 12 (otwarty, czyste drzewo robocze). `node "$HELPER" preflight` zakończył się kodem 0:
+Korzystam ze skilla ss:review-fix na PR 12 (otwarty, jestem na jego gałęzi `change/add-auth`, czyste drzewo robocze). `node "$HELPER" preflight` zakończył się kodem 0:
 
 ```json
 {"ok": true, "version": "1.0.2", "codex": "codex-cli 0.144.1; advanced runtime available", "pointer": {"ok": false, "missing": ["AGENTS.md", "REVIEW.md"]}}
