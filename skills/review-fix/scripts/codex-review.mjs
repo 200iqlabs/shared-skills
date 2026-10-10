@@ -55,12 +55,16 @@ function fold(s) {
   return process.platform === 'win32' ? s.toLowerCase() : s
 }
 
+// `..` segments are resolved before the comparison, so `<root>/../elsewhere` is outside, and a
+// relative path that climbs out of the root is outside too.
 export function relativeToRepo(p, repoRoot) {
-  const file = slash(p)
-  if (!repoRoot) return { path: file, outside: false }
-  const root = slash(repoRoot)
+  const file = path.posix.normalize(slash(p))
+  const climbs = (rel) => rel === '..' || rel.startsWith('../')
+  if (!repoRoot) return { path: file, outside: climbs(file) }
+  const root = path.posix.normalize(slash(repoRoot))
   if (fold(file).startsWith(fold(root) + '/')) return { path: file.slice(root.length + 1), outside: false }
-  return { path: file, outside: /^([A-Za-z]:\/|\/)/.test(file) }
+  const absolute = /^([A-Za-z]:\/|\/)/.test(file)
+  return { path: file, outside: absolute || climbs(file) }
 }
 
 function repoRootOf(dir) {
@@ -182,6 +186,14 @@ export function parsePolicy(text) {
     }
   }
   return out
+}
+
+// The test guard reads the policy as it stood when the round started, so a round cannot narrow the
+// paths that protect it. Without a REVIEW.md at that commit, the defaults apply.
+export function policyAt(repoRoot, ref) {
+  const r = spawnSync('git', ['show', `${ref}:REVIEW.md`], { cwd: repoRoot, encoding: 'utf8' })
+  const text = r.status === 0 ? r.stdout : null
+  return { source: text === null ? 'defaults' : `${ref}:REVIEW.md`, ...parsePolicy(text) }
 }
 
 export function readPolicy(repoRoot, file) {
@@ -320,17 +332,36 @@ export function recordReasons(recordText, round) {
   return reasons
 }
 
-export function guard({ repoRoot, since, patterns, recordText, round }) {
-  const r = spawnSync('git', ['diff', '--name-status', '-M', since], { cwd: repoRoot, encoding: 'utf8' })
-  if (r.status !== 0) return { ok: false, error: `git diff against ${since} failed: ${clip(r.stderr)}`, protected: [], reasoned: [], unreasoned: [] }
-  const changed = []
-  for (const line of r.stdout.split(/\r?\n/).filter(Boolean)) {
-    const [status, from] = line.split('\t')
-    // Added files are new tests and never restricted; a rename counts from the path that existed.
-    if (/^[MDTR]/.test(status)) changed.push({ status: status[0], path: slash(from) })
+// Files that existed at `since` and the round modified, deleted or renamed — read from the index
+// (what a commit takes) and from the working tree (what was edited), NUL-separated so git never
+// quotes a path the patterns would then fail to match. Added files are new and never restricted;
+// a rename counts from the path that existed.
+export function changedSince(repoRoot, since) {
+  const changed = new Map()
+  for (const args of [
+    ['diff', '--cached', '--name-status', '-z', '-M', since],
+    ['diff', '--name-status', '-z', '-M', since],
+  ]) {
+    const r = spawnSync('git', args, { cwd: repoRoot, encoding: 'utf8' })
+    if (r.status !== 0) return { error: `git ${args.join(' ')} failed: ${clip(r.stderr)}` }
+    const parts = r.stdout.split('\0')
+    for (let i = 0; i < parts.length && parts[i]; ) {
+      const status = parts[i]
+      const twoPaths = /^[RC]/.test(status)
+      const from = parts[i + 1]
+      i += twoPaths ? 3 : 2
+      if (/^[MDTR]/.test(status) && from !== undefined) changed.set(slash(from), status[0])
+    }
   }
+  return { changed: [...changed].map(([path, status]) => ({ status, path })) }
+}
+
+export function guard({ repoRoot, since, patterns, recordText, round }) {
+  const diff = changedSince(repoRoot, since)
+  if (diff.error) return { ok: false, error: diff.error, protected: [], reasoned: [], unreasoned: [] }
   const reasons = recordReasons(recordText, round)
-  const prot = changed.filter((c) => isTestPath(c.path, patterns))
+  // REVIEW.md defines the test paths, so a change to it is guarded like a test.
+  const prot = diff.changed.filter((c) => isTestPath(c.path, patterns) || c.path === 'REVIEW.md')
   const reasoned = prot.filter((c) => reasons.has(c.path)).map((c) => ({ path: c.path, ...reasons.get(c.path) }))
   const unreasoned = prot.filter((c) => !reasons.has(c.path)).map((c) => c.path)
   return { ok: unreasoned.length === 0, protected: prot, reasoned, unreasoned, error: null }
@@ -411,7 +442,7 @@ function main(argv) {
   }
   if (cmd === 'guard') {
     if (!o.since) return print({ error: 'guard needs --since SHA' }, 1)
-    const policy = readPolicy(repoRoot, o.policy)
+    const policy = o.policy ? readPolicy(repoRoot, o.policy) : policyAt(repoRoot, String(o.since))
     let recordText = null
     if (o.record) {
       try {
@@ -421,7 +452,7 @@ function main(argv) {
       }
     }
     const res = guard({ repoRoot, since: String(o.since), patterns: policy.testPaths, recordText, round: Number(o.round || 0) })
-    return print({ ...res, testPaths: policy.testPaths }, res.error ? 1 : res.ok ? 0 : 4)
+    return print({ ...res, testPaths: policy.testPaths, policy: policy.source }, res.error ? 1 : res.ok ? 0 : 4)
   }
   return print({ error: `unknown subcommand ${cmd ?? '(none)'}; use preflight, review, parse, policy or guard` }, 1)
 }

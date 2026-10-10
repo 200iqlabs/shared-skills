@@ -207,9 +207,11 @@ node "$HELPER" guard --since <round-start-sha> --record openspec/changes/<change
 ```
 
 (Without a change, leave out `--record` and `--round`.) The helper lists every file the round
-modified, deleted or renamed that existed at the round's start and matches the test paths —
-`REVIEW.md`'s `Test paths:` line, or the defaults (`**/test/**`, `**/tests/**`, `*.test.*`,
-`*.spec.*`, `test_*.py`, `*_test.py`, `*_test.go`, …).
+modified, deleted or renamed — in the index or the working tree — that existed at the round's start
+and matches the test paths: the `Test paths:` line of `REVIEW.md` **as it stood at the round's
+start**, or the defaults (`**/test/**`, `**/tests/**`, `*.test.*`, `*.spec.*`, `test_*.py`,
+`*_test.py`, `*_test.go`, …). `REVIEW.md` itself is guarded the same way, since it defines what the
+guard protects: a round cannot narrow the paths and pass its own check.
 
 Exit 4 means a protected test changed without a `Test changes` entry naming a finding of this round.
 The round ends as an **error before anything is committed**, naming the files. Leave the edits in

@@ -253,6 +253,13 @@ test. The paths come from `REVIEW.md`, or by default from `**/test/**`, `**/test
 `**/__tests__/**`, `*.test.*`, `*.spec.*`, `test_*.py`, `*_test.py` and `*_test.go`. A protected
 test passes only with a record row naming the finding and the reason.
 
+*Hardened after a security review of the pushed branch.* The changed files are read from the index
+and the working tree both (a commit takes the index, so a test staged and then restored in the
+working tree would otherwise pass), with `-z` so git never quotes a path the patterns then fail to
+match. The test paths come from `REVIEW.md` as it stood at the round's start, and `REVIEW.md` is
+itself guarded like a test — otherwise a round could narrow the paths and pass its own check. The
+same review led the parser to resolve `..` before deciding a finding lies inside the repository.
+
 *Alternative.* A `PreToolUse` hook would be deterministic before the edit rather than before the
 commit. A hook shipped in this plugin, however, would run in every session of every user, not only
 during a review round, and the plugin's hooks must never block.

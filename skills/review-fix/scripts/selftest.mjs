@@ -18,6 +18,7 @@ import {
   fixOrder,
   guard,
   isTestPath,
+  policyAt,
   locate,
   parsePolicy,
   pickInstall,
@@ -113,6 +114,9 @@ console.log('\npaths')
   if (process.platform === 'win32') check('the drive letter case does not matter on Windows', relativeToRepo('c:\\Repo\\src\\a.py', 'C:/repo').path === 'src/a.py')
   const outside = relativeToRepo('D:\\elsewhere\\a.py', 'C:/repo')
   check('a path outside the repository is kept and flagged', outside.outside && outside.path === 'D:/elsewhere/a.py')
+  check('a path that climbs out through .. is outside', relativeToRepo(String.raw`C:\repo\..\elsewhere\a.py`, 'C:/repo').outside)
+  check('a relative path that climbs out is outside', relativeToRepo('../elsewhere/a.py', 'C:/repo').outside)
+  check('a .. that stays inside is resolved', relativeToRepo(String.raw`C:\repo\src\..\lib\a.py`, 'C:/repo').path === 'lib/a.py')
 }
 
 console.log('\npolicy lines')
@@ -214,6 +218,37 @@ console.log('\nthe test guard against a real repository')
   check('with a reason for each, the guard passes', reasoned.ok && reasoned.reasoned.length === 2, JSON.stringify(reasoned))
   const wrong = guard({ repoRoot: repo, since: 'not-a-sha', patterns: DEFAULT_TEST_PATHS, recordText: null, round: 1 })
   check('a git failure is reported, not read as "nothing changed"', wrong.ok === false && wrong.error)
+
+  // A second round, starting clean, for the paths the first guard could not see.
+  git('add', '-A')
+  git('commit', '-qm', 'round 1')
+  const since2 = git('rev-parse', 'HEAD').stdout.trim()
+  fs.writeFileSync(path.join(repo, 'tests', 'test_a.py'), 'def test_f():\n    assert f() == 3\n')
+  git('add', 'tests/test_a.py')
+  git('checkout', '--', 'tests/test_a.py')
+  const staged = guard({ repoRoot: repo, since: since2, patterns: DEFAULT_TEST_PATHS, recordText: null, round: 2 })
+  check('a test change staged and then reverted in the working tree is still caught', staged.unreasoned.includes('tests/test_a.py'), JSON.stringify(staged))
+  git('reset', '-q', '--hard', since2)
+  fs.writeFileSync(path.join(repo, 'tests', 'test_\u00e9t\u00e9.py'), 'def test_e():\n    pass\n')
+  git('add', '-A')
+  git('commit', '-qm', 'a test with an accented name')
+  const since3 = git('rev-parse', 'HEAD').stdout.trim()
+  fs.writeFileSync(path.join(repo, 'tests', 'test_\u00e9t\u00e9.py'), 'def test_e():\n    assert False\n')
+  const accented = guard({ repoRoot: repo, since: since3, patterns: DEFAULT_TEST_PATHS, recordText: null, round: 3 })
+  check('a path git would quote is still matched', accented.unreasoned.includes('tests/test_\u00e9t\u00e9.py'), JSON.stringify(accented))
+  git('reset', '-q', '--hard', since3)
+  fs.writeFileSync(path.join(repo, 'REVIEW.md'), 'Test paths: tests/**\n')
+  git('add', '-A')
+  git('commit', '-qm', 'policy')
+  const since4 = git('rev-parse', 'HEAD').stdout.trim()
+  fs.writeFileSync(path.join(repo, 'REVIEW.md'), 'Test paths: nothing/**\n')
+  fs.writeFileSync(path.join(repo, 'tests', 'test_a.py'), 'def test_f():\n    assert True\n')
+  const atStart = policyAt(repo, since4)
+  check('the guard reads the policy as it stood at the round start', JSON.stringify(atStart.testPaths) === '["tests/**"]', JSON.stringify(atStart.testPaths))
+  const narrowed = guard({ repoRoot: repo, since: since4, patterns: atStart.testPaths, recordText: null, round: 4 })
+  check('narrowing REVIEW.md in the round does not unprotect a test', narrowed.unreasoned.includes('tests/test_a.py'), JSON.stringify(narrowed))
+  check('a change to REVIEW.md itself is guarded like a test', narrowed.unreasoned.includes('REVIEW.md'))
+  check('no REVIEW.md at the round start means the defaults', policyAt(repo, since).source === 'defaults')
 }
 
 console.log('\nlocating the plugin')
