@@ -28,9 +28,28 @@ Coding-agent skills for PR review, review loops, and OpenSpec `/goal` prep.
 
 | Skill | Description | Status |
 |-------|-------------|--------|
-| `ss:review-fix` | Fetch PR review comments, fix valid issues, commit, push, reply on GitHub (`/ss:review-fix [PR]`) | ✅ Active |
-| `ss:review-loop` | Automated Claude↔Copilot review cycle on a PR until stable (`/ss:review-loop <PR> <change>`) | ✅ Active |
+| `ss:review-fix` | One Codex review of the branch, then fix what holds up, reject the rest with a reason, verify, commit, push when there is a PR; records every finding in the change's `review.md` (`/ss:review-fix [PR]`) | ✅ Active |
+| `ss:review-loop` | Automated Claude↔Codex review cycle on a PR — review-fix rounds until nothing important is left, then a sign-off issue only a person closes (`/ss:review-loop <PR> <change>`) | ✅ Active |
 | `ss:prepare-openspec-goal` | Formulate a transcript-checkable completion condition for `/goal` implementing an OpenSpec change | ✅ Active |
+
+#### Codex review prerequisite
+
+`review-fix` and `review-loop` review through the Codex plugin for Claude Code, and stop with a
+pointer to `/codex:setup` when it is missing or signed out. There is no Copilot path any more.
+
+1. `claude plugin install codex@openai-codex`, then `/codex:setup`. It needs a ChatGPT plan that
+   includes Codex; every review round spends that plan's allowance, which `--max` bounds in
+   `review-loop`. The skills were verified against plugin **1.0.2** with codex-cli **0.144.1**.
+2. Copy [`templates/REVIEW_TEMPLATE.md`](templates/REVIEW_TEMPLATE.md) to `REVIEW.md` in your
+   repository root and adapt it, and add the section from
+   [`templates/AGENTS_REVIEW_POINTER.md`](templates/AGENTS_REVIEW_POINTER.md) to `AGENTS.md`. Codex
+   reads `AGENTS.md` on its own; the pointer is what makes it apply your policy and respect the
+   findings an earlier round rejected. Without it the skills warn once and review anyway.
+3. Findings and their outcomes are recorded in `openspec/changes/<change>/review.md` and committed
+   with each round, so the pull request carries the whole record.
+
+> Repositories that still have **Copilot's automatic review** switched on keep receiving its
+> comments; neither skill reads them. Switching it off is a per-repository setting on GitHub.
 
 ## Commands
 
