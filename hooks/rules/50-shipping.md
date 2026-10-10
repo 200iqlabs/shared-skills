@@ -7,8 +7,8 @@ Branch, pull request, review — in that order, by default, every time.
 2. **Commit on the branch.** Never on the default branch.
 3. **Open a pull request** once the work is done.
 4. **Run the repository's review flow on it** before anything is merged. Here that is
-   `/ss:review-loop <PR> <change>`, or `/ss:review-fix <PR>` for a single pass over comments
-   already left.
+   `/ss:review-loop <PR> <change>`, or `/ss:review-fix <PR>` for a single Codex review-and-fix
+   pass.
 5. **Merge only after the review has settled**, and release or publish only after the merge.
 
 **One exception: the user asks for the direct route.** Then take it — and say so in one line

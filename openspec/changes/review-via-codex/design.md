@@ -131,9 +131,16 @@ review itself ends as `error`, never as clean.
 The sub-agent's return line grows to carry what the new stop rule reads:
 
 ```
-{"important_fixed": <int>, "minor_fixed": <int>, "rejected": <int>, "repeated": <int>,
- "clean": <bool>, "pushed_commit_sha": <"40-char sha"|null>, "error": <"message"|null>}
+{"important_found": <int>, "important_fixed": <int>, "minor_fixed": <int>, "rejected": <int>,
+ "repeated": <int>, "clean": <bool>, "pushed_commit_sha": <"40-char sha"|null>,
+ "conventions": [<"rule">, ...], "error": <"message"|null>}
 ```
+
+*Two fields added in implementation.* `important_found` is what tells `minor-only` from `no-fixes`
+in decision 7: with only the fixed and rejected counts, a round that rejected one finding cannot
+say whether that finding was important. `conventions` carries the candidate `CLAUDE.md` rules from
+each round to the final report, which the prose above the line would otherwise have to be mined
+for.
 
 ### 5. The review record: `openspec/changes/<change>/review.md`
 
@@ -156,7 +163,15 @@ Checks: `node hooks/selftest.mjs` — 14/14 passed
   location and points at the rejection it matched. A person reopens a finding by deleting that
   rejection.
 - **Committed every round**, alone when nothing else changed, so the pull request carries the whole
-  record and the next run and the next review read it.
+  record and the next run and the next review read it. *In implementation* the record always gets
+  its own commit, after the fix commit: a `fixed in <sha>` row cannot name the commit that contains
+  it. The round's rows are written before the fix commit (the test guard reads its `Test changes`
+  entries from them), and the fix sha is filled in before the record commit.
+- **Test changes** are listed under the round's table as `` - `path` — R2-1: why ``, one line per
+  existing test file the round changed; the test guard (decision 8) accepts a line only when it
+  names a finding of the same round.
+- **A clean round** is recorded too, as `No findings.` and the first sentence of Codex's verdict, so
+  the pull request shows that the last review happened and what it said.
 - **Archived with the change.** `openspec archive` moves the directory, record included. **Task 1.3
   confirmed it** (openspec 1.13.2, scratch copy of this repository): with a `review.md` beside the
   artifacts, `openspec validate review-via-codex --strict` passes; `openspec archive
