@@ -42,19 +42,23 @@
 ## 3. `prd`: four `tier-write` cases
 
 - [ ] 3.1 Write synthetic fixtures under each case directory: `mentormatch` (Track Tech),
-  `klasa` (non-technical founder, Lovable, Track Builder), `thin` (two lines) and
+  `klasa` (non-technical founder, Lovable, Track Builder), `thin` (two lines),
   `mikrobiota-split` (`icp.md`, `positioning.md`, `gtm-plan.md`, `landing-brief.md` with a Brand
-  section: `#0E7C66`, `#E8B04B`, Source Sans 3, voice "Masz kontrolę"). Each input carries one
-  landing-page sentence that the PRD must reproduce verbatim. No real person, company or client
-  appears. Verify that each string a grader matches occurs exactly once in its fixtures
+  section: `#0E7C66`, `#E8B04B`, Source Sans 3, voice "Masz kontrolę") and `scope-cut` (a
+  complete input whose founder lists booking, payments and chat as must-have). Each input carries
+  one landing-page sentence that the PRD must reproduce verbatim. No real person, company or
+  client appears. Verify that each string a grader matches occurs exactly once in its fixtures
   (`grep -c`).
-- [ ] 3.2 Write the four cases from the design's `prd` table. Each gets frontmatter
-  `name: prd-<id>-<slug>`, tags `[prd, tier-write]` (`smoke` on case 2), and the prompt starting
-  with `/ss:prd`. Each gets a `case.yaml` with a `scaffold.sh` that copies
-  `$(dirname "$0")/fixtures/.` and fails on a missing file, plus graders as listed. Verify that
-  `claude plugin eval . --case 'prd-*' --tag tier-write --scaffold --allow-tools Write Edit
-  --runs 1 --ablation none --model claude-opus-5-5 --judge-model claude-haiku-5-5` loads all
-  four cases without a load error and that every grader prints a verdict.
+- [ ] 3.2 Write the five cases from the design's `prd` table (old 0–3 and the new case 4). Each
+  gets frontmatter `name: prd-<id>-<slug>`, tags `[prd, tier-write]` (`smoke` on case 2), and the
+  prompt starting with `/ss:prd`. Each gets a `case.yaml` with a `scaffold.sh` that copies
+  `$(dirname "$0")/fixtures/.` and fails on a missing file, plus graders as listed. Every grader on
+  `prd.md` is a `regex` or `file_exists`, the one-user-story check included (design D5). Verify
+  that `claude plugin eval . --case 'prd-*' --tag tier-write --scaffold --allow-tools Write Edit
+  --runs 1 --ablation none --model claude-opus-5-5 --judge-model claude-haiku-5-5` loads all five
+  cases without a load error and that every grader prints a verdict. Also check the
+  one-user-story pattern against two hand-written `prd.md` samples, one with one story in §3 and
+  one with two.
 - [ ] 3.3 Calibrate. Run the same command with `--runs 3 --ablation with-without`, then summarise
   it with the tool from group 2. Loosen any pattern that failed on output a person judges
   correct. Rewrite any case whose no-plugin arm reaches 0.8. Create `skills/prd/evals/README.md`
@@ -62,7 +66,7 @@
   Claude Code version. Verify that the README table is complete and that every case below 0.8
   WITH, or at or above 0.8 W/OUT, has a written reason.
 - [ ] 3.4 Delete `skills/prd/evals/evals.json`. Verify that `git ls-files skills/prd/evals` lists
-  only `README.md` and that the README maps ids 0–3.
+  only `README.md`, and that the README maps ids 0–3 and names case 4 as new.
 - [ ] 3.5 Write `evals/README.md`. It covers what the suite is, the three tiers and where each
   runs, and the local commands (`tier-read`; `tier-write` with `--scaffold --allow-tools Write
   Edit`), each with `--eval-dir evals/cases` and the pinned models. It explains how to add a case
@@ -92,25 +96,41 @@
 - [ ] 4.4 Delete `skills/linkedin-content/evals/evals.json`. Verify that `git ls-files` lists only
   `README.md` in that directory.
 
-## 5. `review-loop` and `review-fix`: thirteen `tier-read` decision cases
+## 5. `review-loop` and `review-fix`: decision cases
 
-- [ ] 5.1 Write `review-loop` cases 4, 5 and 6–15 from the design's table. Each prompt names
-  `ss:review-loop` in prose, states the run's state, asks what the skill does, and says not to run
-  any command. Each gets `allowed_tools: [Skill, Read, Glob, Grep]`, a `tool_used: Skill`
-  indicator, and graders that match only step 6.4 strings for the sign-off cases. Case 4 gets a
-  read-only scaffold of `openspec/changes/` with an archived near-name. Verify that a `--runs 1`
-  run with `--case 'review-loop-*' --tag tier-read` loads all twelve and that the indicator fires
+Which cases this group migrates depends on the merge order (design D11). Before starting, check
+whether `review-via-codex` has merged: its pull request is merged, or `origin/master` no longer
+mentions `requested_reviewers` in `skills/review-loop/SKILL.md`.
+
+- [ ] 5.1 Write the `review-loop` cases as decision cases. **If `review-via-codex` has not
+  merged:** the twelve from the design's table (4, 5, 6–15). **If it has:** every case in
+  `review-loop`'s `evals.json` at that point, kept and new alike, with graders written by the same
+  rules. Each prompt names `ss:review-loop` in prose, states the run's state, asks what the skill
+  does, and says not to run any command. Each case gets `allowed_tools: [Skill, Read, Glob,
+  Grep]`, a `tool_used: Skill` indicator, at least one deterministic grader on the answer, and,
+  for the sign-off cases, graders that match only step 6.4 strings. Case 4 gets a read-only
+  scaffold of `openspec/changes/` with an archived near-name. Verify that a `--runs 1` run with
+  `--case 'review-loop-*' --tag tier-read` loads every case written and that the indicator fires
   in each with-arm run.
-- [ ] 5.2 Write `review-fix` case 2 with a read-only scaffold (`hooks/selftest.mjs`, `openspec/`,
-  no `package.json`). Verify as in 5.1.
-- [ ] 5.3 Calibrate both skills once with the no-plugin arm, then record WITH/W/OUT/Δ and cost in
-  their `evals/README.md`. Replace the "Running the behavioural evals" section with the plugin-eval
-  commands and add the mapping table: migrated, retired by `review-via-codex` with its task number,
-  or shell variant pending. Verify that every id in the old files appears in exactly one group.
-- [ ] 5.4 Remove the migrated ids from both `evals.json` files: `review-loop` keeps 1–3 and
-  16–22, and `review-fix` keeps 1 and 3–9. If `review-via-codex` has merged before this task, skip
-  this edit and follow that change's state instead. Verify that both files parse and hold exactly
-  the ids the README lists as retiring.
+- [ ] 5.2 Write the `review-fix` cases the same way. **If `review-via-codex` has not merged:**
+  case 2, with a read-only scaffold (`hooks/selftest.mjs`, `openspec/`, no `package.json`).
+  **If it has:** every case in its `evals.json` at that point. A case that needs the shell tier is
+  written, tagged `tier-shell` and excluded from runs until group-1 spikes and the follow-up
+  harness exist. Verify as in 5.1 for the `tier-read` cases.
+- [ ] 5.3 Calibrate both skills once with the no-plugin arm. Rewrite any case whose no-plugin
+  arm reaches 0.8, or record in the README why it is kept as it is, as in 3.3. Record
+  WITH/W/OUT/Δ and cost in their `evals/README.md`. Replace the "Running the behavioural evals"
+  section with the plugin-eval commands and add the mapping table, in which every old id falls
+  into exactly one group: migrated, retired by `review-via-codex` (with its task number),
+  rewritten by `review-via-codex` (with its task number), or shell variant pending. Name the
+  coordination item for `review-fix` 3 and 4 (design D11) in that README. Verify that every id in
+  the old files appears in exactly one group, and that every case at or above 0.8 W/OUT has been
+  rewritten or carries its reason.
+- [ ] 5.4 **If `review-via-codex` has not merged:** remove the migrated ids from both
+  `evals.json` files. `review-loop` keeps 1–3 and 16–22, and `review-fix` keeps 1 and 3–9. Verify
+  that both files parse and hold exactly the ids the README lists as retired or rewritten by
+  `review-via-codex`. **If it has merged:** delete both files, and verify that
+  `git ls-files skills/review-loop/evals skills/review-fix/evals` lists no `evals.json`.
 
 ## 6. Version comparison (`tools/plugin-eval-compare.py`)
 
@@ -151,13 +171,15 @@
 - [ ] 8.2 Trial: dispatch the whole suite on `master` two to four times. Record the cost and
   duration per run, and the cases whose score moved between runs, in `evals/README.md`. Verify
   that the README carries the run links.
-- [ ] 8.3 **Owner:** decide on the weekly schedule, based on the measured cost from 8.2. If yes,
+- [ ] 8.3 **Owner:** decide on the weekly schedule, based on the measured cost from 8.2. If no,
+  the job stays dispatch-only, and the decision with its date goes into `evals/README.md`. If yes,
   let the scheduled event run `suite=both`. Verify that the next scheduled run executes the
   `behaviour` job and that the gate's result is unaffected by it.
 
 ## 9. Integration check
 
 - [ ] 9.1 From a clean checkout on Windows, run the two commands from `evals/README.md` over the
-  whole suite (`--runs 1`). Verify that 23 cases load, that none is refused, that `git status`
+  whole suite (`--runs 1`). Verify that every `tier-read` and `tier-write` case loads (24 if
+  `review-via-codex` had not merged before group 5), that none is refused, that `git status`
   shows nothing under `evals/cases/results/`, and that
   `openspec validate behavioural-skill-evals --strict` and `claude plugin validate .` both pass.

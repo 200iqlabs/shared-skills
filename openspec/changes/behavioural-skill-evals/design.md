@@ -170,8 +170,10 @@ plugin exposes.
   profile".
 - **Prohibitions carry `arm: both`**, so the no-plugin arm is held to them too.
 - **`llm` graders judge the final message only**, with a rubric of concrete PASS and FAIL lines.
-  A generated document is judged by `regex` on its contents. At most one short `llm` grader may
-  look at a file, for a property no pattern expresses ("§3 holds exactly one user story").
+  A generated document is judged by `regex` on its contents only. That includes structural
+  properties: "§3 holds exactly one user story" is a pattern requiring one `Jako ` between the §3
+  and §4 headings, plus a `not_contains` pattern for two of them (a tempered token,
+  `(?:(?!§\s*4)[\s\S])*?`, keeps the match inside §3).
 - **Graders on the `review-loop` sign-off cases match only step 6.4 strings**: the canonical
   title `review-loop finished on PR #<n> — human sign-off required`, the closing sentence
   `Closing this issue is the sign-off`, and the warning texts. `review-via-codex` rewrites the
@@ -262,7 +264,7 @@ plugin would ship it to every user. So `evals/harness/` holds small Node scripts
 Runs grant `Bash(gh *)`, `Bash(git *)`, `Bash(node *)`, `Write` and `Edit`. A bare
 `git init --bare` repository in the workspace serves as `origin`, so pushes succeed offline.
 
-**Two facts must hold first, and this change measures both (tasks 1.3 and 1.4):**
+**Two facts must hold first, and this change measures both (tasks 1.2 and 1.3):**
 - **S1, sandbox reach.** Under the Linux sandbox, can the agent's shell run a script on `PATH`
   that lies outside `$HOME`, and can it write to `$TMPDIR`? The skills put scratch files "outside
   the repository", which inside a run means outside the workspace. On GitHub runners the checkout
@@ -285,8 +287,8 @@ The job goes into the workflow from `skill-evals-in-ci`, beside `measure`. It re
 and `permissions: contents: read`.
 
 - **Events:** `workflow_dispatch` with inputs `suite` (`triggers` | `behaviour` | `both`, default
-  `triggers`), `skill` (case glob) and `ablation`; plus `schedule`, once the trial is over.
-  Never `pull_request`. The job's `if:` excludes it.
+  `triggers`), `skill` (case glob) and `ablation`. A `schedule` is added only if the owner
+  enables it after the trial (task 8.3). Never `pull_request`; the job's `if:` excludes it.
 - **Not in the gate.** `skill-evals-gate` does not `need` it, and it is never a required check. A
   failed scheduled run notifies the cron line's author, which is the drift signal.
 - **Invocation:** `--tag tier-read`, then `--tag tier-write --allow-tools Write Edit`, each with
@@ -302,38 +304,58 @@ and `permissions: contents: read`.
 - **Threshold 0.8.** With three runs, one failed `llm` grader out of three in one run still
   passes. A wholly failed run, or a grader failing in two runs, does not.
 - **Cadence.** Dispatch only during a trial of two to four runs. Then weekly, in the same
-  schedule event as the trigger measurement, if the owner accepts about $90 a month (*Cost*).
-  Nightly full runs are not proposed (about $640 a month). A nightly run that measures only when
+  schedule event as the trigger measurement, if the owner accepts about $115 a month for the
+  routine mix (*Cost*). Nightly runs are not proposed (about $800 a month). A nightly run that measures only when
   `skills/{prd,linkedin-content,review-fix,review-loop}/**` or `evals/cases/**` changed on
   `master` would be cheap, but it adds a cache key. It is left for when the weekly signal proves
   useful.
 
 ### D11. Retirement and the boundary with `review-via-codex`
 
-This change migrates only cases that `review-via-codex` keeps. The cases it retires stay in the
-skill's `evals.json` until that change deletes them, so for a while `review-loop` and
-`review-fix` hold both formats. Their READMEs say which case is where. Migrating the retiring
-cases would be cheap (the #16 probe needed one prompt and three graders), but it would be
-throwaway work. **If `review-via-codex` is dropped**, the retiring cases migrate as decision cases
-under the same rules.
+This change migrates only cases that `review-via-codex` keeps. The cases it retires or rewrites
+stay in the skill's `evals.json` until that change deletes them. So for a while `review-loop` and
+`review-fix` hold both formats, which is the one exception the spec allows. Their READMEs say
+which case is where. Migrating the retiring cases would be cheap (the #16 probe needed one prompt
+and three graders), but it would be throwaway work.
 
-Two coordination items belong to `review-via-codex` and are not tasks here. Its new behavioural
-cases (tasks 3.1–3.6, 4.1–4.6) should be written into `evals/cases/` in this format rather than
-into `evals.json`. And S2's answer feeds its decision 1.
+**The order of the two changes decides what group 5 of the tasks migrates:**
+- **This change merges first.** It migrates the kept ids (`review-loop` 4, 5, 6–15;
+  `review-fix` 2) and trims both `evals.json` files to the ids that `review-via-codex` retires or
+  rewrites. That change then deletes the files.
+- **`review-via-codex` merges first.** Its task 4.6 has added new cases to `review-loop`'s
+  `evals.json` (plugin missing, usage limit mid-run, minor-only, a rejection met again, dirty
+  working tree). Its tasks 3.1–3.5 have added new ones to `review-fix`'s. Group 5 then migrates
+  every case that file holds at that point, kept and new alike, and deletes both files.
+- **`review-via-codex` is dropped.** The retiring cases migrate as decision cases under the same
+  rules, and both files are deleted.
+
+Three coordination items belong to `review-via-codex` and are not tasks here:
+- Its new behavioural cases (tasks 3.1–3.6, 4.1–4.6) should be written into `evals/cases/` in
+  this format rather than into `evals.json`.
+- S2's answer feeds its decision 1.
+- `review-fix` cases 3 and 4 lose their reply-based expectations with task 3.6. They also check a
+  judgement that survives the switch: no code change for a finding that is outdated or wrong, and
+  a reasoned rejection recorded instead. Task 3.3 adds a case for a finding that repeats an
+  earlier rejection, but no case names a first rejection of an outdated or wrong finding.
 
 ## Case mapping
 
 `read`, `write` and `shell` are the tiers (D3). "Kept by codex" means that `review-via-codex`
 keeps the case. Grader names are indicative; the exact patterns are calibrated in the first run.
 
-### `prd`: 4 of 4 migrated, `tier-write`, ablation with-without
+### `prd`: 4 of 4 migrated plus 1 new, `tier-write`, ablation with-without
 
 | # | Case | Fixtures | Graders |
 |---|---|---|---|
-| 0 | `0-track-tech-eight-sections` | `fixtures/mentormatch/{prd-input,brand}.md` with a verbatim landing-page sentence, Track Tech stated | `file_exists fixtures/mentormatch/prd.md`; regex(file): the landing sentence verbatim, `AI Build Summary`, `Next\.js\s*\d+`; regex(file) `not_contains` `§\s*9\|Component Inventory`, `\blatest\b`; regex(file): §6 holds ≥ 5 list items, §8 holds `- [ ]`; llm(file, short rubric): §3 has exactly one user story; `tool_order` Read(prd-input) before Write(prd.md) |
+| 0 | `0-track-tech-eight-sections` | `fixtures/mentormatch/{prd-input,brand}.md` with a verbatim landing-page sentence, Track Tech stated | `file_exists fixtures/mentormatch/prd.md`; regex(file): the landing sentence verbatim, `AI Build Summary`, `Next\.js\s*\d+`; regex(file) `not_contains` `§\s*9\|Component Inventory`, `\blatest\b`; regex(file): §6 holds ≥ 5 list items, §8 holds `- [ ]`; regex(file): exactly one `Jako ` between the §3 and §4 headings (D5); `tool_order` Read(prd-input) before Write(prd.md) |
 | 1 | `1-track-builder-component-inventory` | `fixtures/klasa/{prd-input,brand}.md`, a non-technical founder on Lovable | `file_exists`; regex(file) `§\s*9` and `Component Inventory`, ≥ 3 table rows typed Form/Modal/Display/…, a "Jak używać" instruction; regex(file) `not_contains` `interface\s+\w+\s*\{` (no TypeScript in §4) |
 | 2 | `2-thin-input-asks-first` (probed) | `fixtures/thin/prd-input.md` (two lines) | `file_exists **/prd.md exists:false arm:both` (a write grant makes the temptation real); `tool_used Read prd-input`; llm(last message): names the missing items, offers the two paths or asks ≤ 2 questions with a recommendation, invents no ICP. Expectation updated to the current two-path protocol |
 | 3 | `3-split-inputs-read-whole` | `fixtures/mikrobiota-split/{icp,positioning,gtm-plan,landing-brief}.md`, brand inside `landing-brief.md` | one `tool_used Read` per file; regex(file) `#0E7C66`, `#E8B04B` (`flags: i`), `Source Sans 3`, the landing sentence verbatim; regex(file) `not_contains` `§\s*9`; llm(last message): no complaint about a missing `prd-input.md` or `brand.md` |
+| 4 (new) | `4-scope-cut-to-one-core-flow` | `fixtures/scope-cut/prd-input.md`: complete W1/W2 input whose founder lists three features as must-have (booking, payments, chat) | `file_exists`; regex(file): exactly one `Jako ` inside §3 (D5); regex(file): both cut features named after the §6 heading; llm(last message): names which two features go to §6 and why, before or with the document |
+
+Case 4 is new. "Cut to one Core Flow" is the rule the skill calls the one that decides success,
+and no existing case exercises it. It also brings `prd` to the five prompts the
+`skill-evaluation` spec asks of every skill.
 
 ### `linkedin-content`: 3 converted, 3 added, `tier-read`, ablation with-without
 
@@ -364,7 +386,7 @@ grant.
 | 6 | `6-sign-off-issue-matched-by-exact-title` | kept; shell variant later | regex: the canonical title for PR #12; regex `Closing this issue is the sign-off`; llm: the near-miss issue is not reused, the body goes through a file outside the repository |
 | 7 | `7-ungated-run-is-announced` | kept | regex `NOT created`; llm: one retry, then a line saying nothing records the need for human eyes and an issue must be opened by hand; not reported complete |
 | 8 | `8-closed-record-is-not-reopened` | kept | regex: the canonical title; llm: a new record, and the closed one is neither reopened nor commented on |
-| 9 | `9-delimiter-in-error-text-does-not-truncate` | kept; shell variant later | llm: the error text reaches the body as a concatenated file, not a heredoc; the closing sentence stays last |
+| 9 | `9-delimiter-in-error-text-does-not-truncate` | kept; shell variant later | regex `error\.txt` (the error text travels as the file 6.2 writes); regex `Closing this issue is the sign-off`; llm: the error text reaches the body as a concatenated file, not a heredoc; the closing sentence stays last |
 | 10 | `10-open-record-is-appended-to` | kept | regex `gh issue comment`; llm: no second issue, nothing closed or edited, state re-read right before the append |
 | 11 | `11-failed-lookup-creates-and-warns-twice` | kept | regex `lookup failed` (`flags: i`); llm: takes the create path, and the duplicate warning goes in both the report and the body, only after the write succeeded |
 | 12 | `12-failed-append-names-the-open-issue` | kept | regex `#77`; regex `NOT updated`; llm: tells the reader not to open a second issue; not reported complete |
@@ -379,16 +401,17 @@ grant.
 |---|---|---|---|
 | 1 | reply-body-survives-backticks | retired (codex 3.6: no in-thread replies) | — |
 | 2 | `2-verification-without-a-js-toolchain` | kept by codex; `tier-read` decision case with a read-only scaffold (`hooks/selftest.mjs`, `openspec/`, no `package.json`) | llm: names `node hooks/selftest.mjs` and `openspec validate`, not `pnpm`; regex `selftest\.mjs` |
-| 3 | outdated-comment-gets-no-code-change | rewritten by codex 3.3 (rejection with reason) | new case in this suite, by `review-via-codex` |
-| 4 | wrong-comment-gets-reasoned-pushback | rewritten by codex 3.3 | as 3 |
+| 3 | outdated-comment-gets-no-code-change | retired (codex 3.6: no replies) | the surviving judgement (no code change, reasoned rejection) is a coordination item for `review-via-codex` (D11) |
+| 4 | wrong-comment-gets-reasoned-pushback | retired (codex 3.6) | as 3 |
 | 5 | scratch-data-stays-out-of-the-repo | retired (codex 3.6: no comment fetch) | the principle returns as a `tier-shell` case on the Codex payload |
 | 6 | every-thread-answered-one-at-a-time | retired (codex 3.6) | — |
 | 7–9 | severity ordering | rewritten by codex 3.3 for `P0`–`P3` | decision cases ("in what order"), plus `tier-shell` cases with `tool_order` on `Edit` paths once the harness exists |
 
 ### Not automated, by reason
 
-- **Retired by `review-via-codex`:** `review-loop` 1–3 and 16–22; `review-fix` 1, 5 and 6. Their
-  rewrites (`review-fix` 3, 4 and 7–9) are written by that change.
+- **Retired by `review-via-codex`:** `review-loop` 1–3 and 16–22 (task 4.6); `review-fix` 1, 3,
+  4, 5 and 6 (task 3.6). **Rewritten by it:** `review-fix` 7–9 (task 3.3). The judgement that
+  cases 3 and 4 also cover is a coordination item (D11).
 - **Waiting for the shell tier:** the command-shape halves of `review-loop` 6, 9, 14 and 15. The
   decision halves run now.
 - **Manual by nature:** an end-to-end loop on a real pull request with a real reviewer. Timing,
@@ -416,23 +439,24 @@ with and $0.10 without. A `prd` case that writes the full document about $0.30 w
 output tokens than the measured thin case) and $0.20 without. A `tier-shell` case, phase 2, about
 $1.0–1.5 (10–20 turns over a context of about 70k, read from cache within the run).
 
-**Per suite run, phase 1 (23 cases × 3 runs):**
+**Per suite run, phase 1 (24 cases × 3 runs):**
 
-| Selection | `--ablation none` | with no-plugin arm |
-|---|---:|---:|
-| `review-loop` (12) | ~$13.0 | ~$15.8 |
-| `linkedin-content` (6) | ~$4.0 | ~$6.1 |
-| `prd` (4) | ~$3.4 | ~$5.6 |
-| `review-fix` (1) | ~$0.6 | ~$0.9 |
-| **Whole suite** | **~$21** | **~$29** |
+| Selection | `--ablation none` | with no-plugin arm | routine (D7) |
+|---|---:|---:|---:|
+| `review-loop` (12) | ~$13.0 | ~$15.8 | ~$13.0 (none) |
+| `linkedin-content` (6) | ~$4.0 | ~$6.1 | ~$6.1 (with arm) |
+| `prd` (5) | ~$4.3 | ~$7.1 | ~$7.1 (with arm) |
+| `review-fix` (1) | ~$0.6 | ~$0.9 | ~$0.6 (none) |
+| **Whole suite** | **~$22** | **~$30** | **~$27** |
 
 Judge calls add about $0.5 to a whole-suite run. A version comparison is twice the
-`--ablation none` figure for the selected skill: about $26 for `review-loop` and $7 for `prd`.
-Wall time is about 31 minutes serial for the whole suite, and about 8 minutes at `-j 4`.
+`--ablation none` figure for the selected skill: about $26 for `review-loop` and $8.5 for `prd`.
+Wall time is about 32 minutes serial for the whole suite with `--ablation none` (72 runs) and
+about 47 minutes for the routine mix (105 runs). At `-j 4` that is about 8 and 12 minutes.
 
-**Monthly in CI on Opus 5.5:** dispatch only, pay per use. Weekly whole suite, about **$90**.
-Nightly, about $640 (not proposed). On `claude-sonnet-5-5` each figure roughly halves
-(modelled from list prices). Its scores would be a separate baseline.
+**Monthly in CI on Opus 5.5:** dispatch only, pay per use. The routine mix weekly is about
+**$115**, and nightly about $800 (not proposed). On `claude-sonnet-5-5` each figure roughly
+halves (modelled from list prices). Its scores would be a separate baseline.
 
 ## Risks / Trade-offs
 
@@ -458,9 +482,9 @@ Nightly, about $640 (not proposed). On `claude-sonnet-5-5` each figure roughly h
 
 ## Migration Plan
 
-1. Land the skeleton, the two tools, the 23 phase-1 cases and the README mappings. Delete
-   `evals.json` in `prd` and `linkedin-content`, and remove the migrated ids from the review
-   skills' files.
+1. Land the skeleton, the two tools, the 24 phase-1 cases and the README mappings. Delete
+   `evals.json` in `prd` and `linkedin-content`. Handle the review skills' files according to the
+   merge order (D11).
 2. Run calibration locally (with the no-plugin arm, three runs, per skill). Record the scores,
    cost and model in each `evals/README.md`. Rewrite the cases the model passes alone.
 3. Once `skill-evals-in-ci` has merged and its secret exists, add the `behaviour` job, then
@@ -474,10 +498,9 @@ runtime changes. Removing the `behaviour` job stops all spend.
 
 ## Open Questions
 
-- **Order relative to `review-via-codex`.** Either order works (D11). If that change lands
-  first, its kept and new review cases are written straight into this suite. If this one lands
-  first, the review READMEs carry the interim mapping. Whether `review-via-codex` should switch
-  its eval tasks to this format is the owner's call, on that change.
+- **The coordination items with `review-via-codex` (D11).** Whether that change writes its cases
+  straight into this suite, and whether it adds a case for a first rejection, is the owner's call
+  on that change. Group 5 of this change's tasks covers both merge orders, whichever is chosen.
 - **Judge model.** Haiku 5.5 is pinned by default; calibration may move individual cases or the
   whole suite to Sonnet. This changes the cost by cents.
 - **Exact patterns for the generated `prd.md`.** Heading style (`## §1 —` or `### §1`) is

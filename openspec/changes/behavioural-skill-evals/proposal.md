@@ -34,7 +34,9 @@ separated the skill from the no-plugin arm (Δ +0.50 and +1.00).
 - **Migration, per skill:**
   - `prd`: all 4 cases become `tier-write` cases on scaffolded input. The fixtures are written,
     synthetic, from scratch, and they carry the exact strings the graders match. The expectation
-    of case 2 is updated to the current two-path protocol.
+    of case 2 is updated to the current two-path protocol. A fifth case covers the scope-cut
+    rule, the skill's central rule, which no case tests today. It also brings the skill to the
+    five prompts `skill-evaluation` requires.
   - `linkedin-content`: the 3 cases are converted to the by-name fallback mode, which reads a
     synthetic author profile. They gain 3 new brief-mode cases. The skill's primary contract has
     no case today. All 6 are `tier-read`.
@@ -42,14 +44,21 @@ separated the skill from the no-plugin arm (Δ +0.50 and +1.00).
     All of them survive `review-via-codex`. Cases 1–3 and 16–22 are **not migrated**, because
     `review-via-codex` (task 4.6) retires them. They stay in `evals.json` until that change
     deletes it.
-  - `review-fix`: case 2 becomes a `tier-read` decision case with a read-only scaffold. Cases 1,
-    5 and 6 are retired by `review-via-codex`, which removes comment fetching and in-thread
-    replies. Cases 3, 4 and 7–9 are rewritten there for Codex findings. Its new cases should be
-    written straight into this suite, which is a coordination item, not a task of this change.
+  - `review-fix`: case 2 becomes a `tier-read` decision case with a read-only scaffold.
+    `review-via-codex` removes comment fetching and in-thread replies (task 3.6), and with them
+    the reply-based expectations of cases 1, 3, 4, 5 and 6. Its task 3.3 rewrites cases 7–9 for
+    `P0`–`P3`. Cases 3 and 4 also check a judgement that survives the switch: no code change for
+    a finding that is already outdated or wrong, and a reasoned rejection. No case in
+    `review-via-codex` names that judgement. This is a coordination item, like the request that
+    its new cases be written straight into this suite.
+  - **If `review-via-codex` merges first**, this change migrates the review cases as that change
+    left them: the kept ones and its new ones. The old ids are not migrated.
   - Every case that is not automated is listed in the skill's `evals/README.md`, with the reason.
-- **One format per skill.** A skill's `evals.json` is deleted once each of its cases is
-  migrated, retired or listed as manual. For skills with a suite, `CLAUDE.md`'s mandatory
-  skill-creator workflow runs `claude plugin eval` in place of skill-creator's eval step.
+- **One format per skill**, with one stated exception. A skill's `evals.json` is deleted once
+  each of its cases is migrated, retired or listed as manual. The exception is cases that a named
+  in-flight change retires or rewrites: they wait in `evals.json` until that change deletes them,
+  and the skill's README says so. For skills with a suite, `CLAUDE.md`'s mandatory skill-creator
+  workflow runs `claude plugin eval` in place of skill-creator's eval step.
 - **Version comparison tool `tools/plugin-eval-compare.py`.** It runs the same cases against the
   branch and a base ref (`origin/master` by default) and prints the cases that flipped. That is
   the baseline the `review-loop` README actually asks for: the previous skill, not the absence of
@@ -73,12 +82,13 @@ separated the skill from the no-plugin arm (Δ +0.50 and +1.00).
 ### Modified Capabilities
 - `skill-evaluation`: *Skill passes skill-creator evaluation process* gains the plugin-eval path.
   For a skill whose cases live in the suite, "run the eval" means `claude plugin eval` over those
-  cases. The with/without comparison is the plugin-eval ablation, and the eval artifacts are the
+  cases. The with/without comparison is the no-plugin arm when a case is added. A change to an
+  existing skill is compared with the skill's base revision instead. The eval artifacts are the
   run's `aggregate-result.json` and `report.html`, not a skill-creator workspace.
 
 ## Impact
 
-- **New:** `evals/cases/**` (about 23 cases with fixtures), `evals/README.md`,
+- **New:** `evals/cases/**` (24 cases with fixtures), `evals/README.md`,
   `tools/plugin-eval-compare.py` and `tools/plugin-eval-summary.py` with tests, and a `behaviour`
   job in `skill-evals.yml`.
 - **Changed:** `.claude-plugin/plugin.json` (the `experimental.evals` key passes
@@ -93,9 +103,10 @@ separated the skill from the no-plugin arm (Δ +0.50 and +1.00).
 - **Cost (measured 2026-10-10, CLI 2.1.292, `claude-opus-5-5`):** $0.36 per run of a
   `review-loop` decision case with the plugin and $0.08 without. A `prd` case costs $0.22 with
   and $0.16 without. Each judge-graded run adds about $0.004. Runs do not share a prompt cache, so
-  three runs cost three times one. A full phase-1 run is about **$21** with `--ablation none` and
-  about **$29** with the no-plugin arm (23 cases × 3 runs). Weekly runs would come to about
-  **$90 a month**. Design, *Cost*, has the table.
+  three runs cost three times one. A full phase-1 run is about **$22** with `--ablation none` and
+  about **$30** with the no-plugin arm (24 cases × 3 runs). The routine mix, with the no-plugin
+  arm for `prd` and `linkedin-content` only, is about $27 a run. Weekly, that is about
+  **$115 a month**. Design, *Cost*, has the table.
 - **Out of scope:** trigger accuracy, which stays with `tools/skill-trigger-eval.py`. Building the
   shell tier, which is a follow-up after `review-via-codex`. Cases for the 18 skills that have
   none.

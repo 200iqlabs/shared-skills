@@ -15,8 +15,11 @@ Behavioural cases SHALL be `claude plugin eval` cases under the eval directory t
 manifest declares in `experimental.evals`, grouped in one subdirectory per skill. Each case name
 SHALL begin with its skill's name, so that one skill's cases can be selected by name. Run results
 written under that directory SHALL NOT be committed. A skill SHALL NOT keep behavioural cases in
-two formats at once. Its skill-creator `evals.json` SHALL be removed once every case it held has
-been migrated, retired by a named change, or listed as not automated.
+two formats at once. The one exception is cases that a named in-flight change retires or
+rewrites. They stay in `evals.json` until that change deletes them, and the skill's
+`evals/README.md` SHALL name the change and the task for each. Its skill-creator `evals.json` SHALL be removed
+once every case it held has been migrated, retired by a merged change, or listed as not
+automated.
 
 #### Scenario: Running one skill's cases
 - **WHEN** a maintainer runs `claude plugin eval .` from the repository root with
@@ -28,6 +31,12 @@ been migrated, retired by a named change, or listed as not automated.
 - **WHEN** `claude plugin validate .` runs on Linux and Windows with the `experimental.evals` key
   present
 - **THEN** validation passes with no new error or warning attributable to the key
+
+#### Scenario: Cases waiting on another change
+- **WHEN** some of a skill's cases are retired or rewritten by an in-flight change that has not
+  merged
+- **THEN** those cases stay in `evals.json`, the README lists each with the change and the task,
+  and every other case of the skill lives only in the suite
 
 #### Scenario: A migrated skill keeps no `evals.json`
 - **WHEN** every case of a skill's `evals.json` is migrated, retired or listed as not automated
@@ -146,16 +155,21 @@ waiting for the shell tier, or manual with a stated reason.
 - **THEN** the README names that change and the task that retires the case, and the case stays
   where it was until that change deletes it
 
-### Requirement: CI runs the suite on demand and on schedule, never as a gate
+### Requirement: CI runs the suite only on demand or on a schedule, never as a gate
 
-The behavioural suite SHALL run in CI only on manual dispatch and on a schedule, never on
+The behavioural suite SHALL run in CI on manual dispatch. A schedule is the only other trigger
+it SHALL accept, and the owner decides whether to enable one. It SHALL NOT run on
 `pull_request`, `pull_request_target` or `workflow_run`. Its result SHALL NOT feed a required
 status check. Each CI run SHALL pin the agent model and the judge model and SHALL set a cost
 ceiling. It SHALL publish only case names, scores, deltas, costs and failing grader names. It
 SHALL NOT publish transcripts, judge evidence or grader explanations.
 
-#### Scenario: Scheduled run below threshold
-- **WHEN** a scheduled run ends with a case below the threshold
+#### Scenario: Pull request does not start the suite
+- **WHEN** a pull request is opened or updated
+- **THEN** the behavioural suite does not run and no step of it receives the API key
+
+#### Scenario: Scheduled or dispatched run below threshold
+- **WHEN** a scheduled or dispatched run ends with a case below the threshold
 - **THEN** the job fails and its summary names the case and its failing graders, and no pull
   request is blocked by it
 
