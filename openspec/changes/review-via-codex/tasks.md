@@ -20,14 +20,14 @@
 
 ## 2. Templates and this repository's own policy
 
-- [ ] 2.1 `templates/REVIEW_TEMPLATE.md`: the three passes, the minor-finding cap, and the
+- [x] 2.1 `templates/REVIEW_TEMPLATE.md`: the three passes, the minor-finding cap, and the
       machine-read `Important:` and `Test paths:` lines in the form decision 6 fixes. Verify the
       two lines parse with the pattern the skills will use, and that a file without them falls
       back to the defaults.
-- [ ] 2.2 `templates/AGENTS_REVIEW_POINTER.md` (or the inline variant, per 1.2): the pointer to
+- [x] 2.2 `templates/AGENTS_REVIEW_POINTER.md` (or the inline variant, per 1.2): the pointer to
       `REVIEW.md` and to `openspec/changes/*/review.md`. Verify against the scratch repository
       from 1.2 that a review run with it behaves as 1.2 recorded.
-- [ ] 2.3 This repository's own `REVIEW.md` and `AGENTS.md`, from the templates, naming its checks
+- [x] 2.3 This repository's own `REVIEW.md` and `AGENTS.md`, from the templates, naming its checks
       (`node hooks/selftest.mjs`, `openspec validate --all`). Verify a built-in review on a scratch
       branch here cites a rule from `REVIEW.md`.
 

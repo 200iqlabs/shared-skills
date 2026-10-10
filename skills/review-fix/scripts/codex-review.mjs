@@ -36,6 +36,9 @@ export const DEFAULT_TEST_PATHS = [
 // Codex renders the marker itself, in English, whatever language the findings are written in.
 const MARKER = /^(Full review comments|Review comment):\s*$/
 const ENTRY_LIKE = /^\s*-\s+\[[^\]]+\]/
+// Traces of a findings block in a format this parser does not know: a severity tag, or a line
+// ending in a location. Either one means "clean" cannot be concluded.
+const FINDING_TRACE = [/\[P\d\]/, /—\s*\S+:\d+(?:-\d+)?\s*$/]
 // `- [P1] <title> — <path>:<start>-<end>`. The tag is optional, so an untagged entry still parses
 // and is ordered as untagged instead of failing the round.
 const ENTRY = /^- (?:\[([^\]]+)\]\s+)?(.+) — (.+?)(?::(\d+)(?:-(\d+))?)?\s*$/
@@ -225,6 +228,9 @@ export function recognise({ exit, stdout, stderr, repoRoot, important = DEFAULT_
   const summary = clip((markerAt === -1 ? lines : lines.slice(0, markerAt)).join('\n'), 4000)
   if (markerAt === -1) {
     if (lines.some((l) => ENTRY_LIKE.test(l))) return error(`the review lists entries without a findings marker:\n${clip(text)}`)
+    if (lines.some((l) => FINDING_TRACE.some((re) => re.test(l)))) {
+      return error(`the review carries a severity tag or a location but no findings marker, so it cannot be read as clean:\n${clip(text)}`)
+    }
     return { verdict: 'clean', summary, findings: [], error: null }
   }
   const findings = []
@@ -241,12 +247,13 @@ export function recognise({ exit, stdout, stderr, repoRoot, important = DEFAULT_
     const m = line.match(ENTRY)
     if (!m) return error(`a line under the findings marker does not parse as a finding: ${clip(line)}\n\nFull review text:\n${clip(text)}`)
     const where = relativeToRepo(m[3].trim(), repoRoot)
+    // The fixer edits the files findings name, so a finding outside the repository stops the round.
+    if (where.outside) return error(`a finding names a path outside the repository (${where.path}); nothing outside it is edited:\n${clip(line)}`)
     findings.push({
       n: findings.length + 1,
       tag: m[1] ? m[1].trim().toUpperCase() : null,
       title: m[2].trim(),
       path: where.path,
-      outside_repo: where.outside,
       start: m[4] ? Number(m[4]) : null,
       end: m[5] ? Number(m[5]) : m[4] ? Number(m[4]) : null,
       bodyLines: [],

@@ -205,6 +205,13 @@ finding in Polish), and a `review.md` in the branch. Four reviews:
   review that does raise it again still has to be caught, and a person reopens a finding by deleting
   its rejection from the record.
 
+**Group 2 checks, same day, through the helper.** The `AGENTS.md` template, put into the round-2
+scratch repository, reproduced the 1.2 result: Polish and clean, citing the record (70 s). On a
+scratch branch of this repository, a hook that writes to stderr on a malformed payload drew a `[P2]`
+saying the diagnostic "lacks the required `ss-hook:` prefix" — a rule placed in that branch's
+`REVIEW.md` only, so the citation can only have come from there (49 s). A first attempt with a rule
+that `CLAUDE.md` also states was cited too, but could not tell the two sources apart.
+
 *Why not `AGENTS.md` alone.* `REVIEW.md` is the policy file any reviewer can be pointed at,
 including a Claude reviewer in CI later. `AGENTS.md` is Codex's own entry point and stays one
 pointer long.
