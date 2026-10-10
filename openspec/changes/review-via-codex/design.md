@@ -192,6 +192,40 @@ around. `review-fix` now produces a review itself, so the request it must not ta
 reads. Step 3 of `review-fix` and step 1.3b of `review-loop` change accordingly, and the trigger
 evals are re-measured against the 80% bar.
 
+### 10. Behavioural cases are `claude plugin eval` cases, not `evals.json` entries
+
+`behavioural-skill-evals` (proposed in #21, not yet implemented) moves the behavioural cases of
+both review skills to `claude plugin eval` and asks this change to write its new cases in that
+format from the start. They go to `evals/cases/review-fix/` and `evals/cases/review-loop/`,
+shaped as that change's D2–D5 fix them:
+
+- one directory per case, `<id>-<slug>`, with `prompt.md` (frontmatter `name: <skill>-<id>-<slug>`,
+  tags `[<skill>, tier-read]`, `allowed_tools: [Skill, Read, Glob, Grep]`) and `graders/*.md`;
+- **decision cases**: the prompt names the skill in prose, states the run's state partway through
+  (a `setup --json` payload, a review's text, a `review.md` row), asks what the skill does, and says
+  not to run anything; `tool_used: Skill` is the plugin-fired indicator;
+- at least one deterministic grader (`regex`) on the answer; `llm` graders only on the final
+  message, with concrete PASS and FAIL lines;
+- a read-only scaffold where the state is a file — a `review.md` holding a rejection, a
+  `REVIEW.md` that moves the importance line.
+
+Every case is `tier-read`. The shell tier (a fake `codex-companion.mjs`, a fake `gh`) waits for
+that change's spikes S1 and S2, so the halves of a case where the command's shape is the point —
+the parser on real output, `git diff --name-status` in the test guard — are listed as pending in
+the skills' `evals/README.md`. New ids continue each skill's numbering; the rewritten ordering
+cases of `review-fix` keep 7–9, so the mapping stays traceable.
+
+This change does not add the manifest key `experimental.evals` (that change's task 1.1). Every
+command passes `--eval-dir evals/cases`, and `evals/cases/results/` is gitignored. The cases this
+change keeps (`review-loop` 4–5 and 6–15, `review-fix` 2) stay in `evals.json` for that change's
+group 5 to migrate, as its D11 provides for this merge order. They are re-run here from scratch
+copies in the same format, so "kept and still passing" is graded rather than read off a transcript.
+
+The comparison with the base revision is done by hand until `tools/plugin-eval-compare.py` exists:
+a detached worktree of `origin/master`, the branch's cases copied in, one run per case. A new case
+is expected to fail there, since the base has no Codex path. That is the flip that shows the case
+measures the change.
+
 ## Risks / Trade-offs
 
 - [The plugin changes its arguments or output format] → strict recognition ends the run as `error`
