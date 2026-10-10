@@ -52,3 +52,6 @@ company/brand/
 
 # review-loop run log — written by the review-loop skill in the repository root, never committed.
 .review-loop.log
+
+# claude plugin eval run results — local, never committed.
+evals/cases/results/

@@ -3,9 +3,24 @@
 ## [Unreleased]
 
 ### Fixed
+- **`review-loop`'s sign-off record now says when it is missing the error text** — on an `error`
+  ending, the record could go out without the error text and without saying so. The warning
+  *"The error text could not be read"* never fired once the tail of the run log had been written,
+  because the tail, or the line saying the log could not be read, went into the same file the
+  warning tested. The error text and the log tail now have separate files. The report printed into
+  the session names the part that is missing: the run report, the error text, or both. Before, it
+  always named the report.
 - **`slides` pins Marp CLI `^4` by default** — `^3` fails under Node 26 with `require is not defined in ES module scope` (yargs, pulled in by `@puppeteer/browsers`; measured 2026-09-11 on macOS, Node v26.7.0), while `^4` renders with the same call. New `/ss:slides:init` configs get `^4`; an existing `slides/config.yaml` keeps its own `marp_cli_version` — change it there.
 
 ### Added
+- **Review policy templates** — `templates/REVIEW_TEMPLATE.md` (three review passes, the `P0`–`P3`
+  scale, a cap of five minor findings, and the machine-read `Scale:`, `Important:` and `Test paths:`
+  lines)
+  and `templates/AGENTS_REVIEW_POINTER.md` (the section that points Codex at `REVIEW.md` and at the
+  review records). This repository now carries its own `REVIEW.md` and `AGENTS.md`.
+- **Behavioural eval cases for the review skills** in `evals/cases/`, run with
+  `claude plugin eval . --eval-dir evals/cases`; results go to the gitignored
+  `evals/cases/results/`.
 - **`/ss:decisions`, `/ss:explain-design` and `/ss:explain-diff` are back, invoked by the user
   only** — restored at the plugin owner's request on 2026-10-01 with `disable-model-invocation: true`,
   so they never enter the model's skill listing and run only when typed. The decisions and
@@ -13,6 +28,29 @@
   and the working mode's routing is unchanged.
 
 ### Changed
+- **`review-fix` and `review-loop` review with Codex instead of Copilot** (breaking) — both skills
+  now run the built-in review of the Codex plugin for Claude Code (`codex@openai-codex`) locally,
+  against the pull request's base, and **require that plugin and a signed-in Codex CLI**; without
+  them they stop before reviewing anything and point at `/codex:setup`. There is no Copilot path:
+  `review-fix` no longer reads pull-request review comments or replies in their threads, and
+  `review-loop` no longer requests Copilot, waits for it or checks its workflow runs — the
+  `--wait-initial`, `--poll-interval` and `--poll-timeout` flags and the `timeout` and
+  `no-comments` endings are gone. A round is now one `review-fix` pass: Codex reviews, the fixer
+  judges each finding as fixed, rejected (with a one-sentence reason) or a repeat of an earlier
+  rejection, verifies, commits and pushes. Every finding and its outcome are appended to
+  `openspec/changes/<change>/review.md` and committed with the round, so the pull request carries
+  the record and a rejected finding is not judged again in a later round or run. Fixes follow the
+  repository's severity scale (`REVIEW.md`'s `Scale:` line, `P0`–`P3` by default). Only a fixed
+  important finding starts another review — `P0`–`P2` by default, or the line `REVIEW.md` draws —
+  and the loop ends as `clean`, `minor-only`, `no-fixes`, `max-iterations` or `error`. A review that
+  failed, timed out or could not be read is always an `error`, never clean. A round that changes an
+  existing test without a reason in the record ends as an `error` with nothing committed. Without a
+  pull request, a pass over a dirty working tree commits the reviewed work together with any fixes,
+  every round. The final
+  report lists findings that read as repository conventions as candidate `CLAUDE.md` rules, without
+  writing them. The sign-off issue is unchanged. To keep using the skills: install the Codex plugin,
+  run `/codex:setup`, and add `REVIEW.md` and the `AGENTS.md` pointer from the templates below;
+  where Copilot's automatic review is still switched on, its comments keep arriving and are ignored.
 - **`review-loop` concludes "no review run" only from positive evidence** — when the wait for a
   Copilot review expires, step 5.3 starts from the new timeout outcome `unknown` instead of `no-run`.
   `no-run` now needs a run listing that succeeded and holds no run at all; a listing whose runs
