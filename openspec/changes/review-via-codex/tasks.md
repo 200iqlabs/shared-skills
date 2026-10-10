@@ -125,6 +125,15 @@ entry in `evals.json`. "Eval" below means such a case.
       branch's skills. Done when it ends with one of the new termination reasons, this change's
       `review.md` holds its rounds, and a sign-off issue exists. After the merge, the same command
       from an updated install is the manual smoke test, not part of this task.
+      *Run twice on 2026-10-10, headless (`claude -p --plugin-dir`, auto mode; the second time with
+      `--allowedTools "Edit Write"` as well). Both ran pre-flight and a real Codex review (about
+      105 s) and ended as `error`. The cause both times was infrastructure: the nested session's
+      auto-mode classifier "gave no verdict" on the fixer's `Edit`, so nothing was edited,
+      recorded or committed, exactly as an error round should leave things. Sign-off issue #23 was
+      created by the first run and appended to by the second. Two of three criteria are met; the
+      record's rounds wait for a run from an interactive `claude --plugin-dir <worktree>` session
+      where edits can be approved. The open findings (two from run 1, one from run 2) are in
+      #23.*
 - [ ] 5.5 After merging, archive this change and rewrite the Purpose of
       `openspec/specs/code-review-loop/spec.md`, which still speaks of waiting for a reviewer that
       may never answer. Verify `openspec validate --all` passes.
