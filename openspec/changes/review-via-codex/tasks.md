@@ -37,52 +37,59 @@ Every behavioural case named in groups 3 and 4 is a `claude plugin eval` case un
 `evals/cases/<skill>/`, in the format of `behavioural-skill-evals` (design decision 10), not an
 entry in `evals.json`. "Eval" below means such a case.
 
-- [ ] 3.1 Pre-flight: resolve the plugin from `installed_plugins.json`, run `setup --json`, detect
+- [x] 3.1 Pre-flight: resolve the plugin from `installed_plugins.json`, run `setup --json`, detect
       the pull request and fetch its base, warn once on a missing `AGENTS.md` pointer. Behavioural
       evals: plugin missing, Codex not signed in, pointer missing — each stops or warns as the
       first ADDED requirement says, with nothing edited.
-- [ ] 3.2 Run the review and parse it per decision 2: entries, path normalisation, the strict
+- [x] 3.2 Run the review and parse it per decision 2: entries, path normalisation, the strict
       recognition table, the background path if 1.4 required it. Evals: usage limit exhausted,
       unparseable findings block, genuinely clean review.
-- [ ] 3.3 Judge findings as fix / reject / repeated against `review.md`, ordered `P0`–`P3` or by
+- [x] 3.3 Judge findings as fix / reject / repeated against `review.md`, ordered `P0`–`P3` or by
       the policy's scale, with the stable-sort rules kept. Rewrite evals 7–9 for findings (they keep
       their ids, so `behavioural-skill-evals` can map them); add an eval where a finding repeats a
       rejection, and two for a **first** rejection, which old evals 3 and 4 checked through replies:
       a finding about code the branch no longer has, and a finding that contradicts the change's
       design. Both end with no code change and a `rejected: <reason>` row.
-- [ ] 3.4 Append the round to `review.md` (decision 5 format, checks line included) and commit it
+- [x] 3.4 Append the round to `review.md` (decision 5 format, checks line included) and commit it
       with the round, a record-only round included; push only when the branch has a pull request.
       Evals: a round that fixed nothing still commits its record; a run without a change says no
       record was written.
-- [ ] 3.5 Test guard per decision 8, before the commit. Evals: an edited assertion without a
+- [x] 3.5 Test guard per decision 8, before the commit. Evals: an edited assertion without a
       reason ends as `error` with nothing committed; a reasoned test change commits; a new test
       commits.
-- [ ] 3.6 Remove comment fetching (suppressed comments included) and in-thread replies; turn step
+- [x] 3.6 Remove comment fetching (suppressed comments included) and in-thread replies; turn step
       3 into "an opinion only goes to `/codex:review`"; summary table with outcomes and convention
       candidates. Verify `SKILL.md` no longer mentions `pulls/{pr}/comments` or `/replies`, and add
       an eval for an opinion-only request.
-- [ ] 3.7 Rewrite the description and `trigger-eval.json`; measure with
+- [x] 3.7 Rewrite the description and `trigger-eval.json`; measure with
       `python tools/skill-trigger-eval.py --runs 3 --model claude-opus-5`. Done at ≥ 80%, with the
       number and the variants tried written into `evals/README.md`.
+      *Done 2026-10-10: 19/20 = 95% on the first variant; see `skills/review-fix/evals/README.md`.*
 
 ## 4. `review-loop` (through `/skill-creator`)
 
-- [ ] 4.1 Pre-flight: drop the Copilot baseline and history checks (1.3, 1.3a); add Codex readiness
+- [x] 4.1 Pre-flight: drop the Copilot baseline and history checks (1.3, 1.3a); add Codex readiness
       and a clean working tree; keep the change-directory check, the repetition check (1.3b),
       resume and the `.gitignore` warning. Evals: dirty working tree, plugin missing.
-- [ ] 4.2 Iteration: the sub-agent prompt reads the change artifacts and `REVIEW.md`, invokes
+- [x] 4.2 Iteration: the sub-agent prompt reads the change artifacts and `REVIEW.md`, invokes
       `review-fix`, and returns the line from decision 4; keep the normalisation of the string
       `"null"`. Eval: a return line with `"null"` strings parses to real nulls.
-- [ ] 4.3 Stop rule per decision 7 and the importance line; delete steps 4–5, `ScheduleWakeup`, and
+- [x] 4.3 Stop rule per decision 7 and the importance line; delete steps 4–5, `ScheduleWakeup`, and
       the `--wait-initial`, `--poll-interval` and `--poll-timeout` flags. Verify `SKILL.md` no
       longer mentions `requested_reviewers`, `ScheduleWakeup` or `gh run list`. Evals: minor-only
       ends without another review; a fixed `P1` starts one; all important findings rejected ends as
       `no-fixes`; a policy line of `P0-P1` stops after a `P2`-only round.
-- [ ] 4.4 Report: new reasons in 6.2–6.3, the convention-candidate section, step 6.4 untouched
+- [x] 4.4 Report: new reasons in 6.2–6.3, the convention-candidate section, step 6.4 untouched
       beyond the follow-up text. Re-run the sign-off evals 6–15 unchanged; all must pass.
-- [ ] 4.5 Rewrite the error-handling table and the guardrails: no Copilot rows; one row per Codex
+      *Re-run 2026-10-10 from scratch copies (`skills/review-loop/evals/README.md`): 6, 7, 8, 10,
+      12, 13 at 1.00; 5, 9, 11, 14 below 1.00 on uncalibrated graders that score the same on the
+      base; 15 at 0.78 against 1.00 on the base, because the branch runs read correctly that a
+      defect predating this change (6.3 fills `error.txt` with the log warning, so 6.4 never warns
+      that the error text is missing) makes the case's expectation unreachable. No sign-off
+      behaviour is lost to this change; the defect is a follow-up.*
+- [x] 4.5 Rewrite the error-handling table and the guardrails: no Copilot rows; one row per Codex
       failure path. Verify every termination reason in decision 7 has a row.
-- [ ] 4.6 Retire `review-loop` evals 1–3 and 16–22 (Copilot availability, timeout, run check) and
+- [x] 4.6 Retire `review-loop` evals 1–3 and 16–22 (Copilot availability, timeout, run check) and
       `review-fix` evals 1 and 3–9 from `evals.json` (7–9 now live in `evals/cases/`). Add the new
       `review-loop` evals: plugin missing, usage limit mid-run, minor-only, a rejection met again in
       a later run, dirty working tree. Keep `review-loop` 4–5 and 6–15 and `review-fix` 2 in
@@ -93,17 +100,19 @@ entry in `evals.json`. "Eval" below means such a case.
       kept 4–15 against both as the same kind of decision case, from scratch copies that are not
       committed and are handed to `behavioural-skill-evals` through the shared notes. Record the
       split, the scores and the cost in both skills' `evals/README.md`.
-- [ ] 4.7 Rewrite the description ("Claude–Codex") and `trigger-eval.json`; measure as in 3.7.
+      *Done 2026-10-10: the 9 new cases at 1.00 (3 runs), 7 of them failing on `origin/master`.*
+- [x] 4.7 Rewrite the description ("Claude–Codex") and `trigger-eval.json`; measure as in 3.7.
       Done at ≥ 80%, recorded in `evals/README.md`.
+      *Done 2026-10-10: 18/20 = 90%; the 0.00 query is the installed copy of the skill winning.*
 
 ## 5. Documentation and integration
 
-- [ ] 5.1 `README.md`: both skill rows, a Codex prerequisite section naming the plugin version the
+- [x] 5.1 `README.md`: both skill rows, a Codex prerequisite section naming the plugin version the
       skills were verified against, and the note that Copilot's automatic review keeps posting
       where it is switched on. Verify the rows match the new descriptions.
-- [ ] 5.2 `hooks/rules/50-shipping.md` step 4: `review-fix` is a single Codex pass, not a pass over
+- [x] 5.2 `hooks/rules/50-shipping.md` step 4: `review-fix` is a single Codex pass, not a pass over
       comments already left. Verify `node hooks/selftest.mjs` passes.
-- [ ] 5.3 `CHANGELOG.md`: a **BREAKING** entry (Copilot removed, Codex plugin required, new record
+- [x] 5.3 `CHANGELOG.md`: a **BREAKING** entry (Copilot removed, Codex plugin required, new record
       and policy files). Verify `claude plugin validate .` passes, as `plugin-validate.yml` does in
       CI.
 - [ ] 5.4 First real run, before merging: `/ss:review-loop <PR> review-via-codex` on this change's

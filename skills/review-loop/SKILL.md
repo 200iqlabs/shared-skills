@@ -74,9 +74,10 @@ and no wording of the description prevents it — three variants were measured a
 set in `evals/` and none moved the number. Topical overlap beats an exclusion clause, so the check
 belongs here instead.
 
-If nothing in the request implies repetition — no *until*, *aż*, *keep going*, *repeat*, no round
-count, no complaint about having to re-run the review by hand — then the user wants something
-else. An opinion with no changes is `/codex:review`, which the user types; one review-and-fix pass
+An explicit `/review-loop <PR> <change>` is itself the request for a cycle; this check is for a
+skill picked from free text. If nothing in such a request implies repetition — no *until*, *aż*,
+*keep going*, *repeat*, no round count, no complaint about having to re-run the review by hand —
+then the user wants something else. An opinion with no changes is `/codex:review`, which the user types; one review-and-fix pass
 is `review-fix`. Say so in one line and stop.
 
 1.4. **Codex is ready.**
