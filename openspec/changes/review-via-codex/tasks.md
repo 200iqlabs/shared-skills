@@ -2,19 +2,19 @@
 
 ## 1. Facts the skill text depends on (before any `SKILL.md` is touched)
 
-- [ ] 1.1 Run the built-in review (`codex-companion.mjs review --base <ref> --json`) on a branch
+- [x] 1.1 Run the built-in review (`codex-companion.mjs review --base <ref> --json`) on a branch
       whose diff has no defect; keep the raw payload in a scratch directory and fill the "clean"
       row of the recognition table in `design.md` decision 2 with its exact shape. Done when the
       row quotes real output, not an assumption.
-- [ ] 1.2 In a scratch repository, plant one defect, write `REVIEW.md` (with a rule Codex would
+- [x] 1.2 In a scratch repository, plant one defect, write `REVIEW.md` (with a rule Codex would
       not follow by default, e.g. reply language) and an `AGENTS.md` pointer to it and to a
       `review.md` that rejects the planted finding with a reason. Review with and without the
       pointer. Record in `design.md` decision 6 whether Codex applied the policy and whether it
       raised the rejected finding again; if it ignored the pointer, switch the templates to the
       inline variant before group 2.
-- [ ] 1.3 Add a `review.md` to a scratch change and run `openspec validate --strict`; confirm the
+- [x] 1.3 Add a `review.md` to a scratch change and run `openspec validate --strict`; confirm the
       extra file is accepted and that `openspec archive` keeps it. Record the result in decision 5.
-- [ ] 1.4 Time the built-in review on a large diff (a past multi-file pull request of this
+- [x] 1.4 Time the built-in review on a large diff (a past multi-file pull request of this
       repository, `--base` its merge base). Record the seconds in decision 4; if a review can come
       near the 600 s cap, adopt the background path there before group 3.
 

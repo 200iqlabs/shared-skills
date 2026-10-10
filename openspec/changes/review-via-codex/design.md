@@ -20,7 +20,7 @@ See `proposal.md` — Why. The facts that shape the approach:
     <body>
   ```
 
-  No trial produced a review without findings, so the shape of a clean result is not yet known.
+  A clean review is the verdict paragraph alone, with no findings marker (task 1.1, below).
 - `codex-companion.mjs setup --json` reports whether Codex is installed and authenticated.
 - The install directory is recorded in `~/.claude/plugins/installed_plugins.json` under
   `codex@openai-codex`. The cache can hold more than one version at once — on the owner's machine
@@ -28,7 +28,8 @@ See `proposal.md` — Why. The facts that shape the approach:
   the installed one.
 - Codex reads `AGENTS.md` in the repository root, the way Claude reads `CLAUDE.md`.
 - A Bash call in the foreground is capped at 600 s. Trial reviews of small diffs took 40–97 s;
-  Copilot's reviews of growing branches took 8–16 min, and Codex's time on a large diff is unmeasured.
+  Copilot's reviews of growing branches took 8–16 min. Codex reviewed an 11-file, 988-line diff in
+  81 s (task 1.4, decision 4).
 
 ## Goals / Non-Goals
 
@@ -73,13 +74,35 @@ directions:
 | Exit / `codex.status` | Output | Verdict |
 |---|---|---|
 | 0 / 0 | at least one entry parsed, every entry under the findings marker parsed | findings |
-| 0 / 0 | matches the recognised clean shape (fixed by task 1.1) | clean |
+| 0 / 0 | non-empty text, no findings marker, no line shaped like an entry | clean |
 | 0 / 0 | findings marker present, an entry fails to parse | `error` |
 | 0 / 0 | neither shape | `error` |
 | anything else | — | `error`, with the reviewer's text |
 
 The built-in reviewer takes no instructions, so the review policy and the record reach it only
 through the repository: `AGENTS.md` and the record committed in the diff (decision 5).
+
+**What the output looks like (tasks 1.1, 1.2 and 1.4, 2026-10-10, plugin 1.0.2, codex-cli
+0.144.1).** Six reviews, all exit 0 with `codex.status` 0:
+
+- *Clean* (1.1, a one-line README fix, 53 s): `codex.stdout` was the verdict alone —
+  "The README change accurately reflects the existing `farewell` helper and does not affect code
+  behavior or tests." A second clean result (1.2, 74 s) had the same shape in Polish and named a
+  finding the record had rejected, in prose, without an entry.
+- *Findings*: the verdict paragraph, a blank line, a marker line, then entries. The marker is
+  `Review comment:` for one finding and `Full review comments:` for several — both occurred, so the
+  parser accepts both. The marker stays in English when the policy makes the model write Polish:
+  Codex renders it, not the model.
+- An entry is `- [P1] <title> — <path>:<start>-<end>`. The separator is U+2014, the path is
+  absolute (`C:\Users\…\src\session.py` on Windows, backslashes included), and the body follows
+  indented by two spaces, with a blank line between entries.
+- The line numbers can be off: the same `return` on line 20 was reported as `20-20` in two runs
+  and `18-18` in a third. The fixer reads around the location rather than trusting the line.
+
+The recognition is implemented once, in `skills/review-fix/scripts/codex-review.mjs`, which both
+skills call; the model does not parse the text by eye. A finding with no tag, or a tag outside the
+scale, is untagged for ordering (the spec's rule) and counts as important, because its severity
+cannot be shown to be minor.
 
 ### 3. What the review is run against
 
@@ -97,10 +120,13 @@ dispatches one `review-fix` sub-agent per round and keeps its own context clean.
 schedules wake-ups. A round is synchronous: the sub-agent returns once its review, fixes and push
 are done.
 
-The review runs in the foreground with the 600 s cap. Task 1.4 measures a large diff. If it can
-exceed the cap, the call moves to a background Bash run followed by
-`codex-companion.mjs status <job> --wait --json` and `result <job> --json`, which the plugin already
-provides. A timeout of the review itself ends as `error`, never as clean.
+The review runs in the foreground with the 600 s cap. **Task 1.4 measured it: 81 s** for the
+whole diff of pull request #10 of this repository (11 files, +988/−12, `--base` its parent), against
+43–93 s for the small trial diffs. The heaviest review measured sits at under a sixth of the cap, so
+the background path (`status <job> --wait --json`, then `result <job> --json`) is not adopted. The
+helper stops a review that runs past 540 s and reports it as `error`, so a review that does
+outgrow the cap fails visibly inside the Bash call instead of being killed by it. A timeout of the
+review itself ends as `error`, never as clean.
 
 The sub-agent's return line grows to carry what the new stop rule reads:
 
@@ -131,8 +157,12 @@ Checks: `node hooks/selftest.mjs` — 14/14 passed
   rejection.
 - **Committed every round**, alone when nothing else changed, so the pull request carries the whole
   record and the next run and the next review read it.
-- **Archived with the change.** `openspec archive` moves the directory, record included. Task 1.3
-  confirms that `openspec validate` accepts the extra file.
+- **Archived with the change.** `openspec archive` moves the directory, record included. **Task 1.3
+  confirmed it** (openspec 1.13.2, scratch copy of this repository): with a `review.md` beside the
+  artifacts, `openspec validate review-via-codex --strict` passes; `openspec archive
+  review-via-codex --yes` moved the change to `archive/2026-10-10-review-via-codex/` with
+  `review.md` intact, and applied this change's delta to the main spec (+6, ~1, −3), which then
+  validated.
 
 *Alternatives.* A PR comment per round is visible on the timeline, but Codex never reads it, so a
 rejection would be judged again in every run. The sign-off issue alone loses everything between
@@ -153,6 +183,27 @@ Test paths: tests/**, **/*.test.ts
 `openspec/changes/*/review.md` before raising a finding again. The plugin ships both as templates
 in `templates/`. If task 1.2 shows Codex not following the pointer, the policy moves inline into
 the `AGENTS.md` template, and the machine-read lines move with it.
+
+**Task 1.2 result: Codex follows the pointer, so the policy stays in `REVIEW.md`.** A scratch
+repository with two planted defects (an inverted expiry check, a swallowed exception in a
+best-effort audit call), a `REVIEW.md` whose rule Codex does not follow by default (write every
+finding in Polish), and a `review.md` in the branch. Four reviews:
+
+| Run | `REVIEW.md` | `AGENTS.md` pointer | `review.md` rejects | Result |
+|---|---|---|---|---|
+| control | — | — | — | English; `[P1]` inverted expiry only — the swallowed exception is not raised at all |
+| pointer | yes | yes | the swallowed exception | Polish; the same `[P1]` only |
+| no pointer | yes | — | the swallowed exception | Polish; the same `[P1]` only |
+| pointer, round 2 | yes | yes | the inverted expiry, with a reason | Polish; **clean**: "the reversed comparison was deliberately rejected in the review record and the code has not changed since" |
+
+- The policy was applied with the pointer. In a repository of two files Codex also found
+  `REVIEW.md` without it, so the pointer is not the only route in, but it costs one line and is the
+  route that does not depend on Codex exploring a larger tree.
+- The first rejection says nothing, because the control never raises that finding. The second
+  does: Codex withheld a `[P1]` it raised in all three earlier runs, citing the record. A rejection
+  can therefore remove a finding from the review itself. The fixer's repeated check stays, because a
+  review that does raise it again still has to be caught, and a person reopens a finding by deleting
+  its rejection from the record.
 
 *Why not `AGENTS.md` alone.* `REVIEW.md` is the policy file any reviewer can be pointed at,
 including a Claude reviewer in CI later. `AGENTS.md` is Codex's own entry point and stays one
@@ -256,5 +307,6 @@ measures the change.
 
 ## Open Questions
 
-- The exact text of a clean review. Task 1.1 fixes it before the parser is written. It changes
-  one row of the recognition table, not the approach.
+- None left from group 1. The shell tier of `behavioural-skill-evals` (its spike S2) will say
+  whether the install record is readable inside an eval run; if it is not, the helper needs an
+  `EVAL_*` override for the runtime path, which is a change to decision 1 for later.
