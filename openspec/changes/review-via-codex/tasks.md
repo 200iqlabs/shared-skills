@@ -115,7 +115,7 @@ entry in `evals.json`. "Eval" below means such a case.
 - [x] 5.3 `CHANGELOG.md`: a **BREAKING** entry (Copilot removed, Codex plugin required, new record
       and policy files). Verify `claude plugin validate .` passes, as `plugin-validate.yml` does in
       CI.
-- [ ] 5.4 First real run, before merging: `/ss:review-loop <PR> review-via-codex` on this change's
+- [x] 5.4 First real run, before merging: `/ss:review-loop <PR> review-via-codex` on this change's
       own pull request, from a session started in this worktree with
       `claude --plugin-dir <worktree>`. `claude plugin update ss@shared-skills` cannot serve here:
       it installs the published `master`, which does not carry the new skills until this pull
@@ -134,6 +134,12 @@ entry in `evals.json`. "Eval" below means such a case.
       record's rounds wait for a run from an interactive `claude --plugin-dir <worktree>` session
       where edits can be approved. The open findings (two from run 1, one from run 2) are in
       #23.*
+      *Those three findings were then fixed by hand at the owner's request (522a21a). A third run,
+      started by the owner with `/ss:review-loop 22 review-via-codex` in their own session, was
+      orchestrated from the branch's `review-loop` and `review-fix` files — the installed `ss` is
+      still the Copilot-era version, and `--plugin-dir` was not in that session. Codex reviewed
+      cbc55f1 in 91 s and came back clean; round 1 is in `review.md` (23a568e, pushed), the loop
+      ended as `clean`, and its report was appended to #23. All three criteria met.*
 - [ ] 5.5 After merging, archive this change and rewrite the Purpose of
       `openspec/specs/code-review-loop/spec.md`, which still speaks of waiting for a reviewer that
       may never answer. Verify `openspec validate --all` passes.
