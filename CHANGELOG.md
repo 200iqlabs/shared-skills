@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Fixed
+- **`review-loop`'s sign-off record now says when it is missing the error text** — on an `error`
+  ending, the record could go out without the error text and without saying so. The warning
+  *"The error text could not be read"* never fired once the tail of the run log had been written,
+  because the tail, or the line saying the log could not be read, went into the same file the
+  warning tested. The error text and the log tail now have separate files. The report printed into
+  the session names the part that is missing: the run report, the error text, or both. Before, it
+  always named the report.
 - **`slides` pins Marp CLI `^4` by default** — `^3` fails under Node 26 with `require is not defined in ES module scope` (yargs, pulled in by `@puppeteer/browsers`; measured 2026-09-11 on macOS, Node v26.7.0), while `^4` renders with the same call. New `/ss:slides:init` configs get `^4`; an existing `slides/config.yaml` keeps its own `marp_cli_version` — change it there.
 
 ### Added

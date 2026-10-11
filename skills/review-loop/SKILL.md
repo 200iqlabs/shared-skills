@@ -342,16 +342,16 @@ tomorrow has no "above" at all. So the error text goes *under* the follow-up lin
 session too, and 6.4 concatenates it under the report in the record — the same direction in
 both places.
 
-**On an `error` termination, also write `$SCRATCH/error.txt`** — again with your file-writing
-tool. It carries two things: the error text itself, as the sub-agent or the failing call
-produced it, and the tail of the run log, which is the only place the preceding iterations are
-recorded:
+**On an `error` termination, also write two files, one per thing the follow-up line promises.**
+The error text itself, as the sub-agent or the failing call produced it, goes into
+`$SCRATCH/error.txt`. The tail of the run log, the only place the preceding iterations are
+recorded, goes into `$SCRATCH/log-tail.txt`, from the shell:
 
 ```bash
 SCRATCH="<paste the path 6.2 echoed>"        # 6.2 ran in a different shell; this one has nothing
 REPO_ROOT=$(git rev-parse --show-toplevel)   # 1.4 set it, and that shell is gone too
 if ! tail -n 20 "$REPO_ROOT/.review-loop.log" > "$SCRATCH/log-tail.txt" 2> "$SCRATCH/tail-err.txt"; then
-  printf '> ⚠️ **The run log could not be read** (`%s`), so this record carries the error text\n> without the iteration history that preceded it.\n' \
+  printf '> ⚠️ **The run log could not be read** (`%s`), so this record carries no iteration\n> history for this run.\n' \
     "$(tr '\n' ' ' < "$SCRATCH/tail-err.txt")" > "$SCRATCH/log-tail.txt"
   echo "log tail: FAILED — the record will say so in its own body"
 fi
@@ -359,7 +359,7 @@ fi
 
 **A failed `tail` leaves its file behind, which is why the status is read rather than the
 file.** The `>` redirect creates `log-tail.txt` before `tail` ever runs, so a missing or
-unreadable `.review-loop.log` leaves an *empty* file that the `cat` below appends happily: the
+unreadable `.review-loop.log` leaves an *empty* file that 6.4 would concatenate happily: the
 record goes out without the iteration history the spec requires of it, and nothing anywhere
 says so. The branch replaces that empty file with a line stating the absence, so it reaches the
 record by the same route the log would have, and the `echo` tells the person watching the run —
@@ -374,20 +374,20 @@ the iteration history the spec requires of it — and an unset `SCRATCH` writes 
 filesystem root or dies on a permission error. Neither announces itself; both produce a gate
 that looks written.
 
-Write the error text into `$SCRATCH/error.txt` with your file-writing tool, then append the
-tail to it in a block that restores `SCRATCH` for itself:
+Write the error text into `$SCRATCH/error.txt` with your file-writing tool, and put nothing else
+in that file: not the log tail, not the line about an unreadable log, not a note of your own.
+**The two files stay apart because 6.4 reads `error.txt` as evidence.** Its test asks whether
+the file has content, and the answer has to mean *the error text arrived*. A file that also
+held the tail would have content whenever the tail block ran, so an error text that never
+reached it, or reached it empty, would pass as delivered: the record would go out without the
+error and without saying so. 6.4 puts the two files one under the other itself.
 
-```bash
-SCRATCH="<paste the path 6.2 echoed>"
-cat "$SCRATCH/log-tail.txt" >> "$SCRATCH/error.txt"
-```
+On every other termination reason leave both files absent. 6.4 decides what to do about them
+from the **termination reason**, not from whether a file happens to exist: absent on a clean
+run is the expected state and passes silently, absent on an `error` run is a record that
+promised the error below the follow-up line and did not carry it, and says so.
 
-On every other termination reason leave `$SCRATCH/error.txt` absent. 6.4 decides what to do
-about it from the **termination reason**, not from whether the file happens to exist: absent on
-a clean run is the expected state and passes silently, absent on an `error` run is a record
-that promised the error below the follow-up line and did not carry it, and says so.
-
-Both files are the reason 6.4 can promise a durable record: they are what the follow-up line
+These files are the reason 6.4 can promise a durable record: they are what the follow-up line
 points at, and they are what stays behind when the session ends.
 
 
@@ -477,11 +477,13 @@ author and which carries no delimiter, comes from a heredoc:
 SCRATCH="<paste the path 6.2 echoed>"
 . "$SCRATCH/gate.env"
 
-# Both written in 6.2 and 6.3 with your file-writing tool, not with a shell heredoc:
-#   $SCRATCH/report.md  — the report from 6.2 and its follow-up line from 6.3
-#   $SCRATCH/error.txt  — on an `error` termination, the error text and the log tail;
-#                         absent or empty otherwise
-BODY_INCOMPLETE=""
+# Written in 6.2 and 6.3, never through a shell heredoc; any of them may be missing or empty
+# here, so each is tested on its own:
+#   $SCRATCH/report.md    — the report from 6.2 and its follow-up line from 6.3
+#   $SCRATCH/error.txt    — on an `error` termination, the error text and nothing else
+#   $SCRATCH/log-tail.txt — on an `error` termination, the last lines of the run log, or the
+#                           line saying the log could not be read
+REPORT_MISSING=""; ERROR_MISSING=""
 {
   if [ -n "$LOOKUP_FAILED" ]; then
     cat <<'WARN'
@@ -491,7 +493,7 @@ BODY_INCOMPLETE=""
 WARN
   fi
   if [ -s "$SCRATCH/report.md" ] && cat "$SCRATCH/report.md"; then :; else
-    BODY_INCOMPLETE=1
+    REPORT_MISSING=1
     cat <<'NOREPORT'
 > ⚠️ **The run report could not be read**, so this record carries the closing sentence and
 > little else. The report was produced in the session that opened this issue and cannot be
@@ -502,14 +504,20 @@ NOREPORT
   if [ "$REASON" = "error" ]; then
     printf '\n'
     if [ -s "$SCRATCH/error.txt" ] && cat "$SCRATCH/error.txt"; then :; else
-      BODY_INCOMPLETE=1
+      ERROR_MISSING=1
       cat <<'NOERROR'
 > ⚠️ **The error text could not be read.** This run ended in an error, and the follow-up line
-> above promises the error and the tail of the run log directly below it — neither reached this
-> record. Both were produced in the session that opened this issue and cannot be recovered from
-> here; re-run the loop on this pull request to get them.
-
+> above promises the error text directly below it — it did not reach this record. It was
+> produced in the session that opened this issue and cannot be recovered from here; re-run the
+> loop on this pull request to get it.
 NOERROR
+    fi
+    printf '\n\n'      # the error text may lack a final newline; keep the tail off its last line
+    if [ -s "$SCRATCH/log-tail.txt" ] && cat "$SCRATCH/log-tail.txt"; then :; else
+      cat <<'NOLOG'
+> ⚠️ **The tail of the run log did not reach this record**, so it carries no iteration history
+> for this run.
+NOLOG
     fi
   fi
   cat <<'BODY'
@@ -518,7 +526,9 @@ Closing this issue is the sign-off. A person closes it after reading the pull re
 nothing else may: not this loop, not a later run, not a workflow.
 BODY
 } > "$SCRATCH/sign-off.md"
-printf 'BODY_INCOMPLETE=%q\n' "$BODY_INCOMPLETE" >> "$SCRATCH/gate.env"
+{ printf 'REPORT_MISSING=%q\n' "$REPORT_MISSING"
+  printf 'ERROR_MISSING=%q\n'  "$ERROR_MISSING"
+} >> "$SCRATCH/gate.env"
 ```
 
 `cat` of a file cannot terminate anything, so no line of the report and no line of the error
@@ -528,10 +538,10 @@ text can end the body early. That is the property a quoted delimiter alone does 
 always succeeds, so without the test above a missing or unreadable `report.md` yields a
 footer-only body, a group that still exits 0, and a gate published as though it carried the
 run. The record is still opened — a record nobody can read beats no record, which is the trade
-this whole step is built on — but it says so in its own first lines, and `BODY_INCOMPLETE`
+this whole step is built on — but it says so in its own first lines, and `REPORT_MISSING`
 carries the same fact into the report, because the two are read by different people. The brace
-group runs in this shell rather than a subshell, which is what lets the flag survive the
-redirect; it is appended to `gate.env` because the write block below is another tool call.
+group runs in this shell rather than a subshell, which is what lets the flags survive the
+redirect; they are appended to `gate.env` because the write block below is another tool call.
 
 **The error text is mandatory on an `error` termination, so it is keyed on the reason and not
 on the file.** `[ -s error.txt ]` alone answers "is there one", and a missing file then reads as
@@ -541,11 +551,26 @@ below. `REASON` comes from `gate.env` for the same cause as everything else in t
 tool call that knew it has ended. On any other reason the branch is not entered at all, so a
 clean run neither warns nor leaves an empty gap where the error would have been.
 
+**Inside that branch the test reads the error text and nothing else.** That is why 6.3 keeps
+the log tail in its own file. When the tail used to be appended to `error.txt`, the file had
+content whenever the tail block ran, the line saying the log could not be read included, so an
+error text that never arrived still passed the test. NOERROR could not fire, and the record
+went out without the error and without saying so. The tail gets the same test of its own, and a
+tail that never reached the body is stated where it would have been, not left as a gap.
+
+**The report and the error text are two flags, because they go missing separately.** A single
+flag set by either branch can choose only one session warning. A run whose report arrived and
+whose error text did not would then tell the person watching that the report is missing. They
+would look for the wrong part and never copy the error into the record. `REPORT_MISSING` and
+`ERROR_MISSING` are each set only by their own branch, and both may be set at once. A missing log
+tail sets neither. When `tail` failed, 6.3 has already told the session, and the record says so
+where the tail would be.
+
 **On an `error` termination the body carries the error itself, not a pointer to it.** The
-follow-up line in 6.3 points below itself and `error.txt` is concatenated below the report, so
-the two agree. An earlier wording sent the reader to "the log entries above" — which in the
-issue is nothing at all, since the entries above it are the session's, and outliving that
-session is the whole purpose of the record.
+follow-up line in 6.3 points below itself, and `error.txt` and `log-tail.txt` are concatenated
+below the report, so the two agree. An earlier wording sent the reader to "the log entries
+above" — which in the issue is nothing at all, since the entries above it are the session's,
+and outliving that session is the whole purpose of the record.
 
 Then append to the one you found, or create it — checking that it is still open before each
 attempt, and retrying once before giving up:
@@ -611,8 +636,8 @@ assignment either way, so its exit status says nothing, and the variable itself 
 tool call — a reporting step reading it would see an unset variable on a failed write and on a
 clean one alike, and would call an ungated run complete. It is appended to `gate.env` and
 echoed; the reporting step restores `SCRATCH`, runs `. "$SCRATCH/gate.env"`, and chooses its
-warning from `GATE_WRITTEN`, `EXISTING`, `LOOKUP_FAILED` and `BODY_INCOMPLETE` — with `<error>`
-taken from `$SCRATCH/write-err.txt`.
+warnings from `GATE_WRITTEN`, `EXISTING`, `LOOKUP_FAILED`, `REPORT_MISSING` and `ERROR_MISSING`
+— with `<error>` taken from `$SCRATCH/write-err.txt`.
 
 **The re-check narrows the window; it does not close it.** Nothing holds the issue open between
 `gh issue view` and `gh issue comment`, so a close landing in that gap still appends to a
@@ -664,12 +689,26 @@ nothing was created — a report asserting both outcomes, which a reader resolve
 whichever they read first. When both failed, the create-path warning governs and carries the
 lookup as its own second sentence.
 
-**The body was incomplete** — printed alongside whichever of the three applies, when
-`BODY_INCOMPLETE` is set:
+**The body was incomplete** — printed alongside whichever of the three applies, one line for
+each flag that is set. Both may be.
+
+When `REPORT_MISSING` is set:
 
 > ⚠️ **The sign-off record does not carry the run report** — the report file could not be read
 > while the body was assembled, so whatever was written carries its closing sentence and little
 > else. Read the pull request on its own terms; the record cannot tell you what the loop did.
+
+When `ERROR_MISSING` is set:
+
+> ⚠️ **The sign-off record does not carry the error text** — the error file was missing, empty
+> or unreadable while the body was assembled, so whatever was written says the run ended in an
+> error without saying which. Copy the error from this session into the record before the
+> session ends; nothing else still holds it.
+
+Each line names only its own part, because each asks for something different. A missing report
+sends the reader to the pull request itself. A missing error text asks the person watching to
+copy it out of the session while they still can. A warning about the wrong part sends them to
+the wrong place, and the error is lost when the session ends.
 
 Five things about this step are deliberate:
 

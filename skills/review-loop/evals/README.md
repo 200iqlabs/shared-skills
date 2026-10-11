@@ -47,6 +47,11 @@ three runs against the `review-via-codex` branch; "base" is runs against `origin
 | 29 | `29-policy-line-p0-p1-stops-after-a-p2-round` | 4.3 | 1.00 | 0.20 | under `Important: P0-P1`, P2 fixes do not start a review |
 | 30 | `30-usage-limit-mid-run-is-an-error` | 4.6 | 1.00 | 1.00 | an exhausted allowance in round 3 is `error`, carried to the sign-off |
 | 31 | `31-rejection-met-again-in-a-later-run` | 4.6 | 1.00 | 0.67 | yesterday's rejection: a repeat, round 3, `no-fixes` |
+| 32 | `32-error-text-missing-log-present-still-warns` | 2.1 † | 1.00 | 0.67 | error text missing, log tail present: the record says so, the session names the error text |
+| 33 | `33-missing-report-is-not-a-missing-error` | 2.1 † | 1.00 | 1.00 | report missing, error text present: the record and the session name the report only |
+
+† A task of `review-loop-sign-off-completeness`. Its base is the `review-via-codex` branch, and its
+measurements are under [Sign-off completeness](#sign-off-completeness-review-loop-sign-off-completeness).
 
 **All nine pass on the branch, 3 runs each (1.00 every time); seven fail against the base**, one run
 each. Cases 23 and 30 pass against the base as well — a dirty tree and an error carried to the
@@ -91,7 +96,36 @@ three branch runs worked this out from the text and declined to print the warnin
 The text is the same on `origin/master`; the follow-up is to key that warning on whether the error
 text itself arrived, not on the file. Trial 1.4 of `review-via-codex` (Codex on pull request #10)
 raised a neighbouring defect in the same step: one `BODY_INCOMPLETE` flag covers both a missing
-report and a missing error text.
+report and a missing error text. Both are fixed by `review-loop-sign-off-completeness` (below).
+
+### Sign-off completeness (`review-loop-sign-off-completeness`)
+
+**The fix.** `error.txt` now holds the error text alone, and the log tail stays in `log-tail.txt`.
+6.4 concatenates the two separately, each behind its own test. `REPORT_MISSING` and
+`ERROR_MISSING` replace `BODY_INCOMPLETE`. The reasons are in that change's `design.md`. 6.4's
+body block, extracted verbatim from `SKILL.md`, was also run in a scratch shell against all 24
+combinations of report, error text and log tail (present, unreadable, never captured) on
+`error` and `clean`:
+
+- **Branch:** every row gives the warnings and flags the spec's scenarios require.
+- **Base:** NOERROR never fires once the tail block has run, which is the defect. The base also
+  glued an error text that had no final newline onto the first log line.
+
+Measured 2026-10-10, Claude Code 2.1.292, `claude-opus-5-5`, judge `claude-haiku-5-5`, 3 runs per
+case per round. The base is `change/review-via-codex` at `3d6d6e5`. Cases 9, 14 and 15 run from
+the scratch copies in the shared notes, as above; 30, 32 and 33 from `evals/cases/`.
+
+| id | branch | base | note |
+|---|---|---|---|
+| 9 | 1.00 | 0.75 | the base misses the closing-sentence regex in every run, a paraphrase as noted above; the rubric passes on both |
+| 14 | 0.89, 0.78 (two rounds) | 0.89 | the regex passes in every run on both sides. Every miss is the Haiku rubric rejecting an answer that opens the record with the warning first, as required (read run by run) |
+| 15 | 1.00, 1.00 (two rounds) | 1.00 | does not separate the versions: the base answers diagnose the defect themselves and quote the warning while saying it cannot fire, which satisfies the regex. 32 separates them |
+| 30 | 1.00 | 1.00 | the error carried into the record is unchanged |
+| 32 | 1.00, 1.00 (two rounds) | 0.67 | all three base answers work out that the tail makes `error.txt` non-empty, so NOERROR cannot fire and the session gets no warning |
+| 33 | 1.00, 1.00 (two rounds) | 1.00 | guards the other direction: a missing report is not reported as a missing error text |
+
+Cost: $18.21 in all. The base runs cost $4.77 (14, 15, 32, 33) and $2.09 (9, 30); the branch
+rounds cost $4.45 and $6.90.
 
 ## Triggering
 
