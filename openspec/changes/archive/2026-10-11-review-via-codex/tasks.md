@@ -140,6 +140,6 @@ entry in `evals.json`. "Eval" below means such a case.
       still the Copilot-era version, and `--plugin-dir` was not in that session. Codex reviewed
       cbc55f1 in 91 s and came back clean; round 1 is in `review.md` (23a568e, pushed), the loop
       ended as `clean`, and its report was appended to #23. All three criteria met.*
-- [ ] 5.5 After merging, archive this change and rewrite the Purpose of
+- [x] 5.5 After merging, archive this change and rewrite the Purpose of
       `openspec/specs/code-review-loop/spec.md`, which still speaks of waiting for a reviewer that
       may never answer. Verify `openspec validate --all` passes.
