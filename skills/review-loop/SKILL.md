@@ -1,40 +1,55 @@
 ---
 name: review-loop
-description: 'Run the whole Claude-Copilot review cycle on a pull request unattended — fix the comments, push, wait for the next review, repeat until the reviewer has nothing new. Use this whenever someone wants the back-and-forth to run by itself across several rounds: "az przestanie zglaszac uwagi", "zapetl poprawki i review", "nie chce tego pilnowac", "iterate automatically until it settles", "keep cycling until copilot is quiet" — even when they never type /review-loop. Takes a PR number and an OpenSpec change name, which give the fixer the intent to judge comments against. Do NOT use for a single pass over the comments already on a PR — that is review-fix — nor for producing a review, waiting on CI, or polling a deployment.'
+description: 'Run the whole Claude–Codex review cycle on a pull request unattended — Codex reviews the branch, a fixer judges and fixes the findings, pushes, and the next review runs, until nothing important is left. Use this whenever someone wants the review-and-fix back-and-forth to run by itself across several rounds: "aż przestanie zgłaszać uwagi", "zapętl review i poprawki", "nie chcę tego pilnować", "iterate until the review is clean", "keep cycling codex and fixes until it settles" — even when they never type /review-loop. Takes a PR number and an OpenSpec change name; the change gives the fixer the intent to judge findings against and holds the review record. Do NOT use for a single review-and-fix pass — that is review-fix — nor for an opinion on a pull request, waiting on CI, or polling a deployment.'
 ---
 
 # Review Loop
 
-Orchestrate an automated Claude↔Copilot review cycle on a pull request. Each iteration: read the OpenSpec change for context, run `review-fix` (fetch + classify + fix + push + reply), retrigger Copilot, wait for its next review, repeat. Terminate when Copilot has nothing new to say, or on a safety-net iteration cap.
+Orchestrate an automated Claude↔Codex review cycle on a pull request. Each iteration is one
+`review-fix` pass in a sub-agent: Codex reviews the branch against the pull request's base, the
+fixer judges each finding against the OpenSpec change, fixes what holds up, records every outcome
+in the change's `review.md`, verifies, commits and pushes. The loop ends when a review comes back
+clean, when what is left is below the importance line or was rejected, on an error, or at the
+iteration cap — and every ending opens a sign-off record that only a person can close.
 
-**Input:** `/review-loop <PR-number> <openspec-change-name> [--max N] [--wait-initial S] [--poll-interval S] [--poll-timeout S]`
+**Input:** `/review-loop <PR-number> <openspec-change-name> [--max N]`
 
-- `PR-number` — required. The PR to iterate on. No fallback to `gh pr view` on current branch — the PR must be explicit.
+- `PR-number` — required. The PR to iterate on. No fallback to `gh pr view` on the current branch —
+  the PR must be explicit.
 - `openspec-change-name` — required. Directory name under `openspec/changes/<name>/`.
-- `--max N` — safety-net iteration cap (default `5`).
-- `--wait-initial S` — seconds to sleep after each push before polling (default `180`).
-- `--poll-interval S` — seconds between polls (default `30`).
-- `--poll-timeout S` — seconds to wait for a new Copilot review after a push before step 5.3 checks the workflow state (default `1500`). **Not a hard cap**: 5.3 extends the window while a review run for the current review request is still unfinished, or while it cannot tell whether one exists, so the total wait can exceed it — the final report quotes what was actually waited, not this flag. Copilot's review time scales with the size of the diff: measured across five consecutive rounds on one PR, 8m2s → 12m3s → 8m6s → 9m47s → 15m42s, growing as the branch grew. A 600s default expires mid-review on anything substantial, and the run that expires looks exactly like a run that never started.
+- `--max N` — safety-net iteration cap (default `5`). Every iteration spends one Codex review from
+  the user's plan; this is what bounds it.
+
+**The helper.** Codex readiness is checked with the script that ships in the sibling `review-fix`
+skill:
+
+```bash
+HELPER="<this skill's base directory>/../review-fix/scripts/codex-review.mjs"
+```
+
+Take the base directory from the line announced when this skill loads, and check the file exists
+before pre-flight relies on it.
 
 ## Steps
 
 ### 1. Pre-flight validation
 
-Run once before iteration 1.
+Run once before iteration 1. Nothing in this step edits, commits or pushes.
 
 1.1. **Detect repo and PR.**
 
 ```bash
 gh repo view --json nameWithOwner --jq .nameWithOwner
-gh pr view <PR> --json number,url,headRefName,headRefOid,state
+gh pr view <PR> --json number,url,headRefName,baseRefName,state
 ```
 
-**Note**: do not pipe `gh api` JSON output through `jq` — it may not be installed on all machines. Parse JSON inline. The `--jq` flag above is safe because it's processed by `gh` itself.
+**Note**: do not pipe `gh api` JSON output through `jq` — it may not be installed on all machines.
+Parse JSON inline. The `--jq` flag above is safe because it's processed by `gh` itself.
 
-If `state` is not `OPEN`, abort with: `PR #<PR> is not OPEN — current state: <state>`. Otherwise store `headRefName`, `url`, `nameWithOwner`, and `headRefOid` as `pr_head_sha`.
-
-`pr_head_sha` is what 5.3 scopes its run check by in the pre-review case from 3.2a, where no push
-ever happens and `last_pushed_sha` stays null.
+If `state` is not `OPEN`, abort with: `PR #<PR> is not OPEN — current state: <state>`. Otherwise
+store `headRefName`, `baseRefName`, `url` and `nameWithOwner`. If the current branch
+(`git branch --show-current`) is not `headRefName`, abort and say which branch to check out — the
+review reads the local branch, and the loop does not switch branches in someone's working tree.
 
 1.2. **Verify OpenSpec change directory exists.**
 
@@ -49,646 +64,254 @@ ls openspec/changes/
 ls openspec/changes/archive/ | tail -10
 ```
 
-Ask the user: *"I can't find `openspec/changes/<change-name>/`. Candidates listed above. Which is correct, or should I abort?"* — **pause until user responds**. Do not guess.
+Ask the user: *"I can't find `openspec/changes/<change-name>/`. Candidates listed above. Which is
+correct, or should I abort?"* — **pause until user responds**. Do not guess.
 
-1.3. **Compute Copilot baseline.**
-
-```bash
-gh api --paginate "repos/<owner>/<repo>/pulls/<PR>/reviews?per_page=100"
-```
-
-Parse the JSON response. Compute:
-- `pre_loop_last_copilot_review_id` = maximum `id` among reviews where `user.login == "copilot-pull-request-reviewer[bot]"`, or `0` if no such reviews exist.
-
-1.3a. **Check that Copilot reviews this repo at all.**
-
-The loop cannot otherwise tell *Copilot has not answered yet* from *Copilot does not review here*, and both look identical for the whole `wait_initial + poll_timeout` window. Look for any prior review by the bot across recent pull requests:
-
-```bash
-gh api "repos/<owner>/<repo>/pulls?state=all&per_page=10" --jq '.[].number'
-```
-
-For each number returned, fetch `repos/<owner>/<repo>/pulls/<n>/reviews` and look for `user.login == "copilot-pull-request-reviewer[bot]"`. Then:
-
-- **Found at least one** — Copilot reviews here. Proceed.
-- **None found, and the repo has prior pull requests** — warn before starting: *"Copilot has never reviewed a pull request in this repository. If it is not enabled, this run will spend <wait_initial + poll_timeout>s per iteration and then report a timeout it cannot distinguish from Copilot simply being slow. Continue anyway?"* — wait for the user.
-- **The repo has no prior pull requests** — the check is inconclusive, not negative. Say so in one line and proceed; a first-ever PR has no history to read.
-
-This is advisory. Never abort on it by itself — a repo can have Copilot enabled today and no history of it.
-
-1.3b. **Check the user wants a cycle driven, not a review written.**
+1.3. **Check the user wants a cycle driven, not a review written.**
 
 Requests like *"zrób review tego PR-a i powiedz co jest nie tak"* trigger this skill at full rate,
 and no wording of the description prevents it — three variants were measured against the trigger
 set in `evals/` and none moved the number. Topical overlap beats an exclusion clause, so the check
 belongs here instead.
 
-If nothing in the request implies repetition — no *until*, *aż*, *keep going*, *repeat*, no round
-count, no complaint about having to re-request the review by hand — then the user wants an opinion
-on the pull request, not an unattended loop over it. Say so in one line and point at a code review.
+An explicit `/review-loop <PR> <change>` is itself the request for a cycle; this check is for a
+skill picked from free text. If nothing in such a request implies repetition — no *until*, *aż*,
+*keep going*, *repeat*, no round count, no complaint about having to re-run the review by hand —
+then the user wants something else. An opinion with no changes is `/codex:review`, which the user types; one review-and-fix pass
+is `review-fix`. Say so in one line and stop.
 
-A single pass over comments that already exist is the neighbouring case, and it belongs to
-`review-fix`. The giveaway between the two is the same: nothing is repeated.
+1.4. **Codex is ready.**
 
-1.4. **Check for prior incomplete run.**
+```bash
+node "$HELPER" preflight
+```
+
+Exit 2 (`"ok": false`) means the Codex plugin is not installed, its install record points nowhere,
+or Codex is not signed in. Abort before the first review with the `error` field and the next step:
+*run `/codex:setup`, then start the loop again.* There is no fallback reviewer.
+
+If `pointer.ok` is false, print **one** warning and continue: the repository's `AGENTS.md` does not
+point Codex at `REVIEW.md` and at `openspec/changes/*/review.md` (`pointer.missing` names what is
+absent), so the reviewer works without the policy and may raise again what an earlier round
+rejected. The templates are `templates/REVIEW_TEMPLATE.md` and `templates/AGENTS_REVIEW_POINTER.md`
+in this plugin. The fixer still catches repeats against the record; the warning is about wasted
+rounds, not lost decisions.
+
+1.5. **The working tree is clean.**
+
+```bash
+git status --porcelain
+```
+
+Anything listed aborts the run: *"The working tree has uncommitted changes. Commit or stash them,
+then start the loop again."* Uncommitted work would be reviewed as part of the branch and then swept
+into the round's commit, under a message that does not describe it.
+
+1.6. **Check for prior incomplete run.**
 
 ```bash
 REPO_ROOT=$(git rev-parse --show-toplevel)
 ls "$REPO_ROOT/.review-loop.log" 2>/dev/null
 ```
 
-If the log file exists, scan it for entries with `"pr": <PR>`. If the most recent entry for this PR is an `iter-start` or `iter-end` (not a `terminate`) from the last 24 hours, prompt: *"Previous loop for PR #<PR> stopped at iteration <K>. Resume from iteration <K+1>, or start fresh from iteration 1?"* — wait for user choice, then set `iteration` accordingly.
+If the log file exists, scan it for entries with `"pr": <PR>`. If the most recent entry for this PR
+is an `iter-start` or `iter-end` (not a `terminate`) from the last 24 hours, prompt: *"Previous loop
+for PR #<PR> stopped at iteration <K>. Resume from iteration <K+1>, or start fresh from iteration
+1?"* — wait for user choice, then set `iteration` accordingly. Either way the record carries every
+earlier round: `review-fix` numbers its rounds from `review.md`, not from this counter.
 
-1.5. **Ensure `.review-loop.log` is gitignored.**
+1.7. **Ensure `.review-loop.log` is gitignored.**
 
 ```bash
 grep -q '^\.review-loop\.log$' "$REPO_ROOT/.gitignore" 2>/dev/null
 ```
 
-If not present, print a warning: *"`.review-loop.log` is not in `.gitignore`. Consider adding it."* Do not auto-add — user decides.
+If not present, print a warning: *"`.review-loop.log` is not in `.gitignore`. Consider adding it."*
+Do not auto-add — user decides.
 
-1.6. **Initialize loop state (in-memory):**
+1.8. **Initialize loop state (in-memory):**
 
 ```
-iteration              = 1  (or resumed value from 1.4)
-last_copilot_review_id = pre_loop_last_copilot_review_id
-totals                 = { fixed: 0, outdated: 0, disagreed: 0 }
-termination_reason     = null
-last_pushed_sha        = null
-poll_extensions        = 0
+iteration          = 1  (or resumed value from 1.6)
+totals             = { important_fixed: 0, minor_fixed: 0, rejected: 0, repeated: 0 }
+conventions        = []
+termination_reason = null
+last_pushed_sha    = null
 ```
 
-1.7. **Write `run-start` log entry.** Append one JSON line to `<repo-root>/.review-loop.log`:
-
-```json
-{"ts":"<ISO8601-UTC>","pr":<PR>,"change":"<change-name>","event":"run-start"}
-```
+1.9. **Write `run-start` log entry** (step 5 has the format).
 
 ### 2. Run iteration N
 
-2.1. **Log iteration start and record timestamp.**
+2.1. **Log iteration start** (`iter-start`, step 5).
+
+2.2. **Dispatch the fixer sub-agent.** Use the `Agent` tool with `subagent_type="general-purpose"`,
+`description="review-fix iteration <N> for PR <PR>"`, and this prompt (substitute placeholders with
+live values):
 
 ```
-iter_started_at = now()
-```
-
-Append to `.review-loop.log`:
-
-```json
-{"ts":"<ISO8601-UTC>","pr":<PR>,"event":"iter-start","iteration":<N>}
-```
-
-2.2. **Dispatch the fixer sub-agent.** Use the `Agent` tool with `subagent_type="general-purpose"`, `description="review-fix iteration <N> for PR <PR>"`, and this prompt (substitute placeholders with live values):
-
-```
-You are running one iteration of an automated Copilot review-fix loop.
+You are running one iteration of an automated Codex review-and-fix loop.
 
 Context:
 - PR number: <PR>
 - Repository: <owner>/<repo>
-- PR branch (headRefName): <branch>
+- PR branch (headRefName): <branch>; base: <baseRefName>
 - OpenSpec change: <change-name>
 - Iteration: <N> of <max>
 
-Before doing anything else, read these files to understand the PR's intent and scope:
+Before doing anything else, read these files to understand the change's intent and scope:
 - openspec/changes/<change-name>/proposal.md
 - openspec/changes/<change-name>/design.md            (only if it exists)
 - openspec/changes/<change-name>/tasks.md
 - openspec/changes/<change-name>/specs/**/*.md
+- openspec/changes/<change-name>/review.md            (only if it exists — the decisions so far)
+- REVIEW.md                                           (only if it exists — the review policy)
 
-Then invoke the review-fix skill for this PR:
+Then invoke the review-fix skill for this PR and change:
 
-  Skill(skill="review-fix", args="<PR>")
+  Skill(skill="ss:review-fix", args="<PR> --change <change-name>")
 
-Use the OpenSpec context to inform your FIX / OUTDATED / DISAGREE classification of each Copilot comment. A comment that conflicts with the intent documented in proposal.md or design.md is a candidate for DISAGREE with a grounded technical reply.
+It runs the Codex review itself. Judge each finding against the intent in proposal.md and
+design.md: a finding that conflicts with a decision documented there is a candidate for a reasoned
+rejection, and one the record already rejected is a repeat, not a new question.
 
 CRITICAL RETURN FORMAT:
-The LAST LINE of your response must be a single-line JSON object, nothing else on that line. Lines above may contain prose summary.
+The LAST LINE of your response must be a single-line JSON object, nothing else on that line. Lines
+above may contain prose summary.
 
-{"fixed": <int>, "outdated": <int>, "disagreed": <int>, "pushed_commit_sha": <"40-char sha"|null>, "error": <"message"|null>}
+{"important_found": <int>, "important_fixed": <int>, "minor_fixed": <int>, "rejected": <int>, "repeated": <int>, "clean": <bool>, "pushed_commit_sha": <"40-char sha"|null>, "conventions": [<"rule">, ...], "error": <"message"|null>}
 
-- `fixed`: count of FIX-classified comments that resulted in code changes.
-- `outdated`: count of OUTDATED comments (reply-only, no code change).
-- `disagreed`: count of DISAGREE comments (reply-only with technical reasoning).
-- `pushed_commit_sha`: the **full 40-character** sha of your commit if you pushed, otherwise null. Take it from `git rev-parse HEAD`, not `--short` — the loop matches this against `commit_id` from the reviews endpoint, which is always full-length.
-- `error`: null on success, or a short string describing why you couldn't complete (e.g., "typecheck failed", "push rejected").
+- the counts come from this round's rows in review.md, as review-fix's summary defines them;
+- `clean`: true only when the review itself came back clean;
+- `pushed_commit_sha`: the full 40-character sha of the last commit you pushed (`git rev-parse
+  HEAD`, not `--short`), or null if nothing was pushed;
+- `conventions`: the candidate rules review-fix listed for CLAUDE.md, or [];
+- `error`: null on success, or the reason the round could not complete — the review's own error
+  text when the review failed, quoted, not paraphrased.
 
 Both nullable fields take a JSON string or the bare literal null. Never the string "null" —
 it is truthy, and the loop reads it as a real error and a real sha.
 
-Fixed two, pushed:
-{"fixed": 2, "outdated": 0, "disagreed": 1, "pushed_commit_sha": "5b431277b031648832d09305755ed48431374a4c", "error": null}
+Fixed one P1, rejected a P2:
+{"important_found": 2, "important_fixed": 1, "minor_fixed": 0, "rejected": 1, "repeated": 0, "clean": false, "pushed_commit_sha": "5b431277b031648832d09305755ed48431374a4c", "conventions": [], "error": null}
 
-Nothing needed a code change:
-{"fixed": 0, "outdated": 1, "disagreed": 2, "pushed_commit_sha": null, "error": null}
+Clean review, record committed and pushed:
+{"important_found": 0, "important_fixed": 0, "minor_fixed": 0, "rejected": 0, "repeated": 0, "clean": true, "pushed_commit_sha": "9c01e2a77f3b9d0a6c41e5b2d8f7a1c3e4b5d6f7", "conventions": [], "error": null}
 ```
 
-2.3. **Parse the sub-agent return.** Take the sub-agent's full return text, split on newlines, find the last non-empty line, and `JSON.parse` it. If parsing fails:
-- Log: `{"ts":"<ISO>","pr":<PR>,"event":"iter-error","iteration":<N>,"raw":"<last-line-truncated-to-200-chars>"}`
+2.3. **Parse the sub-agent return.** Take the sub-agent's full return text, split on newlines, find
+the last non-empty line, and `JSON.parse` it. If parsing fails:
+- Log `iter-error` with the raw line truncated to 200 characters.
 - Set `termination_reason = "error"`.
 - Show the user the raw sub-agent output (full, not truncated) so they can debug.
 - Go to Step 6.
 
-Then normalise the two nullable fields. If `parsed.pushed_commit_sha` or `parsed.error` came back as the *string* `"null"` (or `"none"`, or empty), replace it with a real `null`. The string is truthy, so without this Step 2.4 ends every clean iteration as an error, and Step 5 compares shas against `"null"` and never matches. Same reasoning as the sha length above: the return format is a prompt, not a schema the runtime enforces, so the parser should not assume it was obeyed.
+Then normalise. If `pushed_commit_sha` or `error` came back as the *string* `"null"` (or `"none"`,
+or empty), replace it with a real `null`; a missing count is 0, a missing `clean` is false, a
+missing `conventions` is `[]`. The string `"null"` is truthy, so without this Step 2.4 ends every
+good iteration as an error. The return format is a prompt, not a schema the runtime enforces, so
+the parser should not assume it was obeyed.
 
-2.4. **If `parsed.error` is non-null:**
-- Log: `{"ts":"<ISO>","pr":<PR>,"event":"iter-error","iteration":<N>,"error":"<parsed.error>"}`
+2.4. **If `error` is non-null:**
+- Log `iter-error` with the error.
 - Set `termination_reason = "error"`.
-- Show `parsed.error` to user.
+- Show the error to the user.
 - Go to Step 6.
+
+This is where an exhausted Codex allowance, a review that timed out, output the helper could not
+read, a failed check, a test changed without a recorded reason and a rejected push all arrive. None
+of them is a clean round, whatever the counts say.
 
 2.5. **Update cumulative totals and log iteration end.**
 
 ```
-totals.fixed     += parsed.fixed
-totals.outdated  += parsed.outdated
-totals.disagreed += parsed.disagreed
+totals.important_fixed += parsed.important_fixed
+totals.minor_fixed     += parsed.minor_fixed
+totals.rejected        += parsed.rejected
+totals.repeated        += parsed.repeated
+conventions            += parsed.conventions (without duplicates)
 if parsed.pushed_commit_sha: last_pushed_sha = parsed.pushed_commit_sha
 ```
 
-Log:
-
-```json
-{"ts":"<ISO>","pr":<PR>,"event":"iter-end","iteration":<N>,"fixed":<parsed.fixed>,"outdated":<parsed.outdated>,"disagreed":<parsed.disagreed>,"commit":"<parsed.pushed_commit_sha or null>"}
-```
+Log `iter-end` with the counts and the commit.
 
 ### 3. Decide next action
 
-Based on `parsed` values from Step 2.
+From `parsed`, first match wins:
 
-3.1. **All comments handled, nothing to push (no-fixes exit).**
+3.1. **Clean.** `parsed.clean` is true: the review found nothing. `termination_reason = "clean"`, go
+to Step 6.
 
-If `parsed.fixed == 0` AND `parsed.outdated + parsed.disagreed > 0`:
-- All comments were replied-to but no code changed. Copilot has no new material to review.
-- Set `termination_reason = "no-fixes"`.
-- Go to Step 6.
+3.2. **Push expected but missing.** `parsed.important_fixed > 0` and `parsed.pushed_commit_sha` is
+null: the fixer reports fixes the pull request does not have. Log `iter-error` with
+`"important_fixed>0 but no pushed_commit_sha"`, `termination_reason = "error"`, go to Step 6.
 
-3.2. **Nothing at all (either pre-review or terminal).**
+3.3. **An important finding was fixed.** `parsed.important_fixed > 0`: the fix is new material the
+reviewer has not seen. Go to Step 4.
 
-If `parsed.fixed == 0` AND `parsed.outdated == 0` AND `parsed.disagreed == 0`:
+3.4. **Only minor findings.** `parsed.important_found == 0`: everything the review raised sat below
+the importance line, and the fixer fixed or recorded it. Another review would be spent on findings
+that by definition do not justify one. `termination_reason = "minor-only"`, go to Step 6.
 
-3.2a. **Pre-review wait case.** If `iteration == 1` AND `pre_loop_last_copilot_review_id == 0`:
-- Copilot hasn't submitted its first review yet. Skip push and retrigger — there's nothing to retrigger against.
-- Go directly to Step 5.1 (initial sleep) without executing Step 4.
+3.5. **Important findings, none fixed.** Otherwise every important finding was rejected or repeated.
+Their decisions are committed in the record, and a review of the same code would raise the same
+things. `termination_reason = "no-fixes"`, go to Step 6.
 
-3.2b. **Clean terminal case.** Otherwise:
-- Copilot has stopped finding issues.
-- Set `termination_reason = "no-comments"`.
-- Go to Step 6.
+**Only an important fix starts another review.** The line between important and minor is the one
+`REVIEW.md` draws on its `Important:` line — `P0`–`P2` by default. Under `Important: P0-P1`, a round
+whose only fixes were `P2` findings ends here as `minor-only` or `no-fixes`, never as another
+round. Minor fixes ride along in the round's commit and wait for the next review that an important
+fix earns.
 
-This branch is only as trustworthy as the fetch behind it. A Copilot review can carry findings
-that never become threads — they appear as `### Suppressed comments (N)` in the review body —
-and a sub-agent reading the comments endpoint alone returns all zeros for such a review, which
-lands here and terminates the loop as clean. `review-fix` step 2 reads the review bodies for
-exactly this reason; a sub-agent that skipped it will end the loop one round early and report
-success.
-
-3.3. **Push happened — continue to retrigger.**
-
-If `parsed.fixed > 0` AND `parsed.pushed_commit_sha` is non-null:
-- Proceed to Step 4.
-
-3.4. **Defensive: push expected but missing.**
-
-If `parsed.fixed > 0` AND `parsed.pushed_commit_sha` is null:
-- Sub-agent reported fixes but did not push — treat as error.
-- Log: `{"ts":"<ISO>","pr":<PR>,"event":"iter-error","iteration":<N>,"error":"fixed>0 but no pushed_commit_sha"}`
-- Set `termination_reason = "error"`, go to Step 6.
-
-### 4. Retrigger Copilot review
-
-**Request the reviewer over REST. Do not post a comment.** `@copilot review` as a PR comment does not order a re-review — it wakes the Copilot **coding agent**, which reads the thread, replies in prose that the findings are already addressed, and finishes green having produced no review at all. `pulls/<n>/reviews` does not grow. A successful run plus a polite reply is indistinguishable from a real review arriving, and the loop then spends `wait_initial + poll_timeout` before reporting a `timeout` it cannot tell apart from "Copilot does not review this repository".
-
-The two are distinguishable in `gh run list --branch <branch>` if you ever need to confirm it: the automatic review on PR open runs as `Running Copilot Code Review`; the comment runs as `Addressing comment on PR #<n>`.
-
-4.1. **Request the review.**
-
-```bash
-gh api --method POST repos/<owner>/<repo>/pulls/<PR>/requested_reviewers \
-  -f "reviewers[]=copilot-pull-request-reviewer[bot]"
-```
-
-Two traps live in this one call:
-
-- **The login must carry the `[bot]` suffix.** Without it GitHub answers `422 Reviews may only be requested from collaborators`, which reads as "Copilot cannot be requested on this repository" and is why this path was once written off.
-- **The response comes back with `requested_reviewers: []`, and that is not a failure.** An empty list immediately after the request is normal — `gh pr view` shows it empty too — and the review still arrives, measured at 2-4 minutes across four consecutive runs. Reading that empty list as failure is the main way this path gets abandoned.
-
-There is no idempotency check to do here. Re-requesting a reviewer who is already requested is harmless, unlike posting the same comment twice.
-
-If the `gh api` call itself returns non-zero, sleep 30 seconds and retry once. If the retry also fails:
-- Log: `{"ts":"<ISO>","pr":<PR>,"event":"retrigger-failed","exit_code":<code>}`
-- Set `termination_reason = "error"`.
-- Go to Step 6.
-
-Do **not** fall back to `gh pr comment <PR> --body "@copilot review"`. It is not a weaker version of this call; it summons a different agent and guarantees the timeout described above.
-
-4.2. **Record retrigger timestamp** (used as the start point for `poll_timeout` in Step 5):
-
-```
-retrigger_started_at = now()
-```
-
-Log:
-
-```json
-{"ts":"<ISO>","pr":<PR>,"event":"copilot-retrigger"}
-```
-
-**Why not the comment, in one more place.** The comment mechanism also runs through a GitHub Actions workflow and consumes Actions minutes; when Actions billing is exhausted it fails silently, the comment posting successfully either way. The UI's "Re-request review" refresh icon beside Copilot in the reviewers sidebar does not depend on Actions — the REST call above is the scriptable equivalent.
-
-### 5. Wait for Copilot review
-
-5.1. **Initial sleep via `ScheduleWakeup`.**
-
-Stamp the start of this wait and reset the per-wait extension counter:
-
-```
-wait_started_at = retrigger_started_at   # Step 4.2 — or now(), in the pre-review case from 3.2a
-poll_extensions = 0
-```
-
-**In the pre-review case the wait starts here, not at 2.1.** `iter_started_at` is stamped before
-the fixer sub-agent is dispatched in 2.2, and that sub-agent can run for longer than
-`poll_timeout`: measured from it, the deadline in 5.2 would be spent before the first poll,
-`poll_elapsed` would report a wait that was never served, and 5.3's created-at bound would reach
-back past the beginning of this wait. In the retrigger case `retrigger_started_at` is already the
-right value — 4.2 stamps it seconds before this step.
-
-**`poll_extensions` resets here because 5.3's cap is per wait.** 1.6 initialises it once for the
-run; without this reset a slow review in one iteration would leave the counter standing, the next
-iteration would hit the cap early, and the report would charge that iteration with extensions it
-never took. 5.3 hands the loop back to the `Loop:` block in 5.2 and never to this step, so the
-counter still survives across the extensions of a single wait.
-
-Invoke the `ScheduleWakeup` tool:
-- `delaySeconds`: `wait_initial` (default 180).
-- `reason`: `"Waiting for Copilot to finish reviewing PR #<PR> push <last_pushed_sha>"` (or equivalent if no push happened in the pre-review case — reference the initial review instead).
-- `prompt`: the original `/review-loop <PR> <change-name> [flags]` command — the runtime re-enters this skill on wakeup. Pass `--resume` if not already present so Step 1.4 detects the in-flight run.
-
-The main session ends here; wakeup continues in Step 5.2.
-
-5.2. **Polling loop after wakeup.**
-
-Set a polling deadline:
-
-```
-poll_deadline = wait_started_at + poll_timeout   # poll_timeout default 1500s
-```
-
-(`wait_started_at` is what Step 5.1 stamped: `retrigger_started_at` from 4.2, or — in the pre-review wait case where no retrigger happened — the moment 5.1 was reached. Not `iter_started_at` from 2.1; 5.1 says why.)
-
-**Re-entering from 5.3 does not recompute this.** 5.3 can hand the loop back with a deadline of
-its own — when it does, resume at the `Loop:` block below and leave `poll_deadline` as 5.3 set
-it. Recomputing it from the top would restore the deadline that had just expired and turn the
-extension into an immediate second timeout.
-
-Loop:
-
-```
-while now() < poll_deadline:
-  reviews = gh api --paginate "repos/<owner>/<repo>/pulls/<PR>/reviews?per_page=100"
-  candidates = [r for r in reviews
-                 if r.user.login == "copilot-pull-request-reviewer[bot]"
-                 and r.id > last_copilot_review_id]
-  fresh = [c for c in candidates
-            if last_pushed_sha == null or sha_eq(c.commit_id, last_pushed_sha)]
-  if fresh:
-    new_id = max(c.id for c in fresh)
-    last_copilot_review_id = new_id
-    log {"ts":"<ISO>","pr":<PR>,"event":"review-detected","review_id":new_id}
-    goto 5.4 (continue)
-  else:
-    sleep(poll_interval)   # default 30s — use ScheduleWakeup if >= 60s remain
-```
-
-**Freshness is decided by `commit_id`, not by time and not by id alone.** Every entry in `pulls/<n>/reviews` carries the sha it was written against. That is the only cheap way to tell "the reviewer saw my fix" from "an older review just surfaced", and it is why the filter above compares against `last_pushed_sha`:
-
-```bash
-gh api --paginate "repos/<owner>/<repo>/pulls/<PR>/reviews?per_page=100" --jq '.[] | "\(.id) \(.commit_id) \(.submitted_at)"'
-```
-
-**Compare shas by prefix, not by equality.** `commit_id` from the API is always the full 40 characters. `last_pushed_sha` arrives from the sub-agent's `pushed_commit_sha`, and a sub-agent asked for "the sha" returns the 7-character one about as readily — `review-fix`, the sub-agent in question, is told to write replies as `Fixed in {commit_sha_short}`, so the short form is the value already in its hand. Strict `==` then never matches, `fresh` stays empty, and the loop times out with the right review sitting in the list it just fetched.
-
-```
-sha_eq(a, b) = a.startswith(b) or b.startswith(a)
-```
-
-Step 2.2 asks for the full sha as well. Both, not either: the contract is a prompt, not a validated schema, so instructing a sub-agent is not the same as being able to rely on it.
-
-**Every reviews fetch needs `--paginate`.** The endpoint pages at 30 by default and returns reviews oldest-first, so the newest review sits on the *last* page — an unpaginated fetch reads precisely the wrong half for a "has a new review landed?" check, and the loop times out staring at page one. This bites sooner than 30 rounds suggests: posting an in-thread reply creates a review object too, so one iteration adds the Copilot review plus one per reply. PR #9 of this repository reached four reviews after two rounds.
-
-**Take the max over `fresh`, not over `candidates`.** Gating on "some candidate matches" while selecting the highest id among *all* of them hands back a review written against a different sha — and since the next pass keeps only `r.id > last_copilot_review_id`, the fresh review that was skipped over becomes permanently invisible. The loop then waits out `poll_timeout` for a review it already had.
-
-**Do not use a completed Actions run as the signal.** The review object appears a few seconds *after* the run reports completion, so a watcher keyed on `Running Copilot Code Review` finishing reports "run done, no review" while the review is a minute from landing. Poll the reviews endpoint; keep run state at most as a secondary exit condition.
-
-If the loop exits without finding a new review, go to 5.3.
-
-5.3. **Timeout — but check whether the review is still running first.**
-
-The deadline expiring is not evidence that nothing is coming. Before declaring a timeout,
-read the state of the review workflow — **scoped to the current review request**. Every visit
-starts, before the command runs, from
-
-```
-timeout_outcome     = "unknown"
-inconclusive_reason = "unclassified"
-```
-
-and only the paths below overwrite them. **That default is the inversion, in one line** — the rest
-of this step explains it. A case that fails to recognise its state now leaves a verdict that says
-*I don't know*, not one that says *there is nothing*; and every path out of this step still reports
-an outcome, because one left unset renders as an empty placeholder in 6.3, which is how a run that
-failed comes to read as a run that never existed.
-
-```bash
-gh run list --branch <branch> --workflow Copilot --limit 100 --json databaseId,name,status,conclusion,createdAt,updatedAt,headSha
-```
-
-**This step concludes "no review run" only from positive evidence; a listing it read and cannot
-place is inconclusive.** (A listing it could not read at all is a failed command, which is an
-error — the paragraph on failed commands below.) It used to start from `no-run` and narrow the listing — by workflow, by name, by
-sha, by creation time — until a run survived, so an empty result *was* the verdict. Every one of
-those narrowing conditions turned out, in turn, to be able to discard the very run it was looking
-for. Four review rounds on one pull request found the same false verdict, *no review is coming*,
-four times through four different mechanisms: a sha compared for full equality, a created-at bound
-on the pre-review path, a truncated listing, the wrong run picked among several. The defects did not repeat; they
-moved up the pipeline, into fetching and filtering. The conditions below still narrow the listing,
-because that is how a run is *identified*, but an empty result no longer concludes anything. A
-filter that misfires now costs patience, never a false answer: the worst it can produce is
-`unknown`, which sends somebody to look.
-
-What the step can conclude, and where each answer sends the loop:
-
-| What this step established | Where the loop goes |
-|---|---|
-| a review run on the sha is unfinished, or finished less than 90s ago — whether or not it is this request's own | back to waiting: the unfinished run on the extension budget, ending as `run-unfinished` at the cap; the fresh completion for its grace period |
-| everything on the sha finished 90s or more ago, and a run is identified as this request's | `run-failed` or `run-completed-no-review`, read from the newest identified run |
-| the listing succeeded and holds no run at all | `no-run` |
-| anything else the listing shows, or a `Copilot` workflow that does not resolve | inconclusive — back to waiting while extensions remain, then `unknown` |
-| the listing command failed for any other reason | retry once, then `error` |
-
-**Do not add a filter to turn the inconclusive row into one of the rows above it.** That is the road that
-does not converge: each new condition is one more place where the right run can be dropped in
-silence, and the surface grows with every fix. An inconclusive state is resolved by waiting or by
-a person, not by narrowing harder.
-
-**`--workflow` is what keeps `--limit` honest.** `gh` applies the limit server-side, before every
-filter below runs on the client, so an unscoped listing spends those 100 slots on whatever else
-the branch triggers — every push starts CI, and a branch carrying a few workflows passes twenty in
-a couple of rounds. Truncated, the Copilot run falls off the end; this step used to read that as
-*no run at all*, the false timeout the check exists to prevent. Under positive evidence the cut
-can no longer produce `no-run` — a cut listing is never empty — but it can still hide the run and
-spend every extension, so the scoping stays. Scoped to the one workflow, 100 is decades of
-headroom instead of a bet on how much other CI the branch runs.
-
-**The workflow is called `Copilot`; `Running Copilot Code Review` is the name of its *runs*.**
-`--workflow "Running Copilot Code Review"` does not narrow the listing — it exits non-zero with
-`could not find any workflows named …`, and the failure rule below would turn that into an aborted
-loop. Verified against this repository: `gh workflow list --all` answers `Copilot`, while every run
-it produces reads `Running Copilot Code Review` in `--json name`. Keep the client-side name filter
-below regardless — `--workflow` selects the workflow, the name filter selects its review runs.
-
-**A failed command is not an empty list.** A non-zero exit, or JSON that will not parse — expired
-auth, no network, a rate limit — says nothing about whether a run exists. **The listing succeeded
-only when the command exited 0 and its output parsed as a JSON array**; nothing else counts as one.
-This matters more now than it did before: an empty listing is the one proof of absence this step
-accepts, so a failure read as `[]` would go straight to `no-run`. Unless the failure is the
-not-found one in the next paragraph — which is not retried — sleep 30 seconds and retry once,
-the way 4.1 does with its own `gh api` call. If the retry also fails: log
-`{"ts":"<ISO>","pr":<PR>,"event":"run-check-failed","exit_code":<code>}`, set
-`termination_reason = "error"`, and go to Step 6. A failed listing is the loop's own fault — auth,
-network, a rate limit — and `error` carries its text into the report and the sign-off record;
-reported as a timeout it would send the user to debug Copilot.
-
-**A workflow that does not resolve is inconclusive, not an answer.** If the command fails
-*because* no workflow named `Copilot` exists, retrying will not change it — but it is not proof of
-absence either, so it is neither retried nor an error. It says one of two things this step cannot
-tell apart: Copilot code review has
-never run in this repository, or the workflow carries a name other than the one asked for — and
-that name has already been a defect site once (the paragraph above). Set
-`inconclusive_reason = "workflow-not-found"` and go straight to **the inconclusive case** at the
-end of the list below; there is no listing for the other cases to read. Every other failure keeps
-the retry-then-`error` path above; routing this one there would send somebody to debug their auth
-over a repository setting.
-
-**Identifying the run for this review request.** The runs the command returned, before any test,
-are `listing`. Those named `Running Copilot Code Review` whose `headSha` matches the sha this wait
-is about, under the `sha_eq` prefix rule above — `last_pushed_sha` in the retrigger case,
-`pr_head_sha` from 1.1 in the pre-review case from 3.2a — are `on_sha`. In the retrigger case,
-**additionally** require `createdAt >= wait_started_at - 60s`; the runs that pass are `matching`,
-the ones this request started. In the pre-review case `matching` is `on_sha`.
-
-**That created-at bound belongs to the retrigger case alone.** In the pre-review case the run was
-created when the PR opened — before this loop started, let alone before 5.1 stamped
-`wait_started_at` at the end of a fixer pass that can itself run for minutes — so a lower bound
-anchored to this wait discards the one run it is looking for. Before the inversion that reported
-`no-run`, the false timeout this step exists to prevent, manufactured by the step itself; now it
-would spend every extension and end in `unknown` with the run sitting in the listing. The sha
-carries that case on its own and loses nothing, because with no push there is nothing to tell
-apart: a run left on the branch by an abandoned earlier loop sits on the same head sha and *is*
-the initial review this wait is waiting for.
-
-**The 60 seconds of slack on that lower bound are load-bearing.** 4.2 stamps
-`retrigger_started_at` *after* the POST returns, while GitHub creates the run as it processes that
-same request — so the run's `createdAt` can precede our timestamp, and the two clocks drift
-independently on top of that. An exact bound discards the very run it is looking for. The slack
-costs nothing in the other direction: a stale run from an abandoned earlier loop is minutes or
-hours old, not seconds, and the `headSha` scoping catches it as well.
-
-**More than one run carries the sha, and whether the review is still coming is asked of all of
-them.** A push starts a review run on its own, and 4.2 then re-requests review on the same sha,
-which starts another; an abandoned earlier loop leaves a third. All carry the same `headSha`, so
-the set is ordinary, not an edge case — but they need not all fall inside the created-at bound:
-`review-fix` pushes and then posts its replies one by one before 4.2 stamps the wait, so the run
-the push started is routinely older than `wait_started_at - 60s`. This step once read only the
-newest run, which fixed reading the wrong one — an older `completed`, `success` run with no review
-attached reported `run-completed-no-review` while the review that was actually coming sat
-`in_progress` in the newer — and left the next wrong pick possible. Asked over the whole set, the
-question cannot pick wrong: **if any review run on this sha is unfinished, the review may still be
-coming**, whichever of them is newest and whether or not it passes the created-at bound. 5.2
-accepts any review written against the sha, so any run on it may still produce one; the bound
-picks out *this request's* run, which only the ending needs. A single run names the ending only
-once nothing on the sha is unfinished, and then it is the newest of `matching`:
-
-```
-unfinished        = [r for r in on_sha if r.status != "completed"]
-latest_completion = max(r.updatedAt for r in on_sha)       # read only when on_sha is non-empty
-newest            = max(matching, key=createdAt)            # read only when matching is non-empty
-```
-
-The grace below reads `on_sha` for the same reason the still-running question does: a review that
-lands seconds after any run on the sha finishes is a review 5.2 accepts.
-
-This removes a condition from the still-running question rather than adding one: the created-at
-bound no longer stands between a run in progress and the wait it should hold open.
-
-A bare `gh run list --branch <branch>` is worse than no check at all: an unfinished run left on the
-branch by an abandoned or resumed earlier loop, on a sha this wait is not about, would satisfy the
-second case below on every visit and end the wait as `run-unfinished` naming a run that has
-nothing to do with this request — a certain diagnosis of the wrong run, where the scoped check
-reaches an honest `unknown`. `--json` is also what supplies the timestamps the cases below read; the default
-table output carries no completion time.
-
-The cases, first match wins. **Every case that speaks of runs needs at least one.** Read over an
-empty set, *nothing is unfinished* and *every run has completed* are vacuously true, and the loop
-would report a failed or a reviewless run it never saw — a certain answer built from nothing,
-which is the failure this whole step is arranged against. So the grace needs a run in `on_sha`, and
-the two endings that name a run need one in `matching`; with `matching` empty, neither ending can
-apply, whatever `on_sha` holds.
-
-- **The listing succeeded and holds no run at all** — `listing` is empty *before* any test above
-  ran: no name, no sha, no time bound. The Copilot workflow has not run on this branch for any sha,
-  so it has not run for this one. This is the only proof of absence the step accepts, because it is
-  the only one no filter can manufacture. Set `timeout_outcome = "no-run"` and fall through to the
-  timeout below — no extension: positive evidence is final, and a run Copilot was going to create
-  would have been created within seconds of the request, not after `poll_timeout`.
-
-  **Not "no run matches the sha".** That narrower test reads like proof too, but the sha
-  comparison is itself a filter — it was the first of the four defects — and an empty result from
-  it is exactly the false alarm this inversion retires. A listing that holds runs, none of them
-  identifiable as this request's, is the inconclusive case at the end, not this one.
-
-- **Some review run on this sha is not `completed`** (`unfinished` is non-empty) — `queued`, `waiting`, `requested`, `pending` and
-  `in_progress` all say the same thing here, and exempting only `in_progress` would declare a
-  timeout on a run that has not begun executing yet. This is *not* a timeout: the review is still
-  being computed and the window was simply too short. Give the loop a new deadline and **go back to
-  the `Loop:` block in 5.2** instead of falling through to the timeout below — until the extension
-  cap says otherwise:
-
-  ```
-  run = max(unfinished, key=createdAt)    # the newest unfinished run — the log and 6.3 name it
-  if poll_extensions < 3:
-      poll_extensions += 1
-      poll_deadline    = now() + 300      # seconds — then back to the Loop: block in 5.2
-  else:
-      timeout_outcome  = "run-unfinished" # cap reached — fall through to the timeout below
-      timeout_status   = run.status       # 6.3 renders both; the run object is gone by then
-      timeout_run_id   = run.databaseId
-  ```
-
-  **`run-unfinished` is two different verdicts and the status is what tells them apart.** This case
-  deliberately covers `queued`, `waiting`, `requested` and `pending` alongside `in_progress` — but
-  a run that spent the whole window *executing* is a slow review, while one that never started is
-  stuck or waiting on approval, and a longer `--poll-timeout` does nothing for the second. Record
-  the status rather than making 6.3 guess which of the two it is looking at.
-
-  **The cap has to be the guard, not a remark beside it.** Written as an unconditional increment
-  with "stop at three" standing next to it, the fourth visit increments to four and hands out
-  another 300 seconds before anything tests anything — the wedged run this bound exists to bound
-  holds the loop open exactly as long as it would with no bound at all. The test comes first, so
-  the third extension is the last one granted.
-
-  On an extension, log it: `{"ts":"<ISO>","pr":<PR>,"event":"copilot-poll-extended","run_elapsed_seconds":<now() - run.createdAt>,"extension":<poll_extensions>}`.
-  5.2 resumes polling the reviews endpoint and comes back here when the new deadline expires;
-  the same cases apply again. At the cap the loop does not go back: `run-unfinished` is what the
-  report renders differently from a missing run.
-
-  **That log line is diagnostic, not a feedback loop.** Nothing reads it back: 1.4 restores the
-  iteration number only, and 1.6 takes `poll_timeout` from the flag or the default on every
-  invocation — so the next run does *not* inherit a calibrated window by itself. The elapsed
-  time is there for the operator, as the number that says what to pass to `--poll-timeout` next
-  time.
-
-- **`on_sha` is non-empty, every run in it has `completed`, the latest less than 90s ago** — not a
-  timeout yet either.
-  The review object lands a few seconds *after* the run reports completion (the race described in
-  5.2), so set `poll_deadline = latest_completion + 90s`, leave `poll_extensions` alone, and go
-  back to the `Loop:` block in 5.2. `gh run list` exposes no `completedAt`; on a finished run
-  `updatedAt` *is* that timestamp, which is why the grace period needs `--json` rather than the
-  table output. The absence of a review only means something once that grace has passed.
-
-- **`matching` is non-empty, everything on the sha completed 90s or more ago, and the newest
-  matching run has a `conclusion` other than `success`** — a real timeout that names its own cause: the workflow failed, was cancelled
-  or was skipped, so no review was ever going to land. Set `timeout_outcome = "run-failed"`,
-  `timeout_conclusion = newest.conclusion` and `timeout_run_id = newest.databaseId` — 6.3 renders
-  those two names, and the run object itself is long out of scope by the time it does. This is
-  what the query asks for `conclusion` for, and one of the two places it needs `databaseId`.
-  Folded into the next case, an Actions failure would send the operator off to check whether
-  Copilot is enabled on the repository, when what happened is a run they can open and read.
-
-- **`matching` is non-empty, everything on the sha completed 90s or more ago, the newest matching
-  run has `conclusion: success`, and still no review** — a real timeout of a third kind: the review ran, finished cleanly, and left
-  nothing the reviews endpoint returns. Set `timeout_outcome = "run-completed-no-review"`.
-
-- **Anything else — inconclusive.** The listing holds runs and none of them is identifiable as the
-  one this request started, or the workflow did not resolve. Neither says no review is coming: it
-  is most often a listing read too early, or a run this step failed to recognise. When `matching`
-  is empty and `listing` is not, name which: `inconclusive_reason = "listing-truncated"` when
-  `listing` holds as many runs as `--limit` asked for — the run may lie past the cut — and
-  `"no-match"` otherwise. The workflow-not-found path has already set its own reason. **Any other
-  state that arrives here keeps `unclassified`**: the cases above are meant to cover every state
-  with a run in `matching`, so one that slips through is a defect in this step, and the report
-  says so rather than dressing it as a missing match. Then draw on the same extension budget:
-
-  ```
-  if poll_extensions < 3:
-      poll_extensions += 1
-      poll_deadline    = now() + 300      # seconds — then back to the Loop: block in 5.2
-  else:
-      timeout_outcome  = "unknown"        # cap reached — fall through; inconclusive_reason says why
-  ```
-
-  On an extension, log it: `{"ts":"<ISO>","pr":<PR>,"event":"copilot-poll-extended","inconclusive":"<inconclusive_reason>","extension":<poll_extensions>}`.
-
-  **One budget for both kinds of waiting.** An unfinished run and an inconclusive listing draw on
-  the same `poll_extensions`: a wait that alternates between the two — nothing identifiable on one
-  visit, an unfinished run on the next — is still one wait, and two budgets would double the bound
-  the cap exists to keep. At the cap the outcome is whatever the last visit established.
-
-  **`unknown` is a verdict about the loop, not about Copilot.** It tells the reader to check
-  manually and says why, and it asserts neither that the review is missing nor that Copilot is
-  disabled — the loop has evidence for neither. Reported as `no-run`, the same state would send
-  somebody to switch on a Copilot that was working; reported as `unknown`, it sends them to the one
-  place that can settle it, the pull request itself.
-
-The check exists because an unfinished run and an absent one are indistinguishable from the
-polling loop alone, and they call for opposite responses: one wants more patience, the other wants
-the user to look at the PR. Reporting the first as the second sends somebody to debug a working
-system. It is the mirror of the rule above about not keying on a *completed* run — a finished run
-is not proof a review landed, and an unfinished one is proof a verdict would be premature. Between
-the two now stands a third answer, and it is the default: a verdict of absence has to be earned by
-a listing that holds nothing, not inferred from a filter that kept nothing.
-
-Once a real timeout is established:
-
-- Compute the wait actually served: `poll_elapsed = now() - wait_started_at`. With extensions or
-  a completion grace this exceeds `poll_timeout`, and it — not the flag — is what the report
-  quotes.
-- Log: `{"ts":"<ISO>","pr":<PR>,"event":"copilot-timeout","seconds":<poll_elapsed>,"poll_timeout":<poll_timeout>,"extensions":<poll_extensions>,"outcome":"<timeout_outcome>"}`,
-  adding `"inconclusive":"<inconclusive_reason>"` when the outcome is `unknown`.
-- Set `termination_reason = "timeout"`.
-- Go to Step 6.
-
-5.4. **Continue to next iteration.**
-
-Increment iteration:
+### 4. Continue to the next iteration
 
 ```
 iteration += 1
 ```
 
-If `iteration > max`:
-- Set `termination_reason = "max-iterations"`.
-- Go to Step 6.
+If `iteration > max`: `termination_reason = "max-iterations"`, go to Step 6. Otherwise return to
+Step 2. There is no wait between iterations: each review runs as soon as the previous round's push
+is done, inside the next sub-agent.
 
-Otherwise, return to Step 2 (run iteration N).
+### 5. Run log
+
+Every event is one JSON line appended to `<repo-root>/.review-loop.log`, timestamped in UTC:
+
+```json
+{"ts":"<ISO8601-UTC>","pr":<PR>,"change":"<change-name>","event":"run-start"}
+{"ts":"<ISO>","pr":<PR>,"event":"iter-start","iteration":<N>}
+{"ts":"<ISO>","pr":<PR>,"event":"iter-end","iteration":<N>,"important_found":<n>,"important_fixed":<n>,"minor_fixed":<n>,"rejected":<n>,"repeated":<n>,"clean":<bool>,"commit":"<sha or null>"}
+{"ts":"<ISO>","pr":<PR>,"event":"iter-error","iteration":<N>,"error":"<text>"}
+{"ts":"<ISO>","pr":<PR>,"event":"terminate","reason":"<termination_reason>","iterations":<N>}
+```
+
+`iter-error` carries `"raw":"<first 200 characters>"` instead of `error` when the return line did
+not parse. The log is the local trace of the run and what 1.6 resumes from; the record of what was
+found and decided is `review.md`, which travels with the pull request.
 
 ### 6. Terminate + report
 
-6.1. **Log termination event.**
-
-```json
-{"ts":"<ISO>","pr":<PR>,"event":"terminate","reason":"<termination_reason>","iterations":<iteration>}
-```
+6.1. **Log termination event** (`terminate`, step 5).
 
 6.2. **Print final report to the user — and write the same text to a file.**
 
 ```
 Review loop finished after <iteration> iteration(s) — reason: <termination_reason>
-Totals: fixed=<totals.fixed>, outdated=<totals.outdated>, disagreed=<totals.disagreed>
+Totals: important fixed=<n>, minor fixed=<n>, rejected=<n>, repeated=<n>
+Record: openspec/changes/<change-name>/review.md
 Last commit: <last_pushed_sha or 'none'>
 PR: <url>
 ```
+
+When `conventions` is not empty, add below it:
+
+```
+Candidate rules for CLAUDE.md (proposed, not written):
+- <rule>
+```
+
+The loop never edits `CLAUDE.md` or any other agent instructions itself; a person decides which of
+these become rules.
 
 Choose the scratch directory here, because 6.4 needs the same one, and echo it so the later
 blocks can be given it literally:
@@ -707,19 +330,10 @@ to `cat`, and the gate is opened empty.
 6.3. **Add a per-reason follow-up line below the report** — into the session **and** into
 `$SCRATCH/report.md`:
 
-- `no-comments`: *Copilot produced no new comments on the latest push — PR looks clean from Copilot's perspective.*
-- `no-fixes`: *Copilot's latest comments were all OUTDATED or DISAGREE — no code changes were needed.*
-- `max-iterations`: *Hit `--max <N>` iteration cap. Copilot may still have feedback; review manually or re-run with a higher `--max`.*
-- `timeout`: *Copilot didn't submit a review within `<poll_elapsed>`s — `<poll_timeout>`s, `<poll_extensions>` extension(s) of 300s granted by step 5.3, and any completion grace it added on top of those.* Then one line for the `timeout_outcome` that step set, and only that one — the five endings send the user to five different places. `<sha>` below is the one 5.3 matched against: `last_pushed_sha`, or `pr_head_sha` in the pre-review case:
-  - `run-unfinished`: *A review run on `<sha>` was still `<timeout_status>` at the extension cap (run `<timeout_run_id>`). If it was `in_progress`, the review is slow rather than absent: re-run with a higher `--poll-timeout`. If it never started — `queued`, `waiting`, `requested`, `pending` — a longer window changes nothing; open that run, it is stuck or waiting on approval.*
-  - `run-failed`: *The review run for this review request finished as `<timeout_conclusion>` (run `<timeout_run_id>`). Open that run — Copilot's availability is not in question here, the workflow is.*
-  - `run-completed-no-review`: *The review run for this review request finished cleanly and no review object followed. Check the PR in the GitHub UI: a review visible there but absent from `pulls/<n>/reviews` is a different fault from Copilot never having run.*
-  - `no-run`: *No Copilot review run exists on `<branch>` at all — the run listing came back complete and empty. This does not say whether Copilot is merely slow or does not review this repository — check the PR in the GitHub UI: if a review is there, re-run; if the reviewers sidebar offers no Copilot entry at all, it is not enabled here and re-running will time out again.*
-  - `unknown`: *Check manually — the loop could not establish whether a review run exists for this review request (`<inconclusive_reason>`), so it reports neither a missing review nor a failed one.* Then the one sentence for that reason:
-    - `no-match`: *Copilot has runs on `<branch>`, none of them identifiable as the run this review request started on `<sha>`. Open them in the Actions tab: if one was, the loop failed to recognise it — a defect in step 5.3 worth reporting; if none was, the request started no review — re-request it from the reviewers sidebar.*
-    - `listing-truncated`: *The run listing for the `Copilot` workflow hit its limit and none of the runs it returned is for `<sha>`; the one this request started may lie past the cut. Look for it in the Actions tab.*
-    - `workflow-not-found`: *No workflow named `Copilot` resolved in this repository. `gh workflow list --all` shows whether it exists under another name; if there is none, check whether the reviewers sidebar offers Copilot at all.*
-    - `unclassified`: *No case in step 5.3 recognised the state it read — a defect in that step. Read the run listing by hand.*
+- `clean`: *The latest Codex review found nothing on the branch — every finding of earlier rounds is fixed or recorded in `review.md`.*
+- `minor-only`: *The latest Codex review raised only findings below the importance line (`REVIEW.md`'s `Important:` line, `P0-P2` without one); they were fixed or recorded, and none of them justified another review.*
+- `no-fixes`: *Every important finding of the latest review was rejected or repeated an earlier rejection — the reasons are in `review.md`. Read them: a rejection a person disagrees with is reopened by deleting its row and running the loop again.*
+- `max-iterations`: *Hit `--max <N>` iteration cap after a round that fixed an important finding, so the fix itself has not been reviewed. Review it manually or re-run with a higher `--max`.*
 - `error`: *Loop aborted due to an error. Manual intervention required — the error text and the tail of the run log follow directly below this line.*
 
 **The `error` line points below itself, and nothing points "above".** Above is the session
@@ -775,6 +389,7 @@ that promised the error below the follow-up line and did not carry it, and says 
 
 Both files are the reason 6.4 can promise a durable record: they are what the follow-up line
 points at, and they are what stays behind when the session ends.
+
 
 6.4. **Open the sign-off issue — this is the human gate.**
 
@@ -847,8 +462,8 @@ Four things that block is written to avoid:
 
 **Build the body in a file, never as a shell argument.** The report carries literal backticks
 and may carry error text from the sub-agent; inside double quotes a backtick becomes command
-substitution, and the record is mangled or executed while the call still returns success. Same
-rule and same reason as the reply bodies in `review-fix`. Write it outside the repository.
+substitution, and the record is mangled or executed while the call still returns success. Write it
+outside the repository.
 
 **A quoted heredoc is not enough either — the delimiter is still live.** `<<'BODY'` stops
 command substitution, but nothing stops a line reading exactly `BODY`: one such line anywhere
@@ -1083,31 +698,46 @@ Five things about this step are deliberate:
 | Scenario | Detection | Reaction |
 |---|---|---|
 | PR not OPEN | pre-flight `gh pr view` | abort, no loop |
+| Current branch is not the PR's branch | pre-flight 1.1 | abort, name the branch to check out |
 | Spec directory missing | pre-flight `ls openspec/changes/<change>/` | prompt user, wait for correction |
-| Sub-agent JSON unparseable | `JSON.parse` fails on last line | `termination_reason="error"`, show raw output, abort |
-| Sub-agent reports error | JSON `error` field non-null | `termination_reason="error"`, show, abort |
-| `pnpm typecheck` failed inside review-fix | sub-agent returns `pushed_commit_sha=null` + non-null `error` | `termination_reason="error"`, user fixes manually |
+| Nothing in the request implies repetition | pre-flight 1.3 | one line pointing at `/codex:review` or `review-fix`, stop |
+| Codex plugin not installed, or its install record points nowhere | `preflight` exit 2 in 1.4 | abort before any review, name `/codex:setup`; nothing edited |
+| Codex not signed in | `preflight` exit 2 in 1.4 | abort the same way, name `/codex:setup` |
+| No `AGENTS.md` pointer to `REVIEW.md` and the record | `preflight` → `pointer.ok: false` | one warning naming the templates; the loop runs |
+| Uncommitted changes | `git status --porcelain` in 1.5 | abort: commit or stash first |
+| Codex review fails: usage limit, non-zero exit, failure status | sub-agent `error` carries the reviewer's text | `termination_reason="error"`, the text reaches the report and the sign-off record — never read as a clean review |
+| Codex review runs past 540 s | the helper stops it; sub-agent `error` | `termination_reason="error"` |
+| Review output announces findings the helper cannot parse, or names a path outside the repository | helper verdict `error`; sub-agent `error` | `termination_reason="error"`, quoting the output |
+| A check fails and the fixer cannot make it pass | sub-agent `error` | `termination_reason="error"`, nothing from that round committed |
+| An existing test changed without a reason in the record | the helper's test guard, exit 4; sub-agent `error` | `termination_reason="error"` naming the files, nothing from that round committed |
 | `git push` rejected | sub-agent `error` mentions push failure | `termination_reason="error"`, user resolves rebase/merge |
-| Copilot silent past `poll_timeout` | polling loop exits without match, **and** step 5.3's run listing succeeds and holds no run at all — empty before any name, sha or time test | `termination_reason="timeout"` with `timeout_outcome="no-run"`, suggest manual UI check. The only proof of absence the step accepts |
-| No run identifiable for this review request | step 5.3's listing holds runs, nothing on the sha is unfinished or freshly completed, and none passes the identification as this request's run; or the `Copilot` workflow does not resolve | inconclusive, never `no-run` — extend `poll_deadline` by 300s from the same budget as an unfinished run; at the cap `termination_reason="timeout"` with `timeout_outcome="unknown"` and `inconclusive_reason` (`no-match`, `listing-truncated`, `workflow-not-found`). The report says check manually and asserts neither a missing review nor a disabled Copilot |
-| Review run on this sha not `completed` at the deadline | scoped `gh run list` in step 5.3 — **any** review run on the sha with a status other than `completed`, whichever of them is newest and whether or not it passes the created-at bound | not a timeout *while extensions remain* — extend `poll_deadline` by 300s, log the elapsed time, return to 5.2; at most 3, counted per wait (5.1 resets the counter). At the cap it does become one: `termination_reason="timeout"` with `timeout_outcome="run-unfinished"` |
-| Review run finished seconds before the deadline | every review run on the sha `completed`, the latest less than 90s ago | not a timeout — poll until `latest_completion + 90s` before concluding (review objects trail the run) |
-| Review run failed, was cancelled, or was skipped | every review run on the sha `completed` 90s or more ago, and the newest run this request started has a `conclusion` other than `success` | `termination_reason="timeout"` with `timeout_outcome="run-failed"` — the report points at that run, not at Copilot availability |
-| Review run finished clean but no review object followed | every review run on the sha `completed` 90s or more ago, and the newest run this request started has `conclusion: success` | `termination_reason="timeout"` with `timeout_outcome="run-completed-no-review"` — a reporting fault, not an availability one |
-| `gh run list` in step 5.3 fails or returns unparseable JSON | non-zero exit code, or output that will not parse | retry once after 30s; still failing → `termination_reason="error"`. Never read as an empty listing — that would be the one proof of absence the step accepts, fabricated. One exception: a failure that names the `Copilot` workflow as not found is inconclusive (`inconclusive_reason="workflow-not-found"`, `unknown` at the cap), neither an error nor `no-run` |
-| Stale unfinished run from an earlier loop on the branch | a different `headSha` | excluded by 5.3's sha scoping — unscoped, it would end the wait as `run-unfinished` naming a run that has nothing to do with this request. A run on the *same* sha that predates the created-at bound is not stale: it may still deliver a review 5.2 accepts, so it holds the wait open, though it never names the ending |
-| Reviewer request over REST fails | non-zero exit code from `gh api` | retry once after 30s; still failing → `termination_reason="error"` (no comment fallback — see Step 4) |
-| Session closed mid-wait | `ScheduleWakeup` doesn't fire | loop dies silently; log preserves last state; re-invoke offers resume via 1.4 |
-| Fixed > 0 but no pushed_commit_sha | defensive check in Step 3.4 | `termination_reason="error"` |
+| Sub-agent return line unparseable | `JSON.parse` fails on last line | `termination_reason="error"`, show raw output |
+| Important fixes reported but nothing pushed | Step 3.2 | `termination_reason="error"` |
+| Review clean | `clean: true` | `termination_reason="clean"` |
+| Only findings below the importance line | `important_found == 0` | `termination_reason="minor-only"` — no further review |
+| Every important finding rejected or repeated | `important_found > 0`, `important_fixed == 0` | `termination_reason="no-fixes"` — no further review |
+| An important finding fixed at the cap | Step 4 | `termination_reason="max-iterations"` |
+| Session closed mid-run | the sub-agent never returns | the log keeps the last state; re-invoke offers resume via 1.6, and `review.md` holds every committed round |
 
 ## Guardrails
 
-- **Never** skip the OpenSpec read step inside the sub-agent prompt — classification of DISAGREE vs. FIX depends on it.
-- **Never** pipe `gh api` output through `jq` in generated commands — `jq` may be absent. Parse JSON inline or with `gh --jq` (built-in, always available).
-- **Never** post multiple PR review replies in parallel — the `review-fix` skill already enforces sequential posting; don't override.
-- **Never** merge, close, approve, or request-changes on the PR — `review-loop` only iterates on review comments.
+- **Never** skip the OpenSpec read step inside the sub-agent prompt — judging a finding as fixed,
+  rejected or repeated depends on it.
+- **Never** read a failed, timed-out or unreadable review as clean. Only `clean: true` from a
+  completed review ends the loop as `clean`.
+- **Never** start another review after a round that fixed nothing important. Minor findings do not
+  extend the loop.
+- **Never** pipe `gh api` output through `jq` in generated commands — `jq` may be absent. Parse JSON
+  inline or with `gh --jq` (built-in, always available).
+- **Never** read or reply to pull-request review comments. The reviewer is Codex, and its findings
+  live in `review.md`.
+- **Never** merge, close, approve, or request-changes on the PR — `review-loop` only iterates on
+  review findings.
 - **Never** close the sign-off issue from Step 6.4, in this run or any later one. An issue a
   machine can close is a gate that closes itself, and the whole point of it is that it waits
   for a person.
-- **Never** invoke the `review-fix` skill directly in the orchestrator session — always delegate via the `Agent` tool so the main session keeps a clean context across iterations.
-- **Never** guess the `openspec-change-name` if the directory is missing — always ask the user (Step 1.2).
+- **Never** edit `CLAUDE.md` or `AGENTS.md` to adopt a candidate rule; the report proposes them.
+- **Never** invoke the `review-fix` skill directly in the orchestrator session — always delegate via
+  the `Agent` tool so the main session keeps a clean context across iterations.
+- **Never** guess the `openspec-change-name` if the directory is missing — always ask the user
+  (Step 1.2).

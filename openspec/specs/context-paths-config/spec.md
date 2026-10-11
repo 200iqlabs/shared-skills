@@ -1,7 +1,10 @@
 # context-paths-config Specification
 
 ## Purpose
-TBD - created by archiving change parametrize-ingest-context-paths. Update Purpose after archive.
+Lets a project tell context-aware skills where its context folders live, through a
+`## Context Paths` section of its root `CLAUDE.md`, so that a skill such as `/ingest` carries no
+repository-specific path in its own instructions and stops with an actionable message when the
+section is missing.
 ## Requirements
 ### Requirement: Project CLAUDE.md declares context paths in a dedicated section
 

@@ -1,68 +1,123 @@
 # Evals for `review-fix`
 
-- `evals.json` — 9 behavioural prompts. Six are aimed at a defect this skill actually shipped
-  with: a reply body carrying code spans, verification in a repo with no JavaScript toolchain,
-  an outdated comment, a wrong comment needing pushback, scratch data leaking into the repo,
-  and five threads that must each end with exactly one reply.
+Since `review-via-codex` the skill runs a Codex review itself and acts on its findings; it no
+longer reads pull-request comments or replies to them. Its evals follow:
 
-  The last three cover the ordering rule added afterwards, one branch each, because a single
-  prompt cannot exercise three: **7** ranks a fully tagged batch (and checks that equal ranks
-  keep their arrival order), **8** gives a batch with no tag anywhere and expects the arrival
-  order kept rather than a ranking invented, and **9** mixes tagged, untagged and a word the
-  scale does not define — which must be treated as untagged rather than guessed into a
-  neighbouring rank. Prompt 7 used to state 8's expectation in its own expected output without
-  ever asking for it, which no run could have falsified.
-- `trigger-eval.json` — 20 triggering queries, 10 positive and 10 negative.
+- **Behavioural cases** live in [`evals/cases/review-fix/`](../../../evals/cases/review-fix/) as
+  `claude plugin eval` cases, in the format the `behavioural-skill-evals` change fixes. Every case
+  is a `tier-read` decision case: the prompt names the skill in prose, states the run's state (a
+  `preflight` or `review` payload from the helper, rows of `review.md`, a test-guard result), asks
+  what the skill does, and says not to run anything. Each carries a `tool_used: Skill` indicator, at
+  least one deterministic `regex` grader on the answer, and an `llm` rubric where the decision is
+  semantic.
+- `evals.json` keeps **case 2 only** (verification without a JavaScript toolchain), which
+  `behavioural-skill-evals` migrates in its group 5.
+- `trigger-eval.json` — 20 triggering queries, 10 positive and 10 negative, rewritten for the new
+  boundary (below).
+- The helper the skill calls, `scripts/codex-review.mjs`, has its own check:
+  `node skills/review-fix/scripts/selftest.mjs` (no Codex needed; four of its fixtures are real
+  review payloads).
 
-## Measured triggering: 90%, and it does not move
+## Running the behavioural cases
 
-Run with `tools/skill-trigger-eval.py`, 20 queries x 3 runs on `claude-opus-5`.
+From the repository root, on Windows or anywhere else (no shell grant is needed):
 
-| Description | Accuracy | The two contested negatives |
+```bash
+claude plugin eval . --eval-dir evals/cases --case 'review-fix-*' --tag tier-read --runs 3 --ablation none --model claude-opus-5-5 --judge-model claude-haiku-5-5 --threshold 0.8 --no-publish
+```
+
+`--ablation none`: for decision cases the no-plugin arm says nothing (the prompt names steps that
+mean nothing without the skill). The baseline that matters is the previous version of the skill:
+check out `origin/master` in a detached worktree, copy `evals/cases/` into it, and run the same
+command there (`behavioural-skill-evals` turns this into `tools/plugin-eval-compare.py`).
+
+## Case map
+
+Old ids are those of `evals.json` before `review-via-codex`. "Base" is one run against
+`origin/master` (the Copilot version); "branch" is three runs against the `review-via-codex` branch.
+Measured 2026-10-10, Claude Code 2.1.292, `claude-opus-5-5`, judge `claude-haiku-5-5`.
+
+| id | case | task | branch | base | what it checks |
+|---|---|---|---|---|---|
+| 1 | — | 3.6 | retired | — | reply body survives backticks; there are no replies any more |
+| 2 | `evals.json` | — | kept | — | verification without a JS toolchain; migrates with `behavioural-skill-evals` |
+| 3 | — | 3.6 | retired | — | outdated comment; the judgement returns as case 17 |
+| 4 | — | 3.6 | retired | — | wrong comment; the judgement returns as case 18 |
+| 5 | — | 3.6 | retired | — | scratch data outside the repository; returns as a `tier-shell` case once the harness exists |
+| 6 | — | 3.6 | retired | — | every thread answered once |
+| 7 | `7-severity-orders-the-p-scale` | 3.3 | 1.00 | 0.33 | P0, then P2, then the P3s in arrival order |
+| 8 | `8-no-tags-keeps-arrival-order` | 3.3 | 1.00 | 1.00 | no tag anywhere: arrival order, no invented ranking |
+| 9 | `9-unknown-tag-is-treated-as-untagged` | 3.3 | 1.00 | 0.33 | an undefined tag is untagged; untagged follow tagged |
+| 10 | `10-plugin-missing-stops-before-review` | 3.1 | 1.00 | 0.67 | stop, `/codex:setup`, no fallback to Copilot comments |
+| 11 | `11-not-signed-in-stops-the-same-way` | 3.1 | 1.00 | 0.67 | the same stop when Codex is signed out |
+| 12 | `12-missing-pointer-warns-once-and-reviews` | 3.1 | 1.00 | 0.33 | one warning naming the templates, then the review |
+| 13 | `13-usage-limit-is-an-error-not-clean` | 3.2 | 1.00 | 0.80 | an exhausted allowance is an error, quoted, never clean |
+| 14 | `14-unparseable-findings-are-an-error` | 3.2 | 1.00 | 1.00 | unreadable findings are an error; no reading by hand |
+| 15 | `15-clean-review-is-recorded-and-pushed` | 3.2, 3.4 | 1.00 | 0.50 | a clean review is still recorded as the next round and pushed |
+| 16 | `16-repeated-rejection-is-not-fixed-again` | 3.3 | 1.00 | 0.20 | a reworded finding the record rejected is a repeat of R1-2 |
+| 17 | `17-stale-finding-gets-a-first-rejection` | 3.3 | 1.00 | 0.80 | first rejection: the code no longer exists |
+| 18 | `18-wrong-finding-gets-a-first-rejection` | 3.3 | 1.00 | 0.80 | first rejection: the design decided otherwise |
+| 19 | `19-nothing-fixed-still-commits-the-record` | 3.4 | 1.00 | 0.50 | a round that fixed nothing commits its record alone |
+| 20 | `20-no-change-means-no-record` | 3.4 | 1.00 | 0.25 | no OpenSpec change: no `review.md`, and the summary says so |
+| 21 | `21-edited-assertion-without-reason-is-an-error` | 3.5 | 1.00 | 1.00 | an existing test changed without a reason ends the round |
+| 22 | `22-reasoned-test-change-commits` | 3.5 | 1.00 | 1.00 | a reasoned test change commits |
+| 23 | `23-new-test-commits-without-a-reason` | 3.5 | 1.00 | 1.00 | a new test needs no reason |
+| 24 | `24-opinion-only-goes-to-codex-review` | 3.6 | 1.00 | 0.33 | an opinion with no changes goes to `/codex:review` |
+| 25 | `25-reviewed-working-tree-is-committed-even-when-clean` | 5.4 | 1.00 | 0.25 | no PR, dirty tree, clean review: the reviewed work is still committed, not pushed |
+| 26 | `26-repository-scale-orders-the-fixes` | 5.4 | 1.00 | 1.00 | `Scale: blocker, should, nit` orders the fixes; a `[P1]` outside it goes last |
+
+**All 18 cases pass on the branch, 3 runs each (score 1.00 every time); 10 fail against the base.**
+Cases 25 and 26 came later, from the Codex findings of task 5.4 (fixed by hand at the owner's
+request, sign-off issue #23): both 1.00 in 3 runs; 25 fails against the base, 26 does not, because
+the old text already put the repository's own scale first. After those fixes the whole suite was
+run once more as a regression check: every case at 1.00 except 12, whose answer was right but
+speculated, from the eval sandbox's own git state, that the branch check would stop the pass. Its
+prompt now says the run is on the pull request's branch; 1.00 in 3 runs since.
+The eight that also pass against the base (8, 13, 14, 17, 18, 21–23) state a failure, a guard
+result or a design reason so plainly in the prompt that a careful agent reaches the decision
+without the new text. They stay as guards against regression, not as evidence of the change.
+Cases 17 and 18 are the judgement old cases 3 and 4 checked through replies; it survives the move
+to Codex, which is why the base passes them too.
+
+Cost: about $0.20 per run on `claude-opus-5-5`, judge included (the 18 cases × 3 runs cost
+$10.7); against the base about $0.21 per run.
+
+**Waiting for the shell tier** (a fake `codex-companion.mjs` and `gh`, after the spikes S1 and S2 of
+`behavioural-skill-evals`): the halves where the command is the point — the helper's parse on real
+output inside a run, `git diff --name-status` in the test guard, the two commits of a round. The
+helper's own selftest covers the parsing and the guard today.
+
+## Triggering
+
+Measured with `tools/skill-trigger-eval.py` (isolated mode), 20 queries × 3 runs on
+`claude-opus-5`, 2026-10-10, against the new set in `trigger-eval.json`:
+
+| Description | Accuracy | Miss |
 |---|---|---|
-| Shipped (unchanged) | **18/20 = 90%** | 1.00 / 0.67 |
-| A hand-written rewrite | 18/20 = 90% | 1.00 / 1.00 |
-| Rewrite + the exclusion stated as an explicit principle | 18/20 = 90% | 1.00 / 1.00 |
+| Shipped with `review-via-codex` (the only variant tried) | **19/20 = 95%** | *"zrób review moich zmian i od razu napraw co jest do naprawienia, zanim otworzę PR"* — a positive, 0.33 |
 
-Three descriptions, one number. The rewrite was reverted; the tightened variant was never adopted.
-**The shipped description stands unchanged**, because nothing measured beat it.
+It clears the 80% bar on the first variant, so no other wording was measured. All ten negatives
+score 0.00, the opinion-only requests included (*"powiedz mi tylko co jest nie tak…"*, *"can you
+review PR #12 and tell me what's wrong with it"*); the second is a query the old description lost on
+every variant. With the review now produced by the skill, the line between "fix it" and "only tell
+me" is one the description can draw.
 
-## The finding: an exclusion clause is a weak signal
+The number is not comparable with the old 90%: the set changed with the boundary. All ten
+positives are new (they used to be about comments already on a pull request), four negatives are
+new (an opinion only, a loop, a teammate's comments, setting up Codex), and six are unchanged.
 
-Every failure, in every variant, is the same shape — a request to **produce** a review:
+**A caveat about the runner.** The nested `claude -p` loads the installed plugins, the published
+`ss` among them, and only the throwaway test command counts as a trigger. An installed
+`ss:review-fix` therefore competes with the description under test, and a query it wins reads as a
+miss. Measured in the same session for `review-loop`, where it cost one query; here it may explain
+the 0.33.
 
-- *"zrób mi review tych zmian zanim zacommituję, szukam błędów w logice"*
-- *"can you review PR #12 and tell me what's wrong with it"*
+## Why the boundary moved
 
-`review-loop` fails identically on *"zrób review tego PR-a i powiedz co jest nie tak"*, at 95%
-across two variants of its own. Three failures, two skills, one missing distinction.
-
-The third variant above says outright that a request to look at code and say what is wrong remains
-a code review even when it names a pull request. It changed nothing: both queries still trigger on
-every run. The working explanation is that this skill's positive territory — review comments, a PR,
-fixing, replying — overlaps these requests so heavily on the surface that relevance is settled
-before an exclusion is weighed.
-
-**Generalisable to any skill here: describing what a skill is for works; describing what it is not
-for does not.** Do not spend a fourth wording on this.
-
-## Where the boundary is enforced instead
-
-Step 3 of the skill. After the fetch, "are there comments?" is a fact rather than a guess — zero
-top-level comments means no review has happened and the user wanted one written. The skill says so
-and points at a code review. Triggering stays wrong; the outcome stops being wrong.
-
-## Two corrections to an earlier revision of this file
-
-**The runner already existed.** `tools/skill-trigger-eval.py`, committed in `504999d` on
-2026-08-18. An earlier revision recommended writing one, estimated at an hour, and nearly did. The
-tool was built, never used, and therefore invisible — the same pattern that let this skill ship
-broken.
-
-**The measurement failure had two causes, not one.** `skill-creator`'s optimiser reads its
-subprocess with `select.select` on a pipe, which raises `OSError [WinError 10093]` on Windows. But
-running the measurement from inside this repository also breaks it: the nested `claude -p` inherits
-`CLAUDE.md` and the open work, behaves like a coding agent on this codebase, and explores instead of
-consulting the skill. Every query then scores 0.00 for reasons unrelated to the description. Fixing
-`select` alone would not have been enough — which is why the local runner uses a neutral scratch
-directory.
+Before `review-via-codex` the skill acted on review comments that already existed, so a request to
+*produce* a review was the one it had to refuse — and step 3 enforced that after the fetch, because
+no wording of the description kept those requests out (three variants, one number: 90%). The skill
+now produces the review itself, so "review this and fix it" is squarely its job. What it must not
+take is a request for an opinion alone; that goes to `/codex:review`, which only the user can type.
+Step 1 enforces it, for the same reason step 3 used to: describing what a skill is not for does not
+stop it triggering.

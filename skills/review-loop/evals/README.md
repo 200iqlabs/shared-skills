@@ -1,96 +1,124 @@
 # Evals for `review-loop`
 
-- `evals.json` — 22 behavioural prompts covering the states this loop handles badly when it
-  handles them badly, in five groups.
+Since `review-via-codex` the loop no longer requests Copilot or waits for it. Each iteration is one
+`review-fix` pass in a sub-agent, and the loop ends as `clean`, `minor-only`, `no-fixes`,
+`max-iterations` or `error`. Its evals follow:
 
-  **The loop itself (1–5):** a repository where Copilot has never reviewed, a first-ever pull
-  request where the availability check has nothing to read, a timeout that must not assert which
-  of two causes it hit, a missing OpenSpec change directory, and a clean termination that must
-  not read as "all fixed".
+- **New behavioural cases** live in [`evals/cases/review-loop/`](../../../evals/cases/review-loop/)
+  as `claude plugin eval` cases, in the format the `behavioural-skill-evals` change fixes: `tier-read`
+  decision cases that name the skill in prose, state the run's state (a `preflight` payload, a
+  sub-agent's return line, `git status`, a record row), ask what the loop does and say not to run
+  anything. Each carries a `tool_used: Skill` indicator and at least one deterministic `regex`
+  grader on the answer; `llm` rubrics judge only the final message.
+- `evals.json` keeps **cases 4–15** — the missing change directory, the clean ending and the ten
+  sign-off cases — for `behavioural-skill-evals` to migrate in its group 5. Where their prompts
+  named an ending that no longer exists, it was renamed: `no-comments` → `clean` (5, 6, 8, 10, 14),
+  `timeout` → `minor-only` (13). Case 5's expectation now reads "clean"; nothing else changed.
+- `trigger-eval.json` — 20 triggering queries, 10 positive and 10 negative, with Codex in place of
+  Copilot (below).
 
-  **Which record the gate lands in (6, 8, 10, 11):** an unrelated open issue whose title carries
-  the same words and pull-request number and must not be mistaken for the sign-off record; a
-  record a person already closed, which must not be reopened or reused; an open record under the
-  canonical title, which must be appended to rather than duplicated; and a lookup that errored,
-  which must create rather than read its own failure as "none exists". The fourth is what keeps
-  the sixth honest: alone, it passes a regression that always takes the create path.
+## Running the behavioural cases
 
-  **What the run says about its outcome (7, 12, 13):** a failed create announced as an ungated
-  run instead of reported as complete; a failed *append*, which must name the open issue rather
-  than claim nothing was created; and a failed lookup followed by a failed create, which must
-  produce one outcome instead of two contradictory paragraphs. Between them the three walk the
-  `GATE_WRITTEN` × `EXISTING` × `LOOKUP_FAILED` matrix that decides which warning is printed.
+```bash
+claude plugin eval . --eval-dir evals/cases --case 'review-loop-*' --tag tier-read --runs 3 --ablation none --model claude-opus-5-5 --judge-model claude-haiku-5-5 --threshold 0.8 --no-publish
+```
 
-  **What the record carries (9, 14, 15):** an error text carrying the heredoc delimiter, which
-  must not truncate the record it is written into; a report that could not be read, where the
-  record is opened anyway and says so rather than passing for a gate that carried the run; and an
-  aborted run whose error text and run log never arrived, where the body must not promise them
-  below a line that carries nothing.
+The baseline that answers "did this change break anything" is the previous version of the skill,
+not the absence of one: run the same command in a detached worktree of `origin/master` with
+`evals/cases/` copied in (`behavioural-skill-evals` turns this into
+`tools/plugin-eval-compare.py`).
 
-  **Whether a review is still coming (16–22):** the run check in step 5.3 concludes that no review
-  run exists only from a listing that succeeded and holds nothing (17); a listing holding runs
-  none of which matches the pushed sha (16), a listing that may be cut at `--limit` (19) and a
-  `Copilot` workflow that does not resolve (18) are inconclusive — they wait, and at the cap end as
-  `unknown` with "check manually", never as `no-run`. One unfinished run among several keeps the
-  wait open whichever is newest (20) — the run the push started included, though it predates the
-  created-at bound that picks out this request's own run (22) — and a failed command is not read as the empty listing that
-  would prove absence (21). The first three are each one of the mechanisms that produced a false
-  `no-run` in the review rounds this rule came out of; 17 is what keeps them honest — without it,
-  a regression that never concludes `no-run` passes the group.
-- `trigger-eval.json` — 20 triggering queries, 10 positive and 10 negative.
+## Case map
 
-## Measured triggering: 95%, and it does not move either
+Measured 2026-10-10, Claude Code 2.1.292, `claude-opus-5-5`, judge `claude-haiku-5-5`. "Branch" is
+three runs against the `review-via-codex` branch; "base" is runs against `origin/master`.
 
-Run with `tools/skill-trigger-eval.py`, 20 queries x 3 runs on `claude-opus-5`.
+| id | case | task | branch | base | what it checks |
+|---|---|---|---|---|---|
+| 1–3 | — | 4.6 | retired | — | Copilot never reviewed here, first-ever PR, timeout wording |
+| 4–15 | `evals.json` | 4.4 | kept | — | change directory, clean ending, sign-off record — see below |
+| 16–22 | — | 4.6 | retired | — | the run check of the old step 5.3 |
+| 23 | `23-dirty-working-tree-stops` | 4.1 | 1.00 | 1.00 | uncommitted changes abort before the first review |
+| 24 | `24-plugin-missing-stops-the-loop` | 4.1 | 1.00 | 0.67 | stop, `/codex:setup`, no Copilot fallback |
+| 25 | `25-null-strings-read-as-null` | 4.2 | 1.00 | 0.25 | `"error": "null"` is a real null; the loop goes on |
+| 26 | `26-minor-only-ends-without-another-review` | 4.3 | 1.00 | 0.50 | only minor findings: `minor-only`, no further review |
+| 27 | `27-fixed-p1-starts-another-review` | 4.3 | 1.00 | 0.33 | a fixed important finding starts another review |
+| 28 | `28-important-all-rejected-ends-no-fixes` | 4.3 | 1.00 | 0.75 | important findings all rejected or repeated: `no-fixes` |
+| 29 | `29-policy-line-p0-p1-stops-after-a-p2-round` | 4.3 | 1.00 | 0.20 | under `Important: P0-P1`, P2 fixes do not start a review |
+| 30 | `30-usage-limit-mid-run-is-an-error` | 4.6 | 1.00 | 1.00 | an exhausted allowance in round 3 is `error`, carried to the sign-off |
+| 31 | `31-rejection-met-again-in-a-later-run` | 4.6 | 1.00 | 0.67 | yesterday's rejection: a repeat, round 3, `no-fixes` |
 
-| Description | Accuracy |
-|---|---|
-| Shipped | **19/20 = 95%** |
-| Shipped + the exclusion stated as an explicit principle | 19/20 = 95% |
+**All nine pass on the branch, 3 runs each (1.00 every time); seven fail against the base**, one run
+each. Cases 23 and 30 pass against the base as well — a dirty tree and an error carried to the
+sign-off are things the old text also handled — so they guard against regression rather than show
+the change. Cost: about $0.28 per run on the branch ($7.5 for the nine × 3), $0.40 against the base,
+whose skill was 1,113 lines.
 
-All ten positives trigger in both. The tightened variant was **not adopted** — it bought nothing,
-and an unmeasured-against-baseline change that also fails to improve is not worth the diff. (A run
-or two per pass was lost to timeouts and excluded by the harness.)
+### The kept cases, re-run (task 4.4)
 
-No baseline exists for the wording this skill carried before the previous change; that run was
-stopped before finishing. So nothing here claims the current description is better than what came
-before — only that it is measured and clears the repo's 80% bar.
+`behavioural-skill-evals` has not migrated cases 4–15 yet, so this change re-ran them from scratch
+copies in the same decision-case format: graders on the answer, the sign-off cases matched only on
+step 6.4 strings (the canonical title, `Closing this issue is the sign-off`, the warning texts), as
+that change's design prescribes. The copies are not committed; they were handed over to it through
+the shared notes. Step 6.4 itself is unchanged apart from one sentence that pointed at
+`review-fix`'s reply bodies.
 
-## The boundary against `review-fix` holds
+| id | branch (3 runs) | base | note |
+|---|---|---|---|
+| 4 | 1.00 | 1.00 (1 run) | |
+| 5 | 0.78 | 0.67 (3 runs) | the judge's "does not claim every finding was fixed" fails on both; one branch run answered without loading the skill |
+| 6 | 1.00 | 1.00 (1 run) | |
+| 7 | 1.00 | 1.00 (1 run) | |
+| 8 | 1.00 | 1.00 (1 run) | |
+| 9 | 0.83 | 0.92 (3 runs) | Polish answers paraphrase the closing sentence instead of quoting it; the regex is too literal |
+| 10 | 1.00 | 0.67 (1 run) | |
+| 11 | 0.78 | 0.89 (3 runs) | one branch run phrased the lookup failure without the words the regex wants |
+| 12 | 1.00 | 1.00 (1 run) | |
+| 13 | 1.00 | 1.00 (1 run) | |
+| 14 | 0.67 | 0.78 (3 runs) | the answers open the record with the warning first, as required; the Haiku judge rejects most of them on both sides |
+| 15 | 0.78 | 1.00 (3 runs) | see below |
+| 2 (`review-fix`) | 1.00 | 1.00 (1 run) | |
 
-The first negative is the one that matters: *"popraw komentarze copilota na PR 12 i odpisz na nie"*
-scores **0.00** in both variants. The same sentence is a **positive** in `review-fix`'s set. One
-pass belongs there; repeat-until-quiet belongs here. The two sets are written to disagree on
-purpose, so a description blurring that line fails one of them. Neither does.
+No sign-off case loses behaviour to this change: where the branch scores below 1.00, the base
+scores the same within the noise of the same graders, apart from 15. These graders are
+uncalibrated scratch copies; `behavioural-skill-evals` calibrates them (its task 5.3).
 
-The other negatives are adjacent loops that are not this loop: waiting on CI, re-running a flaky
-test suite, polling a deployment, scheduling a daily check. Sharing the word "loop" is what makes
-them useful.
+**Case 15 found a defect that predates this change.** On an `error` ending with no run log, step 6.3
+writes "the run log could not be read" into `error.txt` through `log-tail.txt`. That leaves
+`error.txt` non-empty, so 6.4's `[ -s error.txt ]` passes and the "error text could not be read"
+warning never fires: the record goes out without the error text and without saying so. Two of the
+three branch runs worked this out from the text and declined to print the warning the case expects.
+The text is the same on `origin/master`; the follow-up is to key that warning on whether the error
+text itself arrived, not on the file. Trial 1.4 of `review-via-codex` (Codex on pull request #10)
+raised a neighbouring defect in the same step: one `BODY_INCOMPLETE` flag covers both a missing
+report and a missing error text.
 
-## The one failure is shared, and is not a wording problem
+## Triggering
 
-*"zrób review tego PR-a i powiedz co jest nie tak"* triggers at 1.00 in both variants, including
-the one that explicitly excludes requests to produce a review. `review-fix` fails on two queries of
-the same shape across three of its own variants. Five measurements across two skills, and the
-number never moves.
+Measured with `tools/skill-trigger-eval.py` (isolated mode), 20 queries × 3 runs on
+`claude-opus-5`, 2026-10-10:
 
-See `../../review-fix/evals/README.md` for the conclusion drawn from it: describing what a skill is
-for works, describing what it is not for does not. The boundary is enforced in step 1.3b of this
-skill instead — if nothing in the request implies repetition, the user wants an opinion rather than
-an unattended loop, and the skill says so and points elsewhere.
+| Description | Accuracy | Misses |
+|---|---|---|
+| Shipped with `review-via-codex` (the only variant tried) | **18/20 = 90%** | *"leć z codexem na PR 12 dla changu add-auth aż przestanie zgłaszać ważne uwagi…"* 0.00; *"PR 8, zmiana restructure-working-mode — review, popraw, wypchnij, kolejne review…"* 0.33 |
 
-## Running the behavioural evals
+It clears the 80% bar on the first variant, so no other wording was measured. All ten negatives
+score 0.00, the single-pass request that is `review-fix`'s positive included.
 
-They are not run in CI and cost model calls, so they run by hand. In a session in this repository,
-run `/skill-creator` on `skills/review-loop` and have it evaluate `evals/evals.json` — the whole set,
-or the ids a change touched — with the skill on the branch under test against the previous version
-as the baseline (`git show origin/master:skills/review-loop/SKILL.md` into a scratch copy). A case
-that passes with both versions does not show the change did anything; for 16, 18, 19, 20 and 22
-the baseline is expected to fail.
+**The 0.00 is the installed copy of this same skill winning, not the description failing.** The
+nested `claude -p` loads the installed plugins, the published `ss` among them, and only the
+throwaway test command counts as a trigger. Run once on its own in a neutral directory, the 0.00
+query went straight to `Skill(ss:review-loop)` — the installed, Copilot-era copy, whose description
+carries *"az przestanie zglaszac uwagi"* almost word for word. After `claude plugin update` that
+installed copy is this description, so the query triggers it. Read 90% as a lower bound.
 
-## What is hard to evaluate here
+The old set scored 95% (19/20) against the Copilot description; the set changed with the reviewer
+(seven positives and three negatives reworded for Codex), so the two numbers are not a comparison.
 
-Parts of `evals.json` resist a single-turn eval. The pre-flight Copilot check and the timeout branch
-only reveal themselves in a repository where Copilot is absent or silent, which is a property of the
-environment rather than of the prompt. Expect those two to need a fixture or a manual run — the same
-limitation as any skill whose moment arrives several turns after the prompt.
+## The boundary against `review-fix`
+
+The first negative is the one that matters: *"przepuść PR 12 raz przez codexa i popraw co
+znajdzie"* — one pass, which is `review-fix`'s positive. Repeat-until-quiet belongs here. Requests
+for an opinion alone (*"zrób review tego PR-a i powiedz co jest nie tak"*) trigger topically
+whatever the description says, so step 1.3 turns them away after triggering, pointing at
+`/codex:review` or `review-fix`.

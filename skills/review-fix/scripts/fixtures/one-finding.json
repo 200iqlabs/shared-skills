@@ -1,0 +1,17 @@
+{
+  "review": "Review",
+  "target": {
+    "mode": "branch",
+    "label": "branch diff against main",
+    "baseRef": "main",
+    "explicit": true
+  },
+  "threadId": "00000000-0000-0000-0000-000000000000",
+  "sourceThreadId": "00000000-0000-0000-0000-000000000000",
+  "codex": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Logika sprawdzania wygaśnięcia jest odwrócona, przez co ważne tokeny są odrzucane, a wygasłe mogą otwierać sesje.\n\nReview comment:\n\n- [P1] Popraw odwrócone porównanie czasu wygaśnięcia — C:\\repo\\src\\session.py:18-18\n  Dla tokenu, którego `expires_at` jest późniejsze niż `now`, funkcja zwraca `True`, więc `open_session` odrzuca ważny token; jednocześnie tokeny już wygasłe są akceptowane. Porównanie powinno uznawać token za wygasły, gdy `now >= token.expires_at`, zgodnie z docstringiem.",
+    "reasoning": []
+  }
+}

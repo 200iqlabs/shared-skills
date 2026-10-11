@@ -1,0 +1,17 @@
+{
+  "review": "Review",
+  "target": {
+    "mode": "branch",
+    "label": "branch diff against main",
+    "baseRef": "main",
+    "explicit": true
+  },
+  "threadId": "00000000-0000-0000-0000-000000000000",
+  "sourceThreadId": "00000000-0000-0000-0000-000000000000",
+  "codex": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Nie znaleziono nowych, kwalifikujących się usterek. Odwrócone porównanie w `is_expired` zostało wcześniej świadomie odrzucone w rejestrze przeglądu i kod ten nie zmienił się od tamtej decyzji.",
+    "reasoning": []
+  }
+}
