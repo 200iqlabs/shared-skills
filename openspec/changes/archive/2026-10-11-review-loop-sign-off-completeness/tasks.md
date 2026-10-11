@@ -54,10 +54,13 @@
       now fires; the session warning names the right part).
 - [x] 3.2 `openspec validate --all --strict`, `node hooks/selftest.mjs` and `claude plugin
       validate .` pass.
-- [ ] 3.3 Open the pull request to `master` on `change/review-loop-sign-off-completeness`, with
-      its dependency on pull request 22 stated. Do not merge.
+- [x] 3.3 Open the pull request to `master` on `change/review-loop-sign-off-completeness`, with
+      its dependency on pull request 22 stated. Do not merge. — opened as #24. After #22 landed as
+      a squash, `master` was merged into the branch (`3530360`), a Codex review of the result came
+      back clean, and #24 was merged on 2026-10-11 as `0f743b4`.
 
 ## 4. After merge
 
-- [ ] 4.1 Archive this change after `review-via-codex` is archived, and fold the modified
-      requirement into `openspec/specs/code-review-loop/spec.md`.
+- [x] 4.1 Archive this change after `review-via-codex` is archived, and fold the modified
+      requirement into `openspec/specs/code-review-loop/spec.md`. — `review-via-codex` was archived
+      in #25 (`1668ab2`); this change is archived in the pull request that ticks this box.
