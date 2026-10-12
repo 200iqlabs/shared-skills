@@ -65,6 +65,7 @@ Measured 2026-10-10, Claude Code 2.1.292, `claude-opus-5-5`, judge `claude-haiku
 | 24 | `24-opinion-only-goes-to-codex-review` | 3.6 | 1.00 | 0.33 | an opinion with no changes goes to `/codex:review` |
 | 25 | `25-reviewed-working-tree-is-committed-even-when-clean` | 5.4 | 1.00 | 0.25 | no PR, dirty tree, clean review: the reviewed work is still committed, not pushed |
 | 26 | `26-repository-scale-orders-the-fixes` | 5.4 | 1.00 | 1.00 | `Scale: blocker, should, nit` orders the fixes; a `[P1]` outside it goes last |
+| 27 | `27-checks-come-from-the-reviewed-repository` | `review-fix-project-checks` 2.1 | not run | not run | no `Checks` section: pytest and ruff from the repository's own files, nothing from this plugin's repository |
 
 **All 18 cases pass on the branch, 3 runs each (score 1.00 every time); 10 fail against the base.**
 Cases 25 and 26 came later, from the Codex findings of task 5.4 (fixed by hand at the owner's
@@ -78,6 +79,11 @@ result or a design reason so plainly in the prompt that a careful agent reaches 
 without the new text. They stay as guards against regression, not as evidence of the change.
 Cases 17 and 18 are the judgement old cases 3 and 4 checked through replies; it survives the move
 to Codex, which is why the base passes them too.
+Case 27 came with `review-fix-project-checks`: step 6 used to name this repository's own checks
+(`node hooks/selftest.mjs`, `claude plugin validate .`, …) as its example, which a fixer in a
+repository without a `Checks` section could take for the commands to run. It is written and its
+regexes are tested against sample answers, but it has not been run yet; its measurement is task
+2.2 of that change.
 
 Cost: about $0.20 per run on `claude-opus-5-5`, judge included (the 18 cases × 3 runs cost
 $10.7); against the base about $0.21 per run.

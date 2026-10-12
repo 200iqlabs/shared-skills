@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Fixed
+- **`review-fix` runs the checks of the repository it reviews, not this plugin's** — step 6 used to
+  list this repository's own checks (`node hooks/selftest.mjs`, `claude plugin validate .`, …) as
+  its example, so in a repository whose `REVIEW.md` has no `Checks` section the fixer could take
+  them for the commands to run. It now runs the `Checks` section when there is one, otherwise what
+  the project declares itself (`package.json` scripts, `Makefile` targets, the test setup in
+  `pyproject.toml`, its CI steps), never a command from the skill or another repository, and says
+  so when it finds none. `review-loop` runs `review-fix` as its round, so it gets the same.
 - **`review-loop`'s sign-off record now says when it is missing the error text** — on an `error`
   ending, the record could go out without the error text and without saying so. The warning
   *"The error text could not be read"* never fired once the tail of the run log had been written,
