@@ -46,5 +46,6 @@
 
 ## 4. After merge
 
-- [ ] 4.1 Archive this change and fold the added requirement into
-      `openspec/specs/code-review-loop/spec.md`.
+- [x] 4.1 Archive this change and fold the added requirement into
+      `openspec/specs/code-review-loop/spec.md`. — #27 was merged as `906fe35` on 2026-10-12 and
+      the plugin was updated to it; this change is archived in the pull request that ticks this box.
