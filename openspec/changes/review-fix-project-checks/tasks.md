@@ -34,7 +34,8 @@
 - [x] 3.1 `CHANGELOG.md`: one entry under Fixed, naming the visible effect.
 - [x] 3.2 `node hooks/selftest.mjs`, `node skills/review-fix/scripts/selftest.mjs`,
       `openspec validate --all --strict` and `claude plugin validate .` pass.
-- [ ] 3.3 Open the pull request to `master` on `change/review-fix-project-checks`. Do not merge.
+- [x] 3.3 Open the pull request to `master` on `change/review-fix-project-checks`. Do not merge.
+      — opened as #27.
 
 ## 4. After merge
 
