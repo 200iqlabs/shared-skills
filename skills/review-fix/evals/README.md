@@ -65,6 +65,7 @@ Measured 2026-10-10, Claude Code 2.1.292, `claude-opus-5-5`, judge `claude-haiku
 | 24 | `24-opinion-only-goes-to-codex-review` | 3.6 | 1.00 | 0.33 | an opinion with no changes goes to `/codex:review` |
 | 25 | `25-reviewed-working-tree-is-committed-even-when-clean` | 5.4 | 1.00 | 0.25 | no PR, dirty tree, clean review: the reviewed work is still committed, not pushed |
 | 26 | `26-repository-scale-orders-the-fixes` | 5.4 | 1.00 | 1.00 | `Scale: blocker, should, nit` orders the fixes; a `[P1]` outside it goes last |
+| 27 | `27-checks-come-from-the-reviewed-repository` | `review-fix-project-checks` 2.2 | 1.00 | 0.80 | no `Checks` section: pytest and ruff from the repository's own files, nothing from this plugin's repository |
 
 **All 18 cases pass on the branch, 3 runs each (score 1.00 every time); 10 fail against the base.**
 Cases 25 and 26 came later, from the Codex findings of task 5.4 (fixed by hand at the owner's
@@ -78,6 +79,16 @@ result or a design reason so plainly in the prompt that a careful agent reaches 
 without the new text. They stay as guards against regression, not as evidence of the change.
 Cases 17 and 18 are the judgement old cases 3 and 4 checked through replies; it survives the move
 to Codex, which is why the base passes them too.
+Case 27 came with `review-fix-project-checks`: step 6 used to name this repository's own checks
+(`node hooks/selftest.mjs`, `claude plugin validate .`, …) as its example, which a fixer in a
+repository without a `Checks` section could take for the commands to run. Measured 2026-10-12,
+Claude Code 2.1.296, 3 runs a side, $1.02 for both: 1.00 on the branch in every run, 0.80 against
+`origin/master`, where no run passes. The base does not get the decision wrong: all three base
+answers end on `pytest` and `ruff check .`, and both regexes pass. Each one, though, names
+`node hooks/selftest.mjs` and the other commands of this repository in order to set them aside,
+and the rubric fails it for that (judge votes FAIL FAIL PASS, then FAIL FAIL FAIL twice). The
+branch answers never mention them. So on `claude-opus-5-5` the case shows that the old text put
+this repository's commands in front of the fixer, not that it made the fixer run them.
 
 Cost: about $0.20 per run on `claude-opus-5-5`, judge included (the 18 cases × 3 runs cost
 $10.7); against the base about $0.21 per run.

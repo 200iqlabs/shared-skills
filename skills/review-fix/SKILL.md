@@ -178,11 +178,19 @@ Edit only files inside the repository, and only for findings judged **fix**.
 
 ### 6. Verify
 
-Run the checks the project actually has, after all fixes are in. `REVIEW.md` lists them when it has
-a `Checks` section; otherwise find them — a `test`, `typecheck` or `lint` script in `package.json`,
-a test runner, a self-test script, a schema validator. In this repository they are
-`node hooks/selftest.mjs`, `node skills/review-fix/scripts/selftest.mjs`,
-`openspec validate --all --strict` and `claude plugin validate .`.
+Run the checks of the repository under review, after all fixes are in:
+
+- **`REVIEW.md` has a `Checks` section** — run what it lists, as it lists it, with any condition it
+  attaches (*"when `tools/` changed"*).
+- **It has none** — run what the project itself declares: the `test`, `typecheck` or `lint`
+  scripts in `package.json`, the targets of a `Makefile`, the test setup in `pyproject.toml`, the
+  check commands its `README`, `CONTRIBUTING` or `AGENTS.md` names, the test and lint steps of its
+  CI workflow, a self-test script it ships.
+
+A check comes from the repository you are reviewing, never from this skill, the plugin that ships
+it, or another repository you have seen. For example, a Python service whose `pyproject.toml`
+configures pytest and whose CI runs `ruff check .` is checked with `pytest` and `ruff check .`, not
+with an `npm` script it does not have.
 
 If a check fails, fix the cause and run it again. If you cannot make it pass, the round ends as an
 error with nothing committed. If the project has no automated check at all, say so in the record
@@ -204,7 +212,7 @@ With a change, append — never rewrite earlier sections:
 Test changes:
 - `tests/test_sync.py` — R2-1: the test asserted the unlocked retry that the finding fixes
 
-Checks: `node hooks/selftest.mjs` — 14/14 passed
+Checks: `pytest` — 14/14 passed
 ```
 
 - The heading carries the round number, today's date and the short sha the review ran against.

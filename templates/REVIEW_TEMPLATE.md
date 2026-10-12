@@ -55,7 +55,9 @@ has changed since that decision; if it has, say what changed.
 
 ## Checks (adapt)
 
-<!-- The commands that verify a change here. The fixer runs them after every round. For example:
+<!-- The commands that verify a change here. The fixer runs them after every round; without this
+section it runs what the project declares on its own (package.json scripts, Makefile targets, the
+test setup in pyproject.toml, its CI steps) and says so when it finds none. For example:
 - `npm test`
 - `npm run typecheck`
 -->
