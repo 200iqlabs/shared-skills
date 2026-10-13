@@ -3,6 +3,10 @@
 ## [Unreleased]
 
 ### Fixed
+- **`LICENSE` carries the full Apache License 2.0 text** — the file held only the short notice from
+  the license's appendix, so GitHub detected the license as "Other" instead of Apache-2.0, and a copy
+  of the repository did not include the terms it is licensed under. The file is now the unmodified
+  `LICENSE-2.0.txt` from apache.org. The license itself does not change.
 - **`review-fix` runs the checks of the repository it reviews, not this plugin's** — step 6 used to
   list this repository's own checks (`node hooks/selftest.mjs`, `claude plugin validate .`, …) as
   its example, so in a repository whose `REVIEW.md` has no `Checks` section the fixer could take
