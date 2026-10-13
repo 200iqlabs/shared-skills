@@ -103,6 +103,10 @@
   silently dropped. It is quoted now, the text unchanged; `claude plugin validate` passes.
 
 ### Removed
+- **The `ss:marketing` and `ss:product-manager` placeholders** — both were an eight-line `TODO`
+  stub from Phase 0. They installed with the plugin and showed up in the skill list with no
+  description, and the README advertised them as "Planned". They come back when they are built
+  with `skill-creator`; what they are meant to do stays in `docs/PRD.md` (US-006, US-008).
 - **`/ss:decisions`, `/ss:explain-design`, `/ss:explain-diff`, `/ss:orientation` and the
   `ss:task-delegation` skill** — all five moved to the 200IQ LABS agentic-system foundation: the
   decision sweep and the two walk-throughs are the decisions and understanding modes of its

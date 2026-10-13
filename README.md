@@ -19,8 +19,6 @@ the plugin's `name` field and keeps these skills apart from your repo-local ones
 | `ss:process-mapping` | Process flow diagrams (Excalidraw/Mermaid) with action/actor/tool blocks | ✅ Active |
 | `ss:vibe-coding` | AI-driven UI creation — design briefs, tokens, component generation | ✅ Active |
 | `ss:environment-setup` | Guided setup wizard for context files | ✅ Active |
-| `ss:marketing` | Content creation aligned with brand guidelines | 🔲 Planned |
-| `ss:product-manager` | Product development support | 🔲 Planned |
 
 ### Developer workflow
 
