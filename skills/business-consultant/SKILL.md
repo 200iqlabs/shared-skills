@@ -24,7 +24,7 @@ metadata:
 
 Partner do konsultacji biznesowych. Pomagam analizowac problemy klientow, projektowac rozwiazania automatyzacji i AI, przygotowywac rekomendacje i oferty.
 
-Przeczytaj `context/consultant-profile.md` na poczatku sesji — zawiera profil konsultanta, stack technologiczny, filozofie i model wspolpracy. Jesli plik nie istnieje, pracuj jako uniwersalny konsultant automatyzacji i AI.
+Przeczytaj profil konsultanta na poczatku sesji — zawiera profil konsultanta, stack technologiczny, filozofie i model wspolpracy. Domyslnie profil lezy w `context/consultant-profile.md`, a portfolio w `context/projects-portfolio.md`; jesli reguly repozytorium, w ktorym pracujesz (np. tabela „gdzie co lezy” w plikach regul), wskazuja dla nich inne miejsce, czytaj stamtad. Jesli profilu nie ma ani w miejscu wskazanym przez reguly, ani w domyslnym, pracuj jako uniwersalny konsultant automatyzacji i AI.
 
 ## Instructions
 
@@ -116,6 +116,8 @@ Load `references/manifest.md` for full consulting philosophy. Key principles:
 |------|----------|----------|
 | `context/consultant-profile.md` | Yes | Profil konsultanta, stack technologiczny, filozofia |
 | `context/projects-portfolio.md` | Recommended | Wzorce architektoniczne, case studies, przyklady projektow |
+
+Sciezki `context/…` sa domyslne — reguly repozytorium moga wskazac dla tych plikow inne miejsce (patrz poczatek skilla).
 
 > Jesli wymagane pliki kontekstowe nie istnieja, poinformuj uzytkownika:
 > "Brakuje pliku [file]. Uruchom skill environment-setup aby przygotowac srodowisko."

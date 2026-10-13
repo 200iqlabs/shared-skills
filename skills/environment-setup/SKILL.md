@@ -24,7 +24,7 @@ Skill prowadzacy przez konfiguracje plikow kontekstowych wymaganych przez pozost
 
 #### 1. Audyt istniejacych plikow kontekstowych
 
-Dane firmy (`company.md`, `legal-entities.md`) leza w `company/data/`, pozostale pliki kontekstowe w `context/`. Na poczatku sprawdz, ktore z nich juz istnieja:
+Dane firmy (`company.md`, `legal-entities.md`) leza w `company/data/`, pozostale pliki kontekstowe w `context/` — chyba ze reguly repozytorium wskazuja dla ktoregos z nich inne miejsce (np. profil konsultanta i portfolio w folderze dzialu); wtedy sprawdzaj tam. Na poczatku sprawdz, ktore z nich juz istnieja:
 
 ```
 company/data/company.md
