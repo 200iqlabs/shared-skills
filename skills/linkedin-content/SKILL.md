@@ -36,7 +36,8 @@ z podstawami** i **ograniczenia**, a na końcu wypisuje **kontrakt wyniku**.
 Wtedy obowiązuje brief, nie ta instrukcja:
 
 - Czytasz **wyłącznie** brief i pliki doktryny, które brief wymienia, w podanej kolejności.
-  Nie doczytujesz `context/author-profile.md` ani niczego innego z własnej inicjatywy —
+  Nie doczytujesz profilu autora (`context/author-profile.md` ani miejsca, które wskazują
+  reguły repozytorium) ani niczego innego z własnej inicjatywy —
   jeżeli brief tego chce, sam to wskaże.
 - **Teza bez podstawy nie wchodzi do treści**, także gdy jest prawdziwa i powszechnie znana.
 - **Podstawę przepisujesz dosłownie**, tak jak stoi w briefie. Streszczona podstawa przestaje
@@ -62,7 +63,7 @@ materiał na LinkedIna powinien iść przez nią, a nie tędy. Powiedz to raz i 
 
 ### Profil autora
 
-Przeczytaj `context/author-profile.md` na poczatku sesji. Plik zawiera:
+Przeczytaj profil autora na poczatku sesji. Domyslnie lezy w `context/author-profile.md`; jesli reguly repozytorium, w ktorym pracujesz (np. tabela „gdzie co lezy” w plikach regul), wskazuja dla niego inne miejsce, czytaj stamtad. Plik zawiera:
 - **Profil**: imie, rola, specjalizacja, glos, wartosci
 - **Audiencja**: grupa docelowa — wplywa na ton, zlozonosc i dobor tematow
 - **Hashtagi**: standardowe hashtagi autora
@@ -183,10 +184,12 @@ Styl odpowiedzi:
 | `context/author-profile.md` | Yes | Profil autora, audiencja, hashtagi, przyklady dobrych postow |
 | `company/brand/writing-style.md` | No (recommended) | Autorytatywne zasady stylu (anglicyzmy, epitety, banlista). Brak pliku = fallback na `references/writing-style.md`, skill dziala dalej |
 
+Sciezka `context/author-profile.md` jest w tym pliku domyslna — reguly repozytorium moga wskazac dla profilu autora inne miejsce (patrz „Profil autora”).
+
 ### Gdy brakuje kontekstu
 
 **Plik nie istnieje:**
-1. Poinformuj uzytkownika: "Brakuje pliku context/author-profile.md. Uruchom skill environment-setup aby przygotowac srodowisko. Dzieki niemu posty beda lepiej dopasowane do Twojego stylu i audiencji."
+1. Poinformuj uzytkownika: "Brakuje pliku <sciezka>. Uruchom skill environment-setup aby przygotowac srodowisko. Dzieki niemu posty beda lepiej dopasowane do Twojego stylu i audiencji." — `<sciezka>` to plik, ktorego szukales: wskazany przez reguly repozytorium albo domyslny `context/author-profile.md`
 2. Jesli uzytkownik chce kontynuowac bez kontekstu — dzialaj w trybie generycznym: zapytaj o role i specjalizacje inline, generuj posty bez spersonalizowanych hashtagow i bez dopasowania do stylu z przykladow. Bazuj na ogolnych zasadach z `references/writing-style.md`.
 
 **Plik istnieje, ale ma niewypelnione pola (`[DO UZUPELNIENIA]`):**
