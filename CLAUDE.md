@@ -68,7 +68,6 @@ User-specific data lives outside the skills — company data in `company/`, the 
 ## Key Conventions
 
 - Skills use progressive disclosure: metadata → body → references (load references only when needed)
-- Most agents are currently placeholders (Phase 0) — check for the "PLACEHOLDER" marker before assuming implementation exists
 - All skills are Apache 2.0 licensed
 - Language: many agent skills target Polish-speaking users (tax, legal, business consulting contexts)
 
