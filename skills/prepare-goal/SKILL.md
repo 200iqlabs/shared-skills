@@ -1,10 +1,6 @@
 ---
 name: prepare-goal
-description: "Przygotowuje gotowy tekst completion condition dla komendy /goal w Claude Code (v2.1.139+).
-  Bierze luźny opis zadania i produkuje sformułowanie, które ewaluator (mały model) potrafi sprawdzić
-  z samego transkryptu rozmowy. Triggeruje WYŁĄCZNIE na komendę /prepare-goal — nie auto-triggeruj
-  na keywords typu 'goal', 'cel sesji', 'cel zadania'. Używaj gdy user pisze /prepare-goal <opis>
-  lub /prepare-goal i chce sformułować warunek zakończenia dla autonomicznej pętli /goal."
+description: "Przygotowuje tekst completion condition dla /goal w Claude Code (v2.1.139+): z luźnego opisu zadania robi warunek, który mały model-ewaluator sprawdzi z transkryptu. Triggeruje WYŁĄCZNIE na komendę /prepare-goal <opis>."
 license: Apache-2.0
 ---
 
@@ -146,3 +142,9 @@ Jeśli zadanie jest naprawdę duże, zasugeruj rozbicie na 2-3 sekwencyjne /goal
 4. (Jeśli stosowne) propozycja rozbicia na sekwencję
 
 Bez długich wstępów. Bez powtarzania opisu usera.
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Przygotowuje gotowy tekst completion condition dla komendy /goal w Claude Code (v2.1.139+). Bierze luźny opis zadania i produkuje sformułowanie, które ewaluator (mały model) potrafi sprawdzić z samego transkryptu rozmowy. Triggeruje WYŁĄCZNIE na komendę /prepare-goal — nie auto-triggeruj na keywords typu 'goal', 'cel sesji', 'cel zadania'. Używaj gdy user pisze /prepare-goal <opis> lub /prepare-goal i chce sformułować warunek zakończenia dla autonomicznej pętli /goal.

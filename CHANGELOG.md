@@ -39,6 +39,7 @@
   and the working mode's routing is unchanged.
 
 ### Changed
+- **Skill descriptions are cut to 250 characters** — the list of skills a model sees has a character budget of about 30 thousand, and 122 of 180 skills lost their description from it in a measured session (agentic-ai-system, 2026-10-15). The 15 skills whose `description` was longer keep their main triggers and boundaries in it, and the full former text sits at the end of each `SKILL.md` under *Routing text before the description was cut*. The cut was made without the `/skill-creator` triggering evals that `CLAUDE.md` asks for when a description is rewritten, so the triggering accuracy of the shortened descriptions is not measured.
 - **`review-fix` and `review-loop` review with Codex instead of Copilot** (breaking) — both skills
   now run the built-in review of the Codex plugin for Claude Code (`codex@openai-codex`) locally,
   against the pull request's base, and **require that plugin and a signed-in Codex CLI**; without

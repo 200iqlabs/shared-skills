@@ -1,6 +1,6 @@
 ---
 name: review-loop
-description: 'Run the whole Claude–Codex review cycle on a pull request unattended — Codex reviews the branch, a fixer judges and fixes the findings, pushes, and the next review runs, until nothing important is left. Use this whenever someone wants the review-and-fix back-and-forth to run by itself across several rounds: "aż przestanie zgłaszać uwagi", "zapętl review i poprawki", "nie chcę tego pilnować", "iterate until the review is clean", "keep cycling codex and fixes until it settles" — even when they never type /review-loop. Takes a PR number and an OpenSpec change name; the change gives the fixer the intent to judge findings against and holds the review record. Do NOT use for a single review-and-fix pass — that is review-fix — nor for an opinion on a pull request, waiting on CI, or polling a deployment.'
+description: "Whole Claude–Codex review cycle on a PR unattended: Codex reviews, a fixer fixes and pushes, until nothing important is left. Takes a PR number and an OpenSpec change. Use for „aż przestanie zgłaszać uwagi”. NOT a single pass (review-fix)."
 ---
 
 # Review Loop
@@ -780,3 +780,9 @@ Five things about this step are deliberate:
   the `Agent` tool so the main session keeps a clean context across iterations.
 - **Never** guess the `openspec-change-name` if the directory is missing — always ask the user
   (Step 1.2).
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Run the whole Claude–Codex review cycle on a pull request unattended — Codex reviews the branch, a fixer judges and fixes the findings, pushes, and the next review runs, until nothing important is left. Use this whenever someone wants the review-and-fix back-and-forth to run by itself across several rounds: "aż przestanie zgłaszać uwagi", "zapętl review i poprawki", "nie chcę tego pilnować", "iterate until the review is clean", "keep cycling codex and fixes until it settles" — even when they never type /review-loop. Takes a PR number and an OpenSpec change name; the change gives the fixer the intent to judge findings against and holds the review record. Do NOT use for a single review-and-fix pass — that is review-fix — nor for an opinion on a pull request, waiting on CI, or polling a deployment.

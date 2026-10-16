@@ -1,14 +1,6 @@
 ---
 name: linkedin-content
-description: "Content engine that turns a brief into LinkedIn post text. Use when a
-  publication loop, another skill, or the user hands over a brief that names the channel,
-  the thesis with its grounds, and the constraints — this skill writes the material and
-  returns it against the result contract the brief declares. Do NOT trigger on a bare
-  request to write a LinkedIn post, draft content, brainstorm post ideas, create hooks, or
-  build a content calendar. Where a publication loop exists, material for LinkedIn is
-  written through the loop and this skill is its engine, not a second entry point; without
-  a brief it runs only when the user invokes it by name. Never for blog posts, website
-  copy, email drafts, presentations, or social media graphics."
+description: "Engine of a publication loop: turns a brief (channel, thesis with grounds, constraints) into LinkedIn post text against the brief's result contract. Without a brief only when called by name. NOT for a bare \"write a post\" request, blogs, email."
 license: Apache-2.0
 metadata:
   author: Pawel Lipowczan
@@ -206,3 +198,9 @@ Sciezka `context/author-profile.md` jest w tym pliku domyslna — reguly repozyt
 - NIE pisz postow "seeking new opportunities"
 - NIE twórz listow "10 sposobow na..." bez substancji
 - Jesli brak kontekstu o projekcie/temacie, zapytaj o szczegoly zamiast wymyslac
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Content engine that turns a brief into LinkedIn post text. Use when a publication loop, another skill, or the user hands over a brief that names the channel, the thesis with its grounds, and the constraints — this skill writes the material and returns it against the result contract the brief declares. Do NOT trigger on a bare request to write a LinkedIn post, draft content, brainstorm post ideas, create hooks, or build a content calendar. Where a publication loop exists, material for LinkedIn is written through the loop and this skill is its engine, not a second entry point; without a brief it runs only when the user invokes it by name. Never for blog posts, website copy, email drafts, presentations, or social media graphics.

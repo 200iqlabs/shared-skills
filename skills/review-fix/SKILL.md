@@ -1,6 +1,6 @@
 ---
 name: review-fix
-description: 'Run one Codex review of the current branch and act on every finding — fix what holds up, reject what does not with a one-line reason, verify, commit, and push when the branch has a pull request. Use this whenever someone wants a review pass that ends in fixes rather than a list: "zrób review i popraw co znajdzie", "przepuść to przez Codexa i napraw", "review my branch and fix what is real before I open the PR", "one review pass on PR 12, fix and push", or /review-fix [PR]. With an OpenSpec change it records each finding and its outcome in the change''s review.md, so a rejected finding is not judged again. Needs the codex@openai-codex plugin. An opinion with no changes is /codex:review; repeating until the reviewer is quiet is review-loop.'
+description: "One Codex review of the branch, every finding acted on: fix what holds up, reject the rest with a reason, verify, commit, push if a PR exists. Use for „zrób review i popraw”, /review-fix [PR]. Needs codex@openai-codex. Repeating: review-loop."
 ---
 
 # Review Fix
@@ -327,3 +327,9 @@ is true only for a `clean` verdict; `pushed_commit_sha` is the full sha of the l
 - **Never** pipe JSON through `jq`, which may be absent; the helper and `gh --jq` cover every
   parse this skill needs.
 - **Never** write scratch files into the repository.
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Run one Codex review of the current branch and act on every finding — fix what holds up, reject what does not with a one-line reason, verify, commit, and push when the branch has a pull request. Use this whenever someone wants a review pass that ends in fixes rather than a list: "zrób review i popraw co znajdzie", "przepuść to przez Codexa i napraw", "review my branch and fix what is real before I open the PR", "one review pass on PR 12, fix and push", or /review-fix [PR]. With an OpenSpec change it records each finding and its outcome in the change's review.md, so a rejected finding is not judged again. Needs the codex@openai-codex plugin. An opinion with no changes is /codex:review; repeating until the reviewer is quiet is review-loop.

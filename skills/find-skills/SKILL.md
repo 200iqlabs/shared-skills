@@ -1,11 +1,6 @@
 ---
 name: find-skills
-description: "Discover and install agent skills from the open skills ecosystem,
-  with a security audit step before installation. Use when the user asks 'how do
-  I do X', 'find a skill for X', 'is there a skill that...', wants to extend
-  agent capabilities, or mentions wishing they had help with a specific domain.
-  Triggers on 'find skill', 'install skill', 'znajdz skill', 'czy jest skill',
-  'jak zrobic X' when X may be a common task with an existing skill."
+description: "Discover and install agent skills from the open skills ecosystem, with a security audit before installation. Use for \"find a skill for X\", \"is there a skill that...\", „znajdz skill”, „czy jest skill”, or when the user wishes for help with a domain."
 license: Apache-2.0
 ---
 
@@ -202,3 +197,9 @@ already happened in Step 6).
   Don't ask the user to trust the verdict blindly.
 - **Refuse, don't warn, on `BLOCK`.** Alert fatigue is real. Reserve user
   attention for genuinely ambiguous cases.
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Discover and install agent skills from the open skills ecosystem, with a security audit step before installation. Use when the user asks 'how do I do X', 'find a skill for X', 'is there a skill that...', wants to extend agent capabilities, or mentions wishing they had help with a specific domain. Triggers on 'find skill', 'install skill', 'znajdz skill', 'czy jest skill', 'jak zrobic X' when X may be a common task with an existing skill.

@@ -1,12 +1,6 @@
 ---
 name: prepare-openspec-goal
-description: "Przygotowuje gotowy tekst completion condition dla komendy /goal w Claude Code (v2.1.139+),
-  dostosowany do implementacji OpenSpec change. Bierze nazwę changu z openspec/changes/<name>/
-  i produkuje sformułowanie, które ewaluator (mały model, Haiku) potrafi sprawdzić z samego
-  transkryptu rozmowy. Triggeruje WYŁĄCZNIE na komendę /prepare-openspec-goal — nie auto-triggeruj
-  na keywords typu 'goal', 'openspec', 'change'. Używaj gdy user pisze
-  /prepare-openspec-goal <change-name> i chce sformułować warunek zakończenia dla autonomicznej
-  pętli /goal implementującej openspec change."
+description: "Przygotowuje tekst completion condition dla /goal w Claude Code (v2.1.139+) pod implementację OpenSpec change z openspec/changes/<name>/, sprawdzalny z transkryptu. Triggeruje WYŁĄCZNIE na /prepare-openspec-goal <change-name>."
 license: Apache-2.0
 ---
 
@@ -276,3 +270,9 @@ evaluatora i przekroczenie bound. Mniejsze cele = krótsze konteksty + łatwiejs
 7. Jednolinijkowa podpowiedź headless
 
 Bez długich wstępów. Bez powtarzania proposal.md.
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Przygotowuje gotowy tekst completion condition dla komendy /goal w Claude Code (v2.1.139+), dostosowany do implementacji OpenSpec change. Bierze nazwę changu z openspec/changes/<name>/ i produkuje sformułowanie, które ewaluator (mały model, Haiku) potrafi sprawdzić z samego transkryptu rozmowy. Triggeruje WYŁĄCZNIE na komendę /prepare-openspec-goal — nie auto-triggeruj na keywords typu 'goal', 'openspec', 'change'. Używaj gdy user pisze /prepare-openspec-goal <change-name> i chce sformułować warunek zakończenia dla autonomicznej pętli /goal implementującej openspec change.

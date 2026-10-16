@@ -1,20 +1,6 @@
 ---
 name: process-mapping
-description: "Draw process flow diagrams showing who does what with which tool —
-  generates Excalidraw (.excalidraw) or Mermaid diagrams from process descriptions.
-  ONLY for sequential business process flows (step-by-step workflows with actors
-  and tools). Use when the user wants to: map a business process, draw a process
-  flowchart, create AS-IS or TO-BE process maps, visualize a workflow as a diagram,
-  document process steps from meeting notes or transcripts, generate a process map
-  showing actors and tools per step. Triggers: 'zmapuj proces', 'mapa procesu',
-  'diagram przepływu', 'narysuj flowchart procesu', 'process map', 'workflow diagram',
-  'AS-IS TO-BE', 'mapowanie procesu', 'kroki procesu', 'flowchart',
-  'narysuj diagram procesu', 'udokumentuj proces', 'process flow', 'zmapuj workflow'.
-  NOT for: architecture diagrams, sequence diagrams, ER diagrams, org charts, mind
-  maps, or any non-process diagrams — even if the user asks for excalidraw output.
-  NOT for process analysis, bottleneck identification, or automation recommendations
-  — that is the business-consultant skill's job. This skill draws diagrams only.
-  Also trigger when business-consultant or another skill needs a process diagram drawn."
+description: "Draw business process flow diagrams (who does what with which tool) as Excalidraw or Mermaid. ONLY sequential processes. Triggers: „zmapuj proces”, \"process map\", \"AS-IS TO-BE\", \"flowchart\". NOT architecture/sequence/ER diagrams or process analysis."
 license: Apache-2.0
 metadata:
   author: 200IQ Labs
@@ -170,3 +156,9 @@ Do NOT include:
 
 - `/process` or `/mapa` — invoke this skill
 - `/mermaid` — force Mermaid output instead of Excalidraw
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Draw process flow diagrams showing who does what with which tool — generates Excalidraw (.excalidraw) or Mermaid diagrams from process descriptions. ONLY for sequential business process flows (step-by-step workflows with actors and tools). Use when the user wants to: map a business process, draw a process flowchart, create AS-IS or TO-BE process maps, visualize a workflow as a diagram, document process steps from meeting notes or transcripts, generate a process map showing actors and tools per step. Triggers: 'zmapuj proces', 'mapa procesu', 'diagram przepływu', 'narysuj flowchart procesu', 'process map', 'workflow diagram', 'AS-IS TO-BE', 'mapowanie procesu', 'kroki procesu', 'flowchart', 'narysuj diagram procesu', 'udokumentuj proces', 'process flow', 'zmapuj workflow'. NOT for: architecture diagrams, sequence diagrams, ER diagrams, org charts, mind maps, or any non-process diagrams — even if the user asks for excalidraw output. NOT for process analysis, bottleneck identification, or automation recommendations — that is the business-consultant skill's job. This skill draws diagrams only. Also trigger when business-consultant or another skill needs a process diagram drawn.

@@ -1,14 +1,6 @@
 ---
 name: cfo
-description: "Financial advisor and fractional CFO for business analysis. Use when:
-  analyzing cash flow, runway, burn rate, revenue, costs, profitability, budget planning,
-  financial forecasting, cost optimization, unit economics, break-even analysis,
-  MRR/ARR/churn/CAC/LTV (SaaS metrics), P&L review, financial reports, or comparing
-  financial scenarios. Also use for investment decisions, 'can we afford X' questions,
-  expense analysis, or when the user mentions money, spending, earnings, or financial
-  health of the company. Dyrektor finansowy, analiza finansowa, przeplywy pieniezne,
-  rentownosc, budzet, koszty, przychody, prognoza finansowa, optymalizacja kosztowa,
-  runway, ile mamy kasy, ile wydalismy, ile zarabiamy."
+description: "Financial advisor and fractional CFO: cash flow, runway, burn, unit economics, SaaS metrics (MRR/CAC/LTV/churn), budgets, forecasts, P&L, \"can we afford X\". Dyrektor finansowy: „analiza finansowa”, „ile mamy kasy”, „ile zarabiamy”."
 license: Apache-2.0
 metadata:
   author: Pawel Lipowczan
@@ -136,3 +128,9 @@ Sciezka `context/finances.md` jest domyslna — reguly repozytorium moga wskazac
 - **Nie doradza w inwestycjach osobistych** — tylko finanse firmowe
 - **Nie prowadzi księgowości** — nie księguje faktur, nie robi rozliczeń
 - **Nie generuje fikcyjnych danych** — przy braku danych mówi czego brakuje
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Financial advisor and fractional CFO for business analysis. Use when: analyzing cash flow, runway, burn rate, revenue, costs, profitability, budget planning, financial forecasting, cost optimization, unit economics, break-even analysis, MRR/ARR/churn/CAC/LTV (SaaS metrics), P&L review, financial reports, or comparing financial scenarios. Also use for investment decisions, 'can we afford X' questions, expense analysis, or when the user mentions money, spending, earnings, or financial health of the company. Dyrektor finansowy, analiza finansowa, przeplywy pieniezne, rentownosc, budzet, koszty, przychody, prognoza finansowa, optymalizacja kosztowa, runway, ile mamy kasy, ile wydalismy, ile zarabiamy.

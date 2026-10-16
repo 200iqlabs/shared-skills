@@ -1,13 +1,6 @@
 ---
 name: environment-setup
-description: "Guided setup wizard for configuring the shared-skills environment. Use
-  when: the user wants to set up their environment, configure context files, prepare
-  the system for first use, or is missing context files that other skills need.
-  Trigger on: 'set up environment', 'configure context', 'prepare environment',
-  'missing context files', 'environment setup', 'skonfiguruj srodowisko',
-  'przygotuj kontekst', 'brakuje pliku context/', 'brakuje pliku company/',
-  'jak zaczac', 'pierwsza konfiguracja', 'onboarding'. Also trigger when another skill reports
-  missing context files and suggests running environment-setup."
+description: "Guided setup wizard for the shared-skills environment: configure context files, prepare the system for first use, fix context files other skills report missing. Triggers: \"set up environment\", „skonfiguruj srodowisko”, „brakuje pliku context/”."
 license: Apache-2.0
 metadata:
   author: 200IQ Labs
@@ -102,3 +95,9 @@ Jesli niektore pliki pominieto:
 - Ten skill TYLKO konfiguruje pliki kontekstowe — nie uruchamia innych skilli
 - Nie modyfikuje plikow w `references/` ani `SKILL.md`
 - Nie konfiguruje integracji API (klucze API, .env) — to osobny proces
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Guided setup wizard for configuring the shared-skills environment. Use when: the user wants to set up their environment, configure context files, prepare the system for first use, or is missing context files that other skills need. Trigger on: 'set up environment', 'configure context', 'prepare environment', 'missing context files', 'environment setup', 'skonfiguruj srodowisko', 'przygotuj kontekst', 'brakuje pliku context/', 'brakuje pliku company/', 'jak zaczac', 'pierwsza konfiguracja', 'onboarding'. Also trigger when another skill reports missing context files and suggests running environment-setup.

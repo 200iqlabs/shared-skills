@@ -1,6 +1,6 @@
 ---
 name: slides
-description: "Markdown-to-presentation workflow using Marp. Generate PDF decks (LinkedIn carousels, talk slides, workshop materials) from markdown sources. Triggers on '/slides:*' commands (init, explore, new, draft, build, tweak, archive). Also triggers on 'zrób deck', 'wygeneruj prezentację', 'carousel linkedin', 'marp', 'prezentacja z markdown', 'slajdy na wystąpienie', 'slajdy z posta', 'generate slides', 'make a deck'."
+description: "Markdown-to-presentation workflow using Marp: PDF decks (LinkedIn carousels, talks, workshops) from markdown. Triggers: /slides:* commands (init, explore, new, draft, build, tweak, archive), „zrób deck”, „carousel linkedin”, \"marp\", \"make a deck\"."
 license: Apache-2.0
 ---
 
@@ -483,3 +483,9 @@ If any required file is missing when a workflow command (not `init`) runs, halt 
 - Only PDF (default) and HTML (opt-in); no PPTX or PNG
 - No LinkedIn auto-publish; user uploads PDF manually
 - Chromium sandbox issues on some Linux setups — Marp CLI docs cover workarounds
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Markdown-to-presentation workflow using Marp. Generate PDF decks (LinkedIn carousels, talk slides, workshop materials) from markdown sources. Triggers on '/slides:*' commands (init, explore, new, draft, build, tweak, archive). Also triggers on 'zrób deck', 'wygeneruj prezentację', 'carousel linkedin', 'marp', 'prezentacja z markdown', 'slajdy na wystąpienie', 'slajdy z posta', 'generate slides', 'make a deck'.

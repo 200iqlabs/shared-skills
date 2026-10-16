@@ -1,6 +1,6 @@
 ---
 name: vibe-coding
-description: Guide for creating modern, professional UI without UX/UI design knowledge using AI-driven "vibe coding" approach. Use when the user wants to create frontend interfaces, landing pages, web components, or design systems by describing vibes/feelings instead of precise mockups. Supports React + Vite + Tailwind CSS 4 + shadcn/ui workflow with design briefs, style references, design tokens, and production-ready component generation. Ideal for developers without design background who want to build attractive, accessible interfaces.
+description: "Guide for creating modern UI without design knowledge via \"vibe coding\": React + Vite + Tailwind 4 + shadcn/ui, design briefs, style references, design tokens, production-ready components. Use for frontend interfaces, landing pages, design systems."
 license: Apache-2.0
 ---
 
@@ -187,3 +187,9 @@ All templates and detailed guides:
 - **[references/implementation-prompt.md](references/implementation-prompt.md)** - Production-ready component generation prompt
 - **[references/starter-setup.md](references/starter-setup.md)** - Tailwind CSS 4 + Vite setup guide
 - **[assets/templates/design-tokens.css](assets/templates/design-tokens.css)** - Design tokens template for Tailwind CSS 4
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Guide for creating modern, professional UI without UX/UI design knowledge using AI-driven "vibe coding" approach. Use when the user wants to create frontend interfaces, landing pages, web components, or design systems by describing vibes/feelings instead of precise mockups. Supports React + Vite + Tailwind CSS 4 + shadcn/ui workflow with design briefs, style references, design tokens, and production-ready component generation. Ideal for developers without design background who want to build attractive, accessible interfaces.

@@ -1,22 +1,6 @@
 ---
 name: prd
-description: >-
-  Generuje 1-2 stronicowy, agent-ready PRD dla MVP budowanego w 7 dni (Faza 1
-  playbooka PLSoft 7-Day MVP / AI Startup Builders Week 3). Bierze insighty z
-  Week 1 (Problem-Solution Fit) i Week 2 (GTM/ICP/Value Proposition + LP) —
-  dostarczone w dowolnym układzie plików (jeden dokument, osobne icp/positioning/
-  gtm-plan/landing-brief, folder, notatki) plus brand — i sprowadza je do jednego
-  dokumentu prd.md, który agent (Claude Code lub Lovable/v0) rozumie i pod który
-  generuje kod. Triggeruj
-  na komendę /prd ORAZ gdy founder-uczestnik programu chce zrobić PRD pod MVP,
-  spisać scope na 7 dni, przerobić output W1/W2 na dokument dla agenta, albo
-  pyta "jak napisać PRD dla mojego MVP", "spnij to w PRD", "scope na MVP".
-  Triggeruj też gdy ktoś chce ograniczyć/przyciąć zakres (scope) MVP do jednego
-  core flow i spisać to w dokument pod agenta, oraz gdy osoba nietechniczna
-  buduje aplikację w Lovable/v0 i potrzebuje PRD/spisanego zakresu pod swoje
-  MVP. Nie triggeruj na pełne PRD dla zewnętrznego klienta z fixed-price (to
-  software-delivery-playbook, 9-day), ani na czysty UI/design brief (to
-  vibe-coding).
+description: "Generuje 1-2 stronicowy, agent-ready PRD dla MVP na 7 dni (PLSoft 7-Day MVP, Faza 1) z insightów W1/W2 i brandu — jeden prd.md pod Claude Code/Lovable/v0. Komenda /prd; „scope na MVP”, „spnij to w PRD”. NIE dla PRD fixed-price klienta ani UI briefu."
 license: Apache-2.0
 ---
 
@@ -278,3 +262,9 @@ dekompozycji nie rób w tym skillu — to osobny krok playbooka §5.
 4. Wskazanie §6 i §7 + propozycja przejścia do Fazy 3 (dekompozycja na goals)
 
 Bez długich wstępów. Bez powtarzania całego inputu W1/W2.
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Generuje 1-2 stronicowy, agent-ready PRD dla MVP budowanego w 7 dni (Faza 1 playbooka PLSoft 7-Day MVP / AI Startup Builders Week 3). Bierze insighty z Week 1 (Problem-Solution Fit) i Week 2 (GTM/ICP/Value Proposition + LP) — dostarczone w dowolnym układzie plików (jeden dokument, osobne icp/positioning/ gtm-plan/landing-brief, folder, notatki) plus brand — i sprowadza je do jednego dokumentu prd.md, który agent (Claude Code lub Lovable/v0) rozumie i pod który generuje kod. Triggeruj na komendę /prd ORAZ gdy founder-uczestnik programu chce zrobić PRD pod MVP, spisać scope na 7 dni, przerobić output W1/W2 na dokument dla agenta, albo pyta "jak napisać PRD dla mojego MVP", "spnij to w PRD", "scope na MVP". Triggeruj też gdy ktoś chce ograniczyć/przyciąć zakres (scope) MVP do jednego core flow i spisać to w dokument pod agenta, oraz gdy osoba nietechniczna buduje aplikację w Lovable/v0 i potrzebuje PRD/spisanego zakresu pod swoje MVP. Nie triggeruj na pełne PRD dla zewnętrznego klienta z fixed-price (to software-delivery-playbook, 9-day), ani na czysty UI/design brief (to vibe-coding).

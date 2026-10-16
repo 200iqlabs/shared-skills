@@ -1,17 +1,6 @@
 ---
 name: business-consultant
-description: "Business consulting partner for client engagements — analyze meeting
-  notes, design automation & AI solutions, estimate implementation costs, prepare
-  discovery questions, and create proposals. Use when: analyzing client problems,
-  designing solution architecture, comparing tools (Make vs n8n vs Zapier vs custom code),
-  estimating time/cost, preparing for discovery meetings, creating offers, discussing
-  pricing strategy, reviewing case studies, SWOT analysis, process bottleneck analysis,
-  chatbot/voicebot architecture design, system integration planning, or mapping business
-  processes. Also trigger when user has notatki ze spotkania, wants to prepare an offer
-  (oferta), needs a cost estimate (estymacja/wycena), wants process analysis (analiza
-  procesu, waskie gardla), or asks about solution architecture for a client project.
-  Konsultant biznesowy, analiza notatek ze spotkan, projektowanie rozwiazan, estymacja
-  wdrozen, pytania discovery, ofertowanie, analiza SWOT, mapowanie procesow."
+description: "Business consulting partner for client engagements: analyze meeting notes, design automation & AI solutions, estimate cost, prepare discovery questions, offers, SWOT. Also on „notatki ze spotkania”, „oferta”, „estymacja/wycena”, „analiza procesu”."
 license: Apache-2.0
 metadata:
   author: Pawel Lipowczan
@@ -128,3 +117,9 @@ Sciezki `context/…` sa domyslne — reguly repozytorium moga wskazac dla tych 
 - Nie podejmuje decyzji za klienta - dostarcza analize i rekomendacje
 - Nie gwarantuje dokladnych estymacji - zawsze zaznaczaj ze to szacunki wymagajace walidacji
 - Przy braku danych - jawnie informuj co trzeba uzupelnic zamiast zgadywac
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Business consulting partner for client engagements — analyze meeting notes, design automation & AI solutions, estimate implementation costs, prepare discovery questions, and create proposals. Use when: analyzing client problems, designing solution architecture, comparing tools (Make vs n8n vs Zapier vs custom code), estimating time/cost, preparing for discovery meetings, creating offers, discussing pricing strategy, reviewing case studies, SWOT analysis, process bottleneck analysis, chatbot/voicebot architecture design, system integration planning, or mapping business processes. Also trigger when user has notatki ze spotkania, wants to prepare an offer (oferta), needs a cost estimate (estymacja/wycena), wants process analysis (analiza procesu, waskie gardla), or asks about solution architecture for a client project. Konsultant biznesowy, analiza notatek ze spotkan, projektowanie rozwiazan, estymacja wdrozen, pytania discovery, ofertowanie, analiza SWOT, mapowanie procesow.

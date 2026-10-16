@@ -1,6 +1,6 @@
 ---
 name: legal
-description: "Asystent prawny dla przedsiębiorcy IT — wsparcie prawne na wczesnym etapie analizy. Użyj tego skilla zawsze gdy użytkownik pyta o kwestie prawne, umowy, RODO, ochronę IP, prawo spółek, compliance, regulaminy, OWU, lub potrzebuje przygotować dokument prawny. Triggery: pytania o umowy (NDA, B2B, współpraca), analiza ryzyka prawnego, drafty dokumentów prawnych, review/analiza dokumentów i umów, RODO i ochrona danych, prawa autorskie do kodu/oprogramowania, prawo spółek (PSA, KSH), AI Act, founders agreement, brief dla prawnika, OWU, windykacja i dochodzenie roszczeń, spory z kontrahentami. Także gdy użytkownik używa komend: /analiza, /draft, /brief, /owu, /checklist, /porównanie. Nawet jeśli użytkownik nie mówi wprost 'prawo' — jeśli pyta o umowę z klientem, ochronę danych, przeniesienie praw autorskich, warunki współpracy, regulamin, nieopłacone faktury, lub zakaz konkurencji — użyj tego skilla."
+description: "Asystent prawny dla przedsiębiorcy IT, wczesna analiza: umowy (NDA, B2B), RODO, IP, prawo spółek (PSA, KSH), AI Act, regulaminy, OWU, windykacja. Użyj przy pytaniu prawnym lub o dokument prawny; komendy /analiza, /draft, /brief, /owu, /checklist."
 license: Apache-2.0
 metadata:
   author: shared-skills
@@ -159,3 +159,9 @@ Możesz zaproponować dodanie wygenerowanego wzoru do knowledge base projektu lu
 | `references/legal-scope.md` | Legal competency areas, limitations |
 | `references/workflow-draft.md` | Document drafting workflow (/draft) |
 | `references/workflow-brief.md` | Lawyer brief workflow (/brief) |
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Asystent prawny dla przedsiębiorcy IT — wsparcie prawne na wczesnym etapie analizy. Użyj tego skilla zawsze gdy użytkownik pyta o kwestie prawne, umowy, RODO, ochronę IP, prawo spółek, compliance, regulaminy, OWU, lub potrzebuje przygotować dokument prawny. Triggery: pytania o umowy (NDA, B2B, współpraca), analiza ryzyka prawnego, drafty dokumentów prawnych, review/analiza dokumentów i umów, RODO i ochrona danych, prawa autorskie do kodu/oprogramowania, prawo spółek (PSA, KSH), AI Act, founders agreement, brief dla prawnika, OWU, windykacja i dochodzenie roszczeń, spory z kontrahentami. Także gdy użytkownik używa komend: /analiza, /draft, /brief, /owu, /checklist, /porównanie. Nawet jeśli użytkownik nie mówi wprost 'prawo' — jeśli pyta o umowę z klientem, ochronę danych, przeniesienie praw autorskich, warunki współpracy, regulamin, nieopłacone faktury, lub zakaz konkurencji — użyj tego skilla.

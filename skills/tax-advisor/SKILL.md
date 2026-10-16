@@ -1,6 +1,6 @@
 ---
 name: tax-advisor
-description: "Polish tax advisor for IT entrepreneurs (JDG and PSA). Use this skill whenever the user asks about taxes, tax optimization, or anything related to CIT, PIT, VAT, ZUS, health insurance contributions (składka zdrowotna), IP Box, R&D tax relief (ulga B+R), Estonian CIT (estoński CIT), flat-rate tax (ryczałt), tax forms comparison, JDG vs PSA tax burden, tax deadlines, JPK filing, transfer pricing, or preparing a brief for a tax advisor. Also use when the user asks: ile zostanie mi netto z faktury, jaka forma opodatkowania, czy opłaca się przejść na spółkę, ile kosztuje ZUS, jak zmniejszyć obciążenia podatkowe, kiedy termin JPK/VAT/ZUS, porównanie ryczałt vs liniowy, czy kwalifikuję się do IP Box. Even if the user doesn't say 'tax' explicitly — if they ask about take-home pay from an invoice, choosing a business entity type, social security costs, or reducing their tax burden — use this skill. Supports commands: /analiza, /porównanie, /optymalizacja, /kalendarz, /brief."
+description: "Polish tax advisor for IT entrepreneurs (JDG and PSA): CIT, PIT, VAT, ZUS, składka zdrowotna, IP Box, ulga B+R, estoński CIT, ryczałt, JPK. Use for any tax or take-home-pay question; „jaka forma opodatkowania”; /analiza, /porównanie, /kalendarz."
 license: Apache-2.0
 metadata:
   author: Pawel Lipowczan
@@ -187,3 +187,9 @@ Sekcja "Warunki wstępne" jest kluczowa — pozwala użytkownikowi ocenić, czy 
 - Prawo podatkowe zmienia się co roku. Sygnalizuj gdy przepis mógł ulec zmianie.
 - Przy rozbieżnościach między źródłami — jawnie to wskaż.
 - Zawsze zakończ odpowiedź na złożone pytanie sugestią konsultacji z doradcą podatkowym — nie dlatego że Twoja odpowiedź jest zła, ale dlatego że konsekwencje błędów podatkowych są realne i kosztowne.
+
+## Routing text before the description was cut
+
+The `description` in the front matter is capped at 250 characters, because the list of skills a model sees has a character budget. The full routing text it carried before — triggers, boundaries, what the skill is not for — is kept here:
+
+> Polish tax advisor for IT entrepreneurs (JDG and PSA). Use this skill whenever the user asks about taxes, tax optimization, or anything related to CIT, PIT, VAT, ZUS, health insurance contributions (składka zdrowotna), IP Box, R&D tax relief (ulga B+R), Estonian CIT (estoński CIT), flat-rate tax (ryczałt), tax forms comparison, JDG vs PSA tax burden, tax deadlines, JPK filing, transfer pricing, or preparing a brief for a tax advisor. Also use when the user asks: ile zostanie mi netto z faktury, jaka forma opodatkowania, czy opłaca się przejść na spółkę, ile kosztuje ZUS, jak zmniejszyć obciążenia podatkowe, kiedy termin JPK/VAT/ZUS, porównanie ryczałt vs liniowy, czy kwalifikuję się do IP Box. Even if the user doesn't say 'tax' explicitly — if they ask about take-home pay from an invoice, choosing a business entity type, social security costs, or reducing their tax burden — use this skill. Supports commands: /analiza, /porównanie, /optymalizacja, /kalendarz, /brief.
