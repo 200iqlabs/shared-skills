@@ -3,6 +3,14 @@
 ## [Unreleased]
 
 ### Fixed
+- **`review-fix`'s test guard reads a record kept in the Polish form** — the guard found a round
+  only by `## Round N` and a reason only by an `R<n>-<m>` id, while a record started by hand writes
+  `## Runda N` and numbers its findings across rounds (`| 18 |`). No reason was ever found there,
+  so any round that had to change an existing test ended in exit 4, and the loop in an error; on
+  one pull request three rounds put every new test into a new file to get past it. The guard now
+  takes `## Round N` or `## Runda N`, and a reason naming `R<n>-<m>` or `#<n>`, still only when the
+  id is a row of that round's own table. Step 2.3 numbers the next round from either heading, and
+  step 7 tells the fixer to keep the form the record already has.
 - **`LICENSE` carries the full Apache License 2.0 text** — the file held only the short notice from
   the license's appendix, so GitHub detected the license as "Other" instead of Apache-2.0, and a copy
   of the repository did not include the terms it is licensed under. The file is now the unmodified

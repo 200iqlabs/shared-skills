@@ -363,20 +363,28 @@ export function isTestPath(file, patterns) {
   return patterns.some((p) => globToRegExp(p).test(f))
 }
 
-// Reasons live in the round's own section, as `- \`path\` — R2-1: why`, and must name a finding
-// of that round's table.
+// A table row's finding id: `| R2-1 |` as review-fix writes its own records, or `| 18 |` /
+// `| #18 |` as a record started by hand numbers its findings across rounds, read as `#18`.
+function rowId(line) {
+  const id = line.match(/^\|\s*(R\d+-\d+|#?\d+)\s*\|/)?.[1]
+  if (!id) return null
+  return id.startsWith('R') ? id : `#${id.replace(/^#/, '')}`
+}
+
+// Reasons live in the round's own section — headed `## Round N` or `## Runda N` — as
+// `- \`path\` — R2-1: why` or `- \`path\` — #18: why`, and must name a finding of that round's table.
 export function recordReasons(recordText, round) {
   const reasons = new Map()
   if (typeof recordText !== 'string') return reasons
   const lines = recordText.split(/\r?\n/)
-  const start = lines.findIndex((l) => new RegExp(`^##\\s+Round\\s+${round}\\b`).test(l))
+  const start = lines.findIndex((l) => new RegExp(`^##\\s+(?:Round|Runda)\\s+${round}\\b`).test(l))
   if (start === -1) return reasons
   let end = lines.findIndex((l, i) => i > start && /^##\s/.test(l))
   if (end === -1) end = lines.length
   const section = lines.slice(start, end)
-  const ids = new Set(section.map((l) => l.match(/^\|\s*(R\d+-\d+)\s*\|/)?.[1]).filter(Boolean))
+  const ids = new Set(section.map(rowId).filter(Boolean))
   for (const l of section) {
-    const m = l.match(/^\s*-\s+`?([^`]+?)`?\s+(?:—|--|-)\s+(R\d+-\d+)\s*:\s*(\S.*)$/)
+    const m = l.match(/^\s*-\s+`?([^`]+?)`?\s+(?:—|--|-)\s+(R\d+-\d+|#\d+)\s*:\s*(\S.*)$/)
     if (m && ids.has(m[2])) reasons.set(slash(m[1]), { finding: m[2], reason: m[3].trim() })
   }
   return reasons

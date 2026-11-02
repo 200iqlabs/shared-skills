@@ -199,6 +199,41 @@ console.log('\nrecorded reasons')
   check('a reason naming no finding of the round does not count', !r2.has('tests/test_c.py'))
   check('a reason from another round does not count', !r2.has('tests/test_old.py'))
   check('a round that is not in the record has no reasons', recordReasons(record, 3).size === 0)
+
+  // A record started by hand: Polish headings, findings numbered across rounds under a `#` column.
+  const hand = [
+    '# Przegląd',
+    '',
+    '## Runda 14 — Codex, 2026-11-02 (po b815ef60)',
+    '',
+    '| # | Uwaga | Plik | Wynik |',
+    '|---|---|---|---|',
+    '| 17 | `P2` — a trailing dot passes the block | `tools/a.py` | **Poprawione.** |',
+    '',
+    '- `tests/test_old.py` — #17: belongs to round 14 only',
+    '',
+    '## Runda 15 — Codex, 2026-11-02 (po db07d0cc)',
+    '',
+    '| # | Uwaga | Plik | Wynik |',
+    '|---|---|---|---|',
+    '| 18 | `P2` — an unreadable file raises before the guard | `tools/a.py` | **Poprawione.** |',
+    '| #19 | `P3` — the cell carries the hash itself | `tools/b.py` | **Poprawione.** |',
+    '',
+    'Zmiany testów:',
+    '- `tests/test_a.py` — #18: the test expected the exception the finding removes',
+    '- `tests/test_b.py` — #19: the hash in the cell names the same finding',
+    '- `tests/test_c.py` — #17: names a finding of another round',
+    '- `tests/test_d.py` — 18: a bare number is not an id',
+    '- `tests/test_e.py` — R15-1: no row of this round carries that id',
+  ].join('\n')
+  const r15 = recordReasons(hand, 15)
+  check('a "## Runda N" section is read like "## Round N"', r15.get('tests/test_a.py')?.finding === '#18', JSON.stringify([...r15]))
+  check('a "#<n>" reason matches a row written as "| #<n> |" too', r15.get('tests/test_b.py')?.finding === '#19')
+  check("a \"#<n>\" reason naming another round's finding does not count", !r15.has('tests/test_c.py'))
+  check('a bare number is not read as a finding id', !r15.has('tests/test_d.py'))
+  check('an "R<n>-<m>" reason needs a row with that id, not a numbered one', !r15.has('tests/test_e.py'))
+  check("an earlier round of such a record reads its own reasons", recordReasons(hand, 14).get('tests/test_old.py')?.finding === '#17')
+  check('round 1 is not matched by the headings of rounds 14 and 15', recordReasons(hand, 1).size === 0)
 }
 
 console.log('\nthe test guard against a real repository')
@@ -236,6 +271,18 @@ console.log('\nthe test guard against a real repository')
   ].join('\n')
   const reasoned = guard({ repoRoot: repo, since, patterns: DEFAULT_TEST_PATHS, recordText: record, round: 1 })
   check('with a reason for each, the guard passes', reasoned.ok && reasoned.reasoned.length === 2, JSON.stringify(reasoned))
+  const handRecord = [
+    '## Runda 1 — Codex, 2026-10-10 (po abc1234)',
+    '| # | Uwaga | Plik | Wynik |',
+    '|---|---|---|---|',
+    '| 1 | `P1` — the test pins the old return value | `tests/test_a.py` | **Poprawione.** |',
+    '| 2 | `P2` — the test covers a removed function | `tests/test_gone.py` | **Poprawione.** |',
+    'Zmiany testów:',
+    '- `tests/test_a.py` — #1: the expected value was the defect',
+    '- `tests/test_gone.py` — #2: the function it tested no longer exists',
+  ].join('\n')
+  const byHand = guard({ repoRoot: repo, since, patterns: DEFAULT_TEST_PATHS, recordText: handRecord, round: 1 })
+  check('a record kept in the Polish form passes the guard the same way', byHand.ok && byHand.reasoned.length === 2, JSON.stringify(byHand))
   const wrong = guard({ repoRoot: repo, since: 'not-a-sha', patterns: DEFAULT_TEST_PATHS, recordText: null, round: 1 })
   check('a git failure is reported, not read as "nothing changed"', wrong.ok === false && wrong.error)
 

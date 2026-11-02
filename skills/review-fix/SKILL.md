@@ -90,7 +90,7 @@ gh pr view <PR> --json number,url,headRefName,baseRefName,state   # without <PR>
 
 2.3. **The record and the starting point.** With a change, the record is
 `openspec/changes/<change>/review.md`. Read all of it now: every earlier round, whoever ran it. The
-next round number is one more than the highest `## Round N` in it, or 1.
+next round number is one more than the highest `## Round N` or `## Runda N` in it, or 1.
 
 Note the round's starting point; the test guard in step 8 compares against it. Normally that is the
 commit:
@@ -222,6 +222,12 @@ Checks: `pytest` — 14/14 passed
 - `Test changes:` lists every **existing** test file the round changed, each with the finding that
   required it and why. Leave the line out when none changed. New test files need no entry.
 - `fixed` rows get their commit in step 9.
+- **A record started in another form keeps it.** When the earlier rounds are `## Runda N` sections
+  whose `| # | Uwaga | Plik | Wynik |` table numbers findings across rounds (`| 18 |`, `| 19 |`, …),
+  append in that form — heading, language, columns, the next free number — instead of switching to
+  the one above: the record is one document. A reason line then names its finding as `#<n>`:
+  `` - `tests/test_sync.py` — #18: the test asserted the unlocked retry ``, under a label in the
+  record's language (`Zmiany testów:`). These two forms are the only ones step 8 reads.
 
 Without a change, write nothing and say in the summary that no review record was written.
 
@@ -241,6 +247,11 @@ start**, or the defaults (`**/test/**`, `**/tests/**`, `*.test.*`, `*.spec.*`, `
 guard protects: a round cannot narrow the paths and pass its own check.
 
 Exit 4 means a protected test changed without a `Test changes` entry naming a finding of this round.
+The guard finds the round by its heading, `## Round <N>` or `## Runda <N>`, and reads the lines
+`` - `<path>` — <id>: <why> `` in that section; the label above them is not checked. `<id>` counts
+only when it is a row of the round's own table: `R<n>-<m>` for a row `| R<n>-<m> |`, `#<n>` for a
+row `| <n> |` or `| #<n> |`. A bare number, an id from another round, or any other heading is not
+read, so the reason does not count.
 The round ends as an **error before anything is committed**, naming the files. Leave the edits in
 the working tree for the person to look at, and do not "fix" the guard by writing a reason after the
 fact that the finding did not give. The rule exists because the cheapest way to make a failing check
