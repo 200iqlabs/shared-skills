@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Shared Skills is a modular AI agent library for business advisory, built on the [Agent Skills](https://agentskills.io) standard. It provides specialized agent personas (CFO, tax advisor, legal, marketing, etc.) as Claude Code skills, distributed via plugin marketplace or git submodules.
+Shared Skills is a modular AI agent library for business advisory, built on the [Agent Skills](https://agentskills.io) standard. It provides specialized agent personas (CFO, tax advisor, legal, business consultant, LinkedIn content, etc.) as Claude Code skills, distributed via plugin marketplace or git submodules.
 
 ## Architecture
 
