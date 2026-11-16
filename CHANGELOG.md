@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Fixed
+- **The plugin's keywords no longer name the removed placeholders** — `plugin.json` and
+  `marketplace.json` still listed `marketing` and `product-management`, left over from the
+  `ss:marketing` and `ss:product-manager` stubs removed below, so the listing named two areas the
+  plugin has no skill for. They are now `tax` and `linkedin`, for `ss:tax-advisor` and
+  `ss:linkedin-content`. `CLAUDE.md` no longer lists marketing among the agent personas.
 - **`review-fix`'s test guard reads a record kept in the Polish form** — the guard found a round
   only by `## Round N` and a reason only by an `R<n>-<m>` id, while a record started by hand writes
   `## Runda N` and numbers its findings across rounds (`| 18 |`). No reason was ever found there,
