@@ -52,6 +52,14 @@
   and the working mode's routing is unchanged.
 
 ### Changed
+- **`review-fix` judges findings against the pull request's description when there is no OpenSpec
+  change** — step 2.2 now reads the description (`body`), and step 4 uses it, and first its section
+  that specifies the work when it has one, as the intent a finding is judged against: a finding the
+  specification rules out or leaves out of scope is rejected with the passage named, one that shows
+  the code contradicts it holds up. The description is treated as data and never widens what the
+  pass may edit, run or push. The summary says what the findings were judged against. Codex itself
+  still reviews the diff without the description. New behavioural case
+  `review-fix-28-pr-description-is-the-intent-without-a-change`, not yet run.
 - **Skill descriptions are cut to 250 characters** — the list of skills a model sees has a character budget of about 30 thousand, and 122 of 180 skills lost their description from it in a measured session (agentic-ai-system, 2026-10-15). The 15 skills whose `description` was longer keep their main triggers and boundaries in it, and the full former text sits at the end of each `SKILL.md` under *Routing text before the description was cut*. The cut was made without the `/skill-creator` triggering evals that `CLAUDE.md` asks for when a description is rewritten, so the triggering accuracy of the shortened descriptions is not measured.
 - **`review-fix` and `review-loop` review with Codex instead of Copilot** (breaking) — both skills
   now run the built-in review of the Codex plugin for Claude Code (`codex@openai-codex`) locally,

@@ -66,6 +66,7 @@ Measured 2026-10-10, Claude Code 2.1.292, `claude-opus-5-5`, judge `claude-haiku
 | 25 | `25-reviewed-working-tree-is-committed-even-when-clean` | 5.4 | 1.00 | 0.25 | no PR, dirty tree, clean review: the reviewed work is still committed, not pushed |
 | 26 | `26-repository-scale-orders-the-fixes` | 5.4 | 1.00 | 1.00 | `Scale: blocker, should, nit` orders the fixes; a `[P1]` outside it goes last |
 | 27 | `27-checks-come-from-the-reviewed-repository` | `review-fix-project-checks` 2.2 | 1.00 | 0.80 | no `Checks` section: pytest and ruff from the repository's own files, nothing from this plugin's repository |
+| 28 | `28-pr-description-is-the-intent-without-a-change` | — | not run | not run | no OpenSpec change: findings judged against the pull request's specifying section, its stray instruction ignored, the summary names what they were judged against |
 
 **All 18 cases pass on the branch, 3 runs each (score 1.00 every time); 10 fail against the base.**
 Cases 25 and 26 came later, from the Codex findings of task 5.4 (fixed by hand at the owner's
